@@ -100,4 +100,6 @@ type PipelineAPI interface {
 	RetrieveSchema(*RetrieveSchemaInput) (*RetrieveSchemaOutput, error)
 
 	MakeToken(*base.TokenDesc) (string, error)
+
+	Close() error
 }

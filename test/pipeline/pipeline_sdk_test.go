@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -36,7 +37,7 @@ func init() {
 
 	client, err = New(cfg)
 	if err != nil {
-		logger.Error("new pipeline client failed, err: %v", err)
+		logger.Errorf("new pipeline client failed, err: %v", err)
 	}
 
 	defaultRepoSchema = []RepoSchemaEntry{
@@ -367,6 +368,66 @@ func TestPostData(t *testing.T) {
 	}
 
 	err = client.DeleteRepo(&DeleteRepoInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestPostDataRequstLimiter(t *testing.T) {
+	repoName := "TestPostDataLimiter"
+	createRepoInput := &CreateRepoInput{
+		RepoName: repoName,
+		Schema:   defaultRepoSchema,
+		Region:   "nb",
+	}
+	ncfg := NewConfig().
+		WithEndpoint(endpoint).
+		WithAccessKeySecretKey(ak, sk).
+		WithLogger(logger).
+		WithLoggerLevel(LogDebug).
+		WithFlowRateLimit(10)
+	nclient, err := New(ncfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer nclient.Close()
+
+	err = nclient.CreateRepo(createRepoInput)
+	if err != nil {
+		t.Error(err)
+	}
+	var wg sync.WaitGroup
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			postDataInput := &PostDataInput{
+				RepoName: repoName,
+				Points: Points{
+					Point{
+						[]PointField{
+							PointField{
+								Key:   "f1",
+								Value: "1211111221212121212121212121212",
+							},
+							PointField{
+								Key:   "f2",
+								Value: 1.0,
+							},
+						},
+					},
+				},
+			}
+			for j := 0; j < 100; j++ {
+				err = nclient.PostData(postDataInput)
+				if err != nil {
+					t.Error(err, postDataInput.RepoName)
+				}
+			}
+		}()
+	}
+	wg.Wait()
+	err = nclient.DeleteRepo(&DeleteRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}

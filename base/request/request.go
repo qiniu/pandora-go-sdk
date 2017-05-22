@@ -17,6 +17,7 @@ import (
 
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
+	"github.com/qiniu/pandora-go-sdk/base/ratelimit"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 )
 
@@ -34,7 +35,10 @@ type Request struct {
 	EnableContentMD5 bool
 	Logger           base.Logger
 	token            string
+	bodyLength       int64
 	errBuilder       reqerr.ErrBuilder
+	reqlimiter       *ratelimit.Limiter
+	flowlimiter      *ratelimit.Limiter
 }
 
 type Operation struct {
@@ -135,10 +139,12 @@ func (r *Request) md5Sum(reader io.ReadSeeker) {
 }
 
 func (r *Request) SetBufferBody(buf []byte) {
+	r.bodyLength = int64(len(buf))
 	r.SetReaderBody(bytes.NewReader(buf))
 }
 
 func (r *Request) SetStringBody(s string) {
+	r.bodyLength = int64(len(s))
 	r.SetReaderBody(strings.NewReader(s))
 }
 
@@ -179,6 +185,18 @@ func (r *Request) SetHeader(k, v string) {
 	r.Headers[k] = v
 }
 
+func (r *Request) SetBodyLength(bodyLength int64) {
+	r.bodyLength = bodyLength
+}
+
+func (r *Request) SetReqLimiter(limiter *ratelimit.Limiter) {
+	r.reqlimiter = limiter
+}
+
+func (r *Request) SetFlowLimiter(limiter *ratelimit.Limiter) {
+	r.flowlimiter = limiter
+}
+
 func (r *Request) build() {
 	for k, v := range r.Headers {
 		r.HTTPRequest.Header.Set(k, v)
@@ -207,6 +225,21 @@ func (r *Request) Send() error {
 	if r.Error != nil {
 		r.Logger.Error(logFormatter(r, "build request"))
 		return r.Error
+	}
+	if r.reqlimiter != nil {
+		r.reqlimiter.Assign(1)
+	}
+	if r.flowlimiter != nil {
+		bandneed := r.bodyLength
+		if bandneed > r.flowlimiter.GetRateLimit() {
+			r.Error = fmt.Errorf("can not send request, as body size %v larger than flow rate limit %v", bandneed, r.flowlimiter.GetRateLimit())
+			r.Logger.Error(logFormatter(r, "flow rate limit"))
+			return r.Error
+		}
+		for bandneed > 0 {
+			ret := r.flowlimiter.Assign(bandneed)
+			bandneed -= ret
+		}
 	}
 
 	r.HTTPResponse, r.Error = r.HTTPClient.Do(r.HTTPRequest)

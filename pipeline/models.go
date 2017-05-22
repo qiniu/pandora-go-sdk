@@ -616,8 +616,9 @@ type PostDataFromFileInput struct {
 
 type PostDataFromReaderInput struct {
 	PipelineToken
-	RepoName string
-	Reader   io.ReadSeeker
+	RepoName   string
+	Reader     io.ReadSeeker
+	BodyLength int64
 }
 
 type PostDataFromBytesInput struct {

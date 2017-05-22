@@ -7,12 +7,14 @@ import (
 )
 
 type Config struct {
-	Endpoint        string
-	Ak              string
-	Sk              string
-	Logger          base.Logger
-	DialTimeout     time.Duration
-	ResponseTimeout time.Duration
+	Endpoint         string
+	Ak               string
+	Sk               string
+	Logger           base.Logger
+	DialTimeout      time.Duration
+	ResponseTimeout  time.Duration
+	RequestRateLimit int64 //每秒请求数限制
+	FlowRateLimit    int64 //每秒流量限制(kb),若FlowRateLimit为100，则表示限速100KB/s
 }
 
 const (
@@ -54,5 +56,15 @@ func (c *Config) WithLogger(l base.Logger) *Config {
 
 func (c *Config) WithLoggerLevel(level base.LogLevelType) *Config {
 	c.Logger.SetLoggerLevel(level)
+	return c
+}
+
+func (c *Config) WithRequestRateLimit(limit int64) *Config {
+	c.RequestRateLimit = limit
+	return c
+}
+
+func (c *Config) WithFlowRateLimit(limit int64) *Config {
+	c.FlowRateLimit = limit
 	return c
 }

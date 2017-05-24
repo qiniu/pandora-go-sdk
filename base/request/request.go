@@ -232,7 +232,9 @@ func (r *Request) Send() error {
 	if r.flowlimiter != nil {
 		bandneed := r.bodyLength
 		if bandneed > r.flowlimiter.GetRateLimit() {
-			r.Error = fmt.Errorf("can not send request, as body size %v larger than flow rate limit %v", bandneed, r.flowlimiter.GetRateLimit())
+			r.Error = r.errBuilder.Build("E18005",
+				fmt.Sprintf("can not send request, as body size %v larger than flow rate limit %v", bandneed, r.flowlimiter.GetRateLimit()),
+				"NOTSENDYET", 400)
 			r.Logger.Error(logFormatter(r, "flow rate limit"))
 			return r.Error
 		}

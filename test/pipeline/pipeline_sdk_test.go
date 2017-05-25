@@ -8,51 +8,53 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
+
 	. "github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
-	. "github.com/qiniu/pandora-go-sdk/pipeline"
+	"github.com/qiniu/pandora-go-sdk/pipeline"
 )
 
 var (
 	cfg               *config.Config
-	client            PipelineAPI
+	client            pipeline.PipelineAPI
 	region            = os.Getenv("REGION")
 	endpoint          = os.Getenv("PIPELINE_HOST")
 	ak                = os.Getenv("ACCESS_KEY")
 	sk                = os.Getenv("SECRET_KEY")
 	logger            Logger
-	defaultRepoSchema []RepoSchemaEntry
-	defaultContainer  *Container
+	defaultRepoSchema []pipeline.RepoSchemaEntry
+	defaultContainer  *pipeline.Container
 )
 
 func init() {
 	var err error
 	logger = NewDefaultLogger()
-	cfg = NewConfig().
+	cfg = pipeline.NewConfig().
 		WithEndpoint(endpoint).
 		WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
 		WithLoggerLevel(LogDebug)
 
-	client, err = New(cfg)
+	client, err = pipeline.New(cfg)
 	if err != nil {
 		logger.Errorf("new pipeline client failed, err: %v", err)
 	}
 
-	defaultRepoSchema = []RepoSchemaEntry{
-		RepoSchemaEntry{
+	defaultRepoSchema = []pipeline.RepoSchemaEntry{
+		pipeline.RepoSchemaEntry{
 			Key:       "f1",
 			ValueType: "string",
 			Required:  true,
 		},
-		RepoSchemaEntry{
+		pipeline.RepoSchemaEntry{
 			Key:       "f2",
 			ValueType: "float",
 			Required:  true,
 		},
 	}
-	defaultContainer = &Container{
+	defaultContainer = &pipeline.Container{
 		Type:  "M16C4",
 		Count: 1,
 	}
@@ -73,7 +75,7 @@ func writeToFile(path string, content []byte, t *testing.T) {
 
 func TestGroup(t *testing.T) {
 	groupName := "group"
-	createInput := &CreateGroupInput{
+	createInput := &pipeline.CreateGroupInput{
 		GroupName:       groupName,
 		Container:       defaultContainer,
 		Region:          region,
@@ -84,7 +86,7 @@ func TestGroup(t *testing.T) {
 		t.Error(err)
 	}
 
-	getOutput, err := client.GetGroup(&GetGroupInput{GroupName: groupName})
+	getOutput, err := client.GetGroup(&pipeline.GetGroupInput{GroupName: groupName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -103,7 +105,7 @@ func TestGroup(t *testing.T) {
 		t.Errorf("create time and update time should not be empty")
 	}
 
-	listOutput, err := client.ListGroups(&ListGroupsInput{})
+	listOutput, err := client.ListGroups(&pipeline.ListGroupsInput{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -114,17 +116,17 @@ func TestGroup(t *testing.T) {
 		t.Errorf("group count should be 1 but %d", len(listOutput.Groups))
 	}
 
-	err = client.StartGroupTask(&StartGroupTaskInput{GroupName: groupName})
+	err = client.StartGroupTask(&pipeline.StartGroupTaskInput{GroupName: groupName})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = client.StopGroupTask(&StopGroupTaskInput{GroupName: groupName})
+	err = client.StopGroupTask(&pipeline.StopGroupTaskInput{GroupName: groupName})
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = client.DeleteGroup(&DeleteGroupInput{GroupName: groupName})
+	err = client.DeleteGroup(&pipeline.DeleteGroupInput{GroupName: groupName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -132,7 +134,7 @@ func TestGroup(t *testing.T) {
 
 func TestRepo(t *testing.T) {
 	repoName := "repo"
-	createInput := &CreateRepoInput{
+	createInput := &pipeline.CreateRepoInput{
 		RepoName:  repoName,
 		Region:    region,
 		Schema:    defaultRepoSchema,
@@ -144,7 +146,7 @@ func TestRepo(t *testing.T) {
 		t.Error(err)
 	}
 
-	getOutput, err := client.GetRepo(&GetRepoInput{RepoName: repoName})
+	getOutput, err := client.GetRepo(&pipeline.GetRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -157,7 +159,7 @@ func TestRepo(t *testing.T) {
 		t.Error("spec is different to default spec")
 	}
 
-	listOutput, err := client.ListRepos(&ListReposInput{})
+	listOutput, err := client.ListRepos(&pipeline.ListReposInput{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -171,7 +173,7 @@ func TestRepo(t *testing.T) {
 		t.Error("repo name is different to origin name")
 	}
 
-	err = client.DeleteRepo(&DeleteRepoInput{RepoName: repoName})
+	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -179,14 +181,14 @@ func TestRepo(t *testing.T) {
 
 func TestRepo_InvalidSpec(t *testing.T) {
 	var tests = []struct {
-		input *CreateRepoInput
+		input *pipeline.CreateRepoInput
 	}{
 		{
-			input: &CreateRepoInput{
+			input: &pipeline.CreateRepoInput{
 				RepoName:  "...",
 				GroupName: "group",
-				Schema: []RepoSchemaEntry{
-					RepoSchemaEntry{
+				Schema: []pipeline.RepoSchemaEntry{
+					pipeline.RepoSchemaEntry{
 						Key:       "f1",
 						ValueType: "string",
 						Required:  true,
@@ -195,11 +197,11 @@ func TestRepo_InvalidSpec(t *testing.T) {
 			},
 		},
 		{
-			input: &CreateRepoInput{
+			input: &pipeline.CreateRepoInput{
 				RepoName:  "repo",
 				GroupName: "...",
-				Schema: []RepoSchemaEntry{
-					RepoSchemaEntry{
+				Schema: []pipeline.RepoSchemaEntry{
+					pipeline.RepoSchemaEntry{
 						Key:       "f1",
 						ValueType: "string",
 						Required:  true,
@@ -208,18 +210,18 @@ func TestRepo_InvalidSpec(t *testing.T) {
 			},
 		},
 		{
-			input: &CreateRepoInput{
+			input: &pipeline.CreateRepoInput{
 				RepoName:  "repo",
 				GroupName: "",
-				Schema:    []RepoSchemaEntry{},
+				Schema:    []pipeline.RepoSchemaEntry{},
 			},
 		},
 		{
-			input: &CreateRepoInput{
+			input: &pipeline.CreateRepoInput{
 				RepoName:  "repo",
 				GroupName: "",
-				Schema: []RepoSchemaEntry{
-					RepoSchemaEntry{
+				Schema: []pipeline.RepoSchemaEntry{
+					pipeline.RepoSchemaEntry{
 						Key:       "...",
 						ValueType: "string",
 						Required:  true,
@@ -228,11 +230,11 @@ func TestRepo_InvalidSpec(t *testing.T) {
 			},
 		},
 		{
-			input: &CreateRepoInput{
+			input: &pipeline.CreateRepoInput{
 				RepoName:  "repo",
 				GroupName: "",
-				Schema: []RepoSchemaEntry{
-					RepoSchemaEntry{
+				Schema: []pipeline.RepoSchemaEntry{
+					pipeline.RepoSchemaEntry{
 						Key:       "f1",
 						ValueType: "map",
 						Required:  true,
@@ -255,7 +257,7 @@ func TestRepo_InvalidSpec(t *testing.T) {
 
 func TestPlugin(t *testing.T) {
 	pluginName := "plugin"
-	pluginInput := &UploadPluginInput{
+	pluginInput := &pipeline.UploadPluginInput{
 		PluginName: pluginName,
 		Buffer:     bytes.NewBufferString("plugin content"),
 	}
@@ -264,7 +266,7 @@ func TestPlugin(t *testing.T) {
 		t.Error(err)
 	}
 
-	getOutput, err := client.GetPlugin(&GetPluginInput{PluginName: pluginName})
+	getOutput, err := client.GetPlugin(&pipeline.GetPluginInput{PluginName: pluginName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -272,7 +274,7 @@ func TestPlugin(t *testing.T) {
 		t.Error("plugin name is different to orign plugin name")
 	}
 
-	listOutput, err := client.ListPlugins(&ListPluginsInput{})
+	listOutput, err := client.ListPlugins(&pipeline.ListPluginsInput{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -283,12 +285,12 @@ func TestPlugin(t *testing.T) {
 		t.Errorf("plugin name is different to origin name")
 	}
 
-	if err = client.DeletePlugin(&DeletePluginInput{PluginName: pluginName}); err != nil {
+	if err = client.DeletePlugin(&pipeline.DeletePluginInput{PluginName: pluginName}); err != nil {
 		t.Error(err)
 	}
 
 	path := "/tmp/plugin.jar"
-	filePluginInput := &UploadPluginFromFileInput{
+	filePluginInput := &pipeline.UploadPluginFromFileInput{
 		PluginName: "plugin",
 		FilePath:   path,
 	}
@@ -298,14 +300,14 @@ func TestPlugin(t *testing.T) {
 	if err = client.UploadPluginFromFile(filePluginInput); err != nil {
 		t.Error(err)
 	}
-	if err = client.DeletePlugin(&DeletePluginInput{PluginName: pluginName}); err != nil {
+	if err = client.DeletePlugin(&pipeline.DeletePluginInput{PluginName: pluginName}); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestPostData(t *testing.T) {
 	repoName := "repo_post_data"
-	createRepoInput := &CreateRepoInput{
+	createRepoInput := &pipeline.CreateRepoInput{
 		RepoName: repoName,
 		Schema:   defaultRepoSchema,
 		Region:   "nb",
@@ -315,16 +317,16 @@ func TestPostData(t *testing.T) {
 		t.Error(err)
 	}
 
-	postDataInput := &PostDataInput{
+	postDataInput := &pipeline.PostDataInput{
 		RepoName: repoName,
-		Points: Points{
-			Point{
-				[]PointField{
-					PointField{
+		Points: pipeline.Points{
+			pipeline.Point{
+				[]pipeline.PointField{
+					pipeline.PointField{
 						Key:   "f1",
 						Value: "12.7",
 					},
-					PointField{
+					pipeline.PointField{
 						Key:   "f2",
 						Value: 1.0,
 					},
@@ -338,7 +340,7 @@ func TestPostData(t *testing.T) {
 	}
 
 	buf := []byte("f1=\"12.7\"\tf2=3.14\nf1=\"dang\"\tf2=1024.0")
-	postDataFromBytesInput := &PostDataFromBytesInput{
+	postDataFromBytesInput := &pipeline.PostDataFromBytesInput{
 		RepoName: repoName,
 		Buffer:   buf,
 	}
@@ -347,7 +349,7 @@ func TestPostData(t *testing.T) {
 		t.Error(err)
 	}
 
-	postDataFromReaderInput := &PostDataFromReaderInput{
+	postDataFromReaderInput := &pipeline.PostDataFromReaderInput{
 		RepoName: repoName,
 		Reader:   bytes.NewReader(buf),
 	}
@@ -358,7 +360,7 @@ func TestPostData(t *testing.T) {
 
 	path := "/tmp/postdata"
 	writeToFile(path, buf, t)
-	postDataFromFileInput := &PostDataFromFileInput{
+	postDataFromFileInput := &pipeline.PostDataFromFileInput{
 		RepoName: repoName,
 		FilePath: path,
 	}
@@ -367,7 +369,7 @@ func TestPostData(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = client.DeleteRepo(&DeleteRepoInput{RepoName: repoName})
+	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -375,18 +377,18 @@ func TestPostData(t *testing.T) {
 
 func TestPostDataRequstLimiter(t *testing.T) {
 	repoName := "TestPostDataLimiter"
-	createRepoInput := &CreateRepoInput{
+	createRepoInput := &pipeline.CreateRepoInput{
 		RepoName: repoName,
 		Schema:   defaultRepoSchema,
 		Region:   "nb",
 	}
-	ncfg := NewConfig().
+	ncfg := pipeline.NewConfig().
 		WithEndpoint(endpoint).
 		WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
 		WithLoggerLevel(LogDebug).
 		WithFlowRateLimit(10)
-	nclient, err := New(ncfg)
+	nclient, err := pipeline.New(ncfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -401,16 +403,16 @@ func TestPostDataRequstLimiter(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			postDataInput := &PostDataInput{
+			postDataInput := &pipeline.PostDataInput{
 				RepoName: repoName,
-				Points: Points{
-					Point{
-						[]PointField{
-							PointField{
+				Points: pipeline.Points{
+					pipeline.Point{
+						[]pipeline.PointField{
+							pipeline.PointField{
 								Key:   "f1",
 								Value: "1211111221212121212121212121212",
 							},
-							PointField{
+							pipeline.PointField{
 								Key:   "f2",
 								Value: 1.0,
 							},
@@ -427,7 +429,81 @@ func TestPostDataRequstLimiter(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	err = nclient.DeleteRepo(&DeleteRepoInput{RepoName: repoName})
+	err = nclient.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestPostDataGzip(t *testing.T) {
+	repoName := "TestPostDataGzip"
+	createRepoInput := &pipeline.CreateRepoInput{
+		RepoName: repoName,
+		Schema:   defaultRepoSchema,
+		Region:   "nb",
+	}
+	ncfg := pipeline.NewConfig().
+		WithEndpoint(endpoint).
+		WithAccessKeySecretKey(ak, sk).
+		WithLogger(logger).
+		WithLoggerLevel(LogDebug).
+		WithFlowRateLimit(1)
+	nclient, err := pipeline.New(ncfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer nclient.Close()
+
+	err = nclient.CreateRepo(createRepoInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var val string
+	for i := 0; i < 2048; i++ {
+		val += "a"
+	}
+
+	postDataInput := &pipeline.PostDataInput{
+		RepoName: repoName,
+		Points: pipeline.Points{
+			pipeline.Point{
+				[]pipeline.PointField{
+					pipeline.PointField{
+						Key:   "f1",
+						Value: val,
+					},
+					pipeline.PointField{
+						Key:   "f2",
+						Value: 1.0,
+					},
+				},
+			},
+		},
+	}
+	err = nclient.PostData(postDataInput)
+	if err == nil {
+		t.Error("should have error with flow limit")
+	} else {
+		fmt.Println(err)
+	}
+
+	ncfg1 := pipeline.NewConfig().
+		WithEndpoint(endpoint).
+		WithAccessKeySecretKey(ak, sk).
+		WithLogger(logger).
+		WithLoggerLevel(LogDebug).
+		WithFlowRateLimit(1).WithGzipData(true)
+	nclient1, err := pipeline.New(ncfg1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer nclient1.Close()
+	err = nclient1.PostData(postDataInput)
+	if err != nil {
+		t.Error(err)
+	}
+	err = nclient.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -435,7 +511,7 @@ func TestPostDataRequstLimiter(t *testing.T) {
 
 func TestPostData_WithEscapeCharacters(t *testing.T) {
 	repoName := "repo_post_data_with_escape"
-	createRepoInput := &CreateRepoInput{
+	createRepoInput := &pipeline.CreateRepoInput{
 		RepoName: repoName,
 		Schema:   defaultRepoSchema,
 		Region:   "nb",
@@ -445,40 +521,40 @@ func TestPostData_WithEscapeCharacters(t *testing.T) {
 		t.Error(err)
 	}
 
-	postDataInput := &PostDataInput{
+	postDataInput := &pipeline.PostDataInput{
 		RepoName: repoName,
-		Points: Points{
-			Point{
-				[]PointField{
-					PointField{
+		Points: pipeline.Points{
+			pipeline.Point{
+				[]pipeline.PointField{
+					pipeline.PointField{
 						Key:   "f1",
 						Value: "tab: \t xxxxx",
 					},
-					PointField{
+					pipeline.PointField{
 						Key:   "f2",
 						Value: 1.0,
 					},
 				},
 			},
-			Point{
-				[]PointField{
-					PointField{
+			pipeline.Point{
+				[]pipeline.PointField{
+					pipeline.PointField{
 						Key:   "f1",
 						Value: "newline: \n yyyy",
 					},
-					PointField{
+					pipeline.PointField{
 						Key:   "f2",
 						Value: 1.0,
 					},
 				},
 			},
-			Point{
-				[]PointField{
-					PointField{
+			pipeline.Point{
+				[]pipeline.PointField{
+					pipeline.PointField{
 						Key:   "f1",
 						Value: "tab: \t and newline: \n zzzz",
 					},
-					PointField{
+					pipeline.PointField{
 						Key:   "f2",
 						Value: 1.0,
 					},
@@ -491,14 +567,14 @@ func TestPostData_WithEscapeCharacters(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = client.DeleteRepo(&DeleteRepoInput{RepoName: repoName})
+	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestTransform(t *testing.T) {
-	createRepoInput := &CreateRepoInput{
+	createRepoInput := &pipeline.CreateRepoInput{
 		RepoName: "src_repo",
 		Schema:   defaultRepoSchema,
 		Region:   "nb",
@@ -508,13 +584,13 @@ func TestTransform(t *testing.T) {
 		t.Error(err)
 	}
 
-	spec := &TransformSpec{
+	spec := &pipeline.TransformSpec{
 		Mode:      "sql",
 		Code:      "select * from stream",
 		Interval:  "5m",
 		Container: defaultContainer,
 	}
-	createTransInput := &CreateTransformInput{
+	createTransInput := &pipeline.CreateTransformInput{
 		SrcRepoName:   "src_repo",
 		DestRepoName:  "dest_repo",
 		TransformName: "transform",
@@ -525,10 +601,10 @@ func TestTransform(t *testing.T) {
 		t.Error(err)
 	}
 
-	updateTransInput := &UpdateTransformInput{
+	updateTransInput := &pipeline.UpdateTransformInput{
 		SrcRepoName:   "src_repo",
 		TransformName: "transform",
-		Spec: &TransformSpec{
+		Spec: &pipeline.TransformSpec{
 			Mode: "sql",
 			Code: "select f1 from stream",
 		},
@@ -538,7 +614,7 @@ func TestTransform(t *testing.T) {
 		t.Error(err)
 	}
 
-	listTransOutput, err := client.ListTransforms(&ListTransformsInput{RepoName: "src_repo"})
+	listTransOutput, err := client.ListTransforms(&pipeline.ListTransformsInput{RepoName: "src_repo"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -546,7 +622,7 @@ func TestTransform(t *testing.T) {
 		t.Error("listTransOutput should not be empty")
 	}
 
-	getTransOutput, err := client.GetTransform(&GetTransformInput{RepoName: "src_repo", TransformName: "transform"})
+	getTransOutput, err := client.GetTransform(&pipeline.GetTransformInput{RepoName: "src_repo", TransformName: "transform"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -574,11 +650,11 @@ func TestTransform(t *testing.T) {
 	if !reflect.DeepEqual(getTransOutput.Spec.Container, defaultContainer) {
 		t.Errorf("spec in getTransOutput %v is not equal spec %v", getTransOutput.Spec, spec)
 	}
-	err = client.DeleteTransform(&DeleteTransformInput{RepoName: "src_repo", TransformName: "transform"})
+	err = client.DeleteTransform(&pipeline.DeleteTransformInput{RepoName: "src_repo", TransformName: "transform"})
 	if err != nil {
 		t.Error(err)
 	}
-	err = client.DeleteRepo(&DeleteRepoInput{RepoName: "src_repo"})
+	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: "src_repo"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -586,7 +662,7 @@ func TestTransform(t *testing.T) {
 
 func TestExport(t *testing.T) {
 	repoName := "repo_for_export"
-	createRepoInput := &CreateRepoInput{
+	createRepoInput := &pipeline.CreateRepoInput{
 		RepoName: repoName,
 		Schema:   defaultRepoSchema,
 		Region:   "nb",
@@ -596,11 +672,11 @@ func TestExport(t *testing.T) {
 		t.Error(err)
 	}
 
-	exports := []CreateExportInput{
-		CreateExportInput{
+	exports := []pipeline.CreateExportInput{
+		pipeline.CreateExportInput{
 			RepoName:   repoName,
 			ExportName: "tsdb_export",
-			Spec: &ExportTsdbSpec{
+			Spec: &pipeline.ExportTsdbSpec{
 				DestRepoName: "tsdb_dest_repo",
 				SeriesName:   "series",
 				Tags:         map[string]string{"tag1": "#f1"},
@@ -608,19 +684,19 @@ func TestExport(t *testing.T) {
 			},
 			Whence: "oldest",
 		},
-		CreateExportInput{
+		pipeline.CreateExportInput{
 			RepoName:   repoName,
 			ExportName: "lg_export",
-			Spec: &ExportLogDBSpec{
+			Spec: &pipeline.ExportLogDBSpec{
 				DestRepoName: "lg_dest_repo",
 				Doc:          map[string]interface{}{"f1": "#f1"},
 			},
 			Whence: "newest",
 		},
-		CreateExportInput{
+		pipeline.CreateExportInput{
 			RepoName:   repoName,
 			ExportName: "mongo_export",
-			Spec: &ExportMongoSpec{
+			Spec: &pipeline.ExportMongoSpec{
 				Host:     "10.200.20.23:27017",
 				DbName:   "test",
 				CollName: "my_coll",
@@ -628,10 +704,10 @@ func TestExport(t *testing.T) {
 				Doc:      map[string]interface{}{"f1": "#f1"},
 			},
 		},
-		CreateExportInput{
+		pipeline.CreateExportInput{
 			RepoName:   repoName,
 			ExportName: "kodo_export",
-			Spec: &ExportKodoSpec{
+			Spec: &pipeline.ExportKodoSpec{
 				Bucket:         "mybucket",
 				KeyPrefix:      "export_prefix_",
 				Fields:         map[string]string{"field1": "#f1", "field2": "#f2"},
@@ -643,10 +719,10 @@ func TestExport(t *testing.T) {
 				Retention:      3,
 			},
 		},
-		CreateExportInput{
+		pipeline.CreateExportInput{
 			RepoName:   repoName,
 			ExportName: "http_export",
-			Spec: &ExportHttpSpec{
+			Spec: &pipeline.ExportHttpSpec{
 				Host: "http://qiniu.com",
 				Uri:  "/resource",
 			},
@@ -659,7 +735,7 @@ func TestExport(t *testing.T) {
 			t.Errorf("export: %s create failed, err: %v", export.ExportName, err)
 		}
 
-		getExportInput := &GetExportInput{
+		getExportInput := &pipeline.GetExportInput{
 			RepoName:   export.RepoName,
 			ExportName: export.ExportName,
 		}
@@ -678,7 +754,7 @@ func TestExport(t *testing.T) {
 		}
 	}
 
-	listExportsOutput, err := client.ListExports(&ListExportsInput{RepoName: repoName})
+	listExportsOutput, err := client.ListExports(&pipeline.ListExportsInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -690,7 +766,7 @@ func TestExport(t *testing.T) {
 	}
 
 	for _, export := range exports {
-		deleteExportInput := &DeleteExportInput{
+		deleteExportInput := &pipeline.DeleteExportInput{
 			RepoName:   export.RepoName,
 			ExportName: export.ExportName,
 		}
@@ -700,7 +776,7 @@ func TestExport(t *testing.T) {
 		}
 	}
 
-	err = client.DeleteRepo(&DeleteRepoInput{RepoName: repoName})
+	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -708,7 +784,7 @@ func TestExport(t *testing.T) {
 
 func TestPostDataWithToken(t *testing.T) {
 	repoName := "repo_post_data_with_token"
-	createInput := &CreateRepoInput{
+	createInput := &pipeline.CreateRepoInput{
 		RepoName: repoName,
 		Region:   "nb",
 		Schema:   defaultRepoSchema,
@@ -730,29 +806,29 @@ func TestPostDataWithToken(t *testing.T) {
 		t.Error(err)
 	}
 
-	cfg2 := NewConfig().WithEndpoint(endpoint)
+	cfg2 := pipeline.NewConfig().WithEndpoint(endpoint)
 
-	client2, err2 := New(cfg2)
+	client2, err2 := pipeline.New(cfg2)
 	if err2 != nil {
 		logger.Error("new pipeline client failed, err: %v", err2)
 	}
-	postDataInput := &PostDataInput{
+	postDataInput := &pipeline.PostDataInput{
 		RepoName: repoName,
-		Points: Points{
-			Point{
-				[]PointField{
-					PointField{
+		Points: pipeline.Points{
+			pipeline.Point{
+				[]pipeline.PointField{
+					pipeline.PointField{
 						Key:   "f1",
 						Value: 12.7,
 					},
-					PointField{
+					pipeline.PointField{
 						Key:   "f2",
 						Value: 1.0,
 					},
 				},
 			},
 		},
-		PipelineToken: PipelineToken{
+		PipelineToken: pipeline.PipelineToken{
 			Token: token,
 		},
 	}
@@ -781,7 +857,7 @@ func TestPostDataWithToken(t *testing.T) {
 		t.Errorf("expires token, expires: %d, now: %d", td.Expires, time.Now().Unix())
 	}
 
-	err = client.DeleteRepo(&DeleteRepoInput{RepoName: repoName})
+	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}

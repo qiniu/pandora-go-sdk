@@ -15,6 +15,7 @@ type Config struct {
 	ResponseTimeout  time.Duration
 	RequestRateLimit int64 //每秒请求数限制
 	FlowRateLimit    int64 //每秒流量限制(kb),若FlowRateLimit为100，则表示限速100KB/s
+	Gzip             bool
 }
 
 const (
@@ -66,5 +67,10 @@ func (c *Config) WithRequestRateLimit(limit int64) *Config {
 
 func (c *Config) WithFlowRateLimit(limit int64) *Config {
 	c.FlowRateLimit = limit
+	return c
+}
+
+func (c *Config) WithGzipData(enable bool) *Config {
+	c.Gzip = enable
 	return c
 }

@@ -174,7 +174,7 @@ func (r *Request) SetVariantBody(v interface{}) error {
 
 func (r *Request) SetReaderBody(reader io.ReadSeeker) (err error) {
 	reader.Seek(0, 0)
-	if r.Config.Gzip {
+	if r.Config.Gzip && r.Operation.Name == base.OpPostData {
 		var buf bytes.Buffer
 		g := gzip.NewWriter(&buf)
 		_, err = io.Copy(g, reader)

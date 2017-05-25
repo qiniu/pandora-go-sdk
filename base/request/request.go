@@ -2,6 +2,7 @@ package request
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/json"
@@ -171,10 +172,25 @@ func (r *Request) SetVariantBody(v interface{}) error {
 	return nil
 }
 
-func (r *Request) SetReaderBody(reader io.ReadSeeker) {
+func (r *Request) SetReaderBody(reader io.ReadSeeker) (err error) {
 	reader.Seek(0, 0)
+	if r.Config.Gzip {
+		var buf bytes.Buffer
+		g := gzip.NewWriter(&buf)
+		_, err = io.Copy(g, reader)
+		if err != nil {
+			return
+		}
+		if err = g.Close(); err != nil {
+			return
+		}
+		r.SetHeader("Content-Encoding", "gzip")
+		r.bodyLength = int64(buf.Len())
+		reader = bytes.NewReader(buf.Bytes())
+	}
 	r.HTTPRequest.Body = newOffsetReader(reader, 0)
 	r.Body = reader
+	return
 }
 
 func (r *Request) EnableContentMD5d() {

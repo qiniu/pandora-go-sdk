@@ -19,7 +19,8 @@ type LogdbToken struct {
 const (
 	schemaKeyPattern = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
 	repoNamePattern  = "^[a-z][a-z0-9_]{0,127}$"
-	retentionPattern = "^(-1|0|[1-9][0-9]*)d$"
+	retentionPattern = "^(0|[1-9][0-9]*)d$"
+	noRetentionRepo  = "-1"
 )
 
 const (
@@ -360,6 +361,9 @@ func (r *CreateRepoInput) Validate() (err error) {
 }
 
 func checkRetention(retention string) error {
+	if retention == noRetentionRepo {
+		return nil
+	}
 	matched, err := regexp.MatchString(retentionPattern, retention)
 	if err != nil {
 		return reqerr.NewInvalidArgs("Retention", "parse retention time failed")

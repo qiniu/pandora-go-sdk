@@ -206,3 +206,10 @@ func Test_convertDSL(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckRetention(t *testing.T) {
+	fullTextSearch := noRetentionRepo
+	if err := checkRetention(fullTextSearch); err != nil {
+		t.Error(err)
+	}
+}

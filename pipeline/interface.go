@@ -61,6 +61,8 @@ type PipelineAPI interface {
 
 	CreateExport(*CreateExportInput) error
 
+	UpdateExport(*UpdateExportInput) error
+
 	GetExport(*GetExportInput) (*GetExportOutput, error)
 
 	ListExports(*ListExportsInput) (*ListExportsOutput, error)

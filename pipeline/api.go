@@ -285,6 +285,17 @@ func (c *Pipeline) CreateExport(input *CreateExportInput) (err error) {
 	return req.Send()
 }
 
+func (c *Pipeline) UpdateExport(input *UpdateExportInput) (err error) {
+	op := c.newOperation(base.OpUpdateExport, input.RepoName, input.ExportName)
+
+	req := c.newRequest(op, input.Token, nil)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	return req.Send()
+}
+
 func (c *Pipeline) ListExports(input *ListExportsInput) (output *ListExportsOutput, err error) {
 	op := c.newOperation(base.OpListExports, input.RepoName)
 

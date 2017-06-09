@@ -35,6 +35,7 @@ const (
 	OpListTransforms   string = "ListTransform"
 	OpDeleteTransform  string = "DeleteTransform"
 	OpCreateExport     string = "CreateExport"
+	OpUpdateExport     string = "UpdateExport"
 	OpGetExport        string = "GetExport"
 	OpListExports      string = "ListExport"
 	OpDeleteExport     string = "DeleteExport"

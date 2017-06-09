@@ -2,15 +2,14 @@ package pipeline
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
 
-	"fmt"
-
-	. "github.com/qiniu/pandora-go-sdk/base"
+	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	"github.com/qiniu/pandora-go-sdk/pipeline"
@@ -23,19 +22,19 @@ var (
 	endpoint          = os.Getenv("PIPELINE_HOST")
 	ak                = os.Getenv("ACCESS_KEY")
 	sk                = os.Getenv("SECRET_KEY")
-	logger            Logger
+	logger            base.Logger
 	defaultRepoSchema []pipeline.RepoSchemaEntry
 	defaultContainer  *pipeline.Container
 )
 
 func init() {
 	var err error
-	logger = NewDefaultLogger()
+	logger = base.NewDefaultLogger()
 	cfg = pipeline.NewConfig().
 		WithEndpoint(endpoint).
 		WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
-		WithLoggerLevel(LogDebug)
+		WithLoggerLevel(base.LogDebug)
 
 	client, err = pipeline.New(cfg)
 	if err != nil {
@@ -386,7 +385,7 @@ func TestPostDataRequstLimiter(t *testing.T) {
 		WithEndpoint(endpoint).
 		WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
-		WithLoggerLevel(LogDebug).
+		WithLoggerLevel(base.LogDebug).
 		WithFlowRateLimit(10)
 	nclient, err := pipeline.New(ncfg)
 	if err != nil {
@@ -446,7 +445,7 @@ func TestPostDataGzip(t *testing.T) {
 		WithEndpoint(endpoint).
 		WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
-		WithLoggerLevel(LogDebug).
+		WithLoggerLevel(base.LogDebug).
 		WithFlowRateLimit(1)
 	nclient, err := pipeline.New(ncfg)
 	if err != nil {
@@ -492,7 +491,7 @@ func TestPostDataGzip(t *testing.T) {
 		WithEndpoint(endpoint).
 		WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
-		WithLoggerLevel(LogDebug).
+		WithLoggerLevel(base.LogDebug).
 		WithFlowRateLimit(1).WithGzipData(true)
 	nclient1, err := pipeline.New(ncfg1)
 	if err != nil {
@@ -729,6 +728,10 @@ func TestExport(t *testing.T) {
 		},
 	}
 
+	newspec := &pipeline.ExportLogDBSpec{
+		DestRepoName: "lg_dest_repo",
+		Doc:          map[string]interface{}{"f1": "#f1", "f2": "#f2"},
+	}
 	for _, export := range exports {
 		err = client.CreateExport(&export)
 		if err != nil {
@@ -751,6 +754,23 @@ func TestExport(t *testing.T) {
 		}
 		if getExportOutput.Whence != export.Whence {
 			t.Errorf("whence %s is different to expected whence %s", getExportOutput.Whence, export.Whence)
+		}
+		if export.ExportName == "lg_export" {
+			err = client.UpdateExport(&pipeline.UpdateExportInput{
+				RepoName:   export.RepoName,
+				ExportName: export.ExportName,
+				Spec:       newspec,
+			})
+			if err != nil {
+				t.Error(err)
+			}
+			getExportOutput, err = client.GetExport(getExportInput)
+			if err != nil {
+				t.Error(err)
+			}
+			if !reflect.DeepEqual(getExportOutput.Spec, newspec) {
+				t.Error("Update export error")
+			}
 		}
 	}
 
@@ -795,7 +815,7 @@ func TestPostDataWithToken(t *testing.T) {
 		t.Error(err)
 	}
 
-	td := &TokenDesc{}
+	td := &base.TokenDesc{}
 	td.Expires = time.Now().Unix() + 10
 	td.Method = "POST"
 	td.Url = "/v2/repos/repo_post_data_with_token/data"

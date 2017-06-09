@@ -124,6 +124,8 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodDelete, "/v2/repos/%s/transforms/%s"
 	case base.OpCreateExport:
 		method, urlTmpl = base.MethodPost, "/v2/repos/%s/exports/%s"
+	case base.OpUpdateExport:
+		method, urlTmpl = base.MethodPut, "/v2/repos/%s/exports/%s"
 	case base.OpListExports:
 		method, urlTmpl = base.MethodGet, "/v2/repos/%s/exports"
 	case base.OpGetExport:

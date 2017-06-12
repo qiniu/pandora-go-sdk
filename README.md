@@ -1,5 +1,4 @@
 # Pandora SDK
-===
 
 [![Qiniu Logo](http://qiniutek.com/images/logo-2.png)](http://qiniu.com/)
 
@@ -63,8 +62,10 @@ func main() {
 ```
 上面是一个简单但是可以运行的代码片段，展示了一个最简单的场景，接下来我们将逐步的介绍如何借助SDK本身的一些基础设置更好的使用。
 
-##pandora sdk提供的基础设施
-###签名
+## pandora sdk提供的基础设施
+
+### 签名
+
 Pandora SDK封装了签名逻辑，用户无需手动计算签名，避免大量重复无意义的工作。签名的方式分为以下两种：
 
 ```
@@ -73,7 +74,7 @@ Pandora SDK封装了签名逻辑，用户无需手动计算签名，避免大量
 ```
 由于token签名方式较为复杂，因此这里做一些详述。
 
-首先，为什么要有token，其实这是一种保护用户主AK/SK的方式，加入用户有1000台设备，或者在某个手机app上要向pipeline打点，但是把自己的AK/SK分发出来的风险是极高的，因此设置过期时间之后签发一批token，设备或者手机app拿着签发出来的token在过期时间之内都可以访问pipeline，既能保护AK/SK，也可以防止token一直被使用而泄露权限。
+首先，为什么要有token，其实这是一种保护用户主AK/SK的方式，假如用户有1000台设备，或者在某个手机app上要向pipeline打点，但是把自己的AK/SK分发出来的风险是极高的，因此设置过期时间之后签发一批token，设备或者手机app拿着签发出来的token在过期时间之内都可以访问pipeline，既能保护AK/SK，也可以防止token一直被使用而泄露权限。
 
 我们要使用token，必须借助于一个定义于token.go里面的辅助结构体TokenDesc，它的定义如下：
 
@@ -126,9 +127,10 @@ if err != nil {
     log.Println(err)
 }
 ```
-上面的代码里面我们清楚地看到由client签发出一个token，然后交给client2来使用，token在签发的时候设置了一些条件，比如过期时间用来限定token何时过期，而其他的字段如method、url等等是对这个请求本身的一些描述。具体的签名规则相关的东西建议参考[签名规则](https://github.com/qbox/streaming/blob/develop/src/qiniu.com/streaming.v2/Qiniu%20Pipeline%E7%AD%BE%E5%90%8D%E8%A7%84%E5%88%99.md)的说明。
+上面的代码里面我们清楚地看到由client签发出一个token，然后交给client2来使用，token在签发的时候设置了一些条件，比如过期时间用来限定token何时过期，而其他的字段如method、url等等是对这个请求本身的一些描述。
 
-###Error
+### Error
+
 Pandora SDK中封装了RequestError，来表示服务端返回的错误，方便用户快速得到出错的详细信息。
 RequestError的定义如下：
 
@@ -197,16 +199,19 @@ default:
 ```
 可以看到由于提供了详尽的错误类型，所以用户可以方便的定位问题并采取对应的处理，不必去根据返回的body判断错误类型，摆脱对low level信息的判断和处理。
 当然，如果用户觉得这些额外提供的错误类型太过于繁琐，那么可以把返回的错误当成普通的error来处理也没有任何问题。
-###API封装
+
+### API封装
+
 Pandora SDK提供了对所有核心API的封装，各个接口的输入类型定义在pipeline/tsdb/logdb目录下的models.go里面，结构体的定义和API的定义是接近的，具体的可以参考[Pandora产品文档](https://pandora-docs.qiniu.com/)和sample目录下的示例代码，此处不再赘述。
 
-##使用原则
+## 使用原则
 1. 所有接口调用均遵循“没有消息就是好消息”的原则，返回的error如果是nil，那么表明调用成功；
 2. 当请求出错的时候尽可能的将error转换为RequestError或者它的派生错误类型，既可以快速定位错误类型，又可以获取到RequestId，便于服务端定位问题；
 3. 在client实例上调用任何接口都是天然支持并发的，无需使用同步机制。
 
 
-##FAQ
+## FAQ
+
 1. Q: SDK提供了token签名方式，怎么使用？
 
    A: 每一个接口的输入，例如`CreateRepoInput`中有一个`PipelineToken`的结构，包含了一个`Token`字段，是一个字符串，当此字段为空的时候表示使用AK/SK签名，不为空的时候使用字符串的值作为token进行访问。

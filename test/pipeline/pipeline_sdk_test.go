@@ -3,6 +3,7 @@ package pipeline
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"sync"
@@ -367,6 +368,71 @@ func TestPostData(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestPostDataSchemaLess(t *testing.T) {
+	repoName := "repo_post_data_schemaless"
+	var err error
+
+	postDataInput := &pipeline.SchemaFreeInput{
+		RepoName: repoName,
+		Datas: pipeline.Datas{
+			pipeline.Data{
+				"f1": "12.7",
+				"f2": 1.0,
+				"f4": 123,
+				"f5": true,
+			},
+		},
+	}
+	schemas, err := client.PostDataSchemaFree(postDataInput)
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println(schemas)
+	postDataInput = &pipeline.SchemaFreeInput{
+		RepoName: repoName,
+		Datas: pipeline.Datas{
+			pipeline.Data{
+				"f1": "12.7",
+				"f3": map[string]interface{}{
+					"hello": "123",
+				},
+			},
+		},
+	}
+	schemas, err = client.PostDataSchemaFree(postDataInput)
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println(schemas)
+	postDataInput = &pipeline.SchemaFreeInput{
+		RepoName: repoName,
+		Datas: pipeline.Datas{
+			pipeline.Data{
+				"f1": "12.7",
+				"f3": map[string]interface{}{
+					"hello": "123",
+					"ketty": 1.23,
+				},
+			},
+		},
+	}
+	schemas, err = client.PostDataSchemaFree(postDataInput)
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println(schemas)
+	repo, err := client.GetRepo(&pipeline.GetRepoInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println(repo.Schema)
 
 	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
 	if err != nil {

@@ -33,6 +33,8 @@ type PipelineAPI interface {
 
 	PostData(*PostDataInput) error
 
+	PostDataSchemaFree(input *SchemaFreeInput) (map[string]RepoSchemaEntry, error)
+
 	PostDataFromFile(*PostDataFromFileInput) error
 
 	PostDataFromReader(*PostDataFromReaderInput) error
@@ -102,6 +104,10 @@ type PipelineAPI interface {
 	RetrieveSchema(*RetrieveSchemaInput) (*RetrieveSchemaOutput, error)
 
 	MakeToken(*base.TokenDesc) (string, error)
+
+	GetDefault(RepoSchemaEntry) interface{}
+
+	GetUpdateSchemas(string) (map[string]RepoSchemaEntry, error)
 
 	Close() error
 }

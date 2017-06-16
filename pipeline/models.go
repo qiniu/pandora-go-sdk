@@ -18,6 +18,11 @@ type PipelineToken struct {
 	Token string `json:"-"`
 }
 
+const defaultRegion = "nb"
+
+//PandoraMaxBatchSize 发送到Pandora的batch限制
+var PandoraMaxBatchSize = 2 * 1024 * 1024
+
 const (
 	schemaKeyPattern      = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
 	groupNamePattern      = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
@@ -30,14 +35,28 @@ const (
 	pluginNamePattern     = "^[a-zA-Z][a-zA-Z0-9_\\.]{0,127}[a-zA-Z0-9_]$"
 )
 
+//Pandora Types
+const (
+	PandoraTypeLong   = "long"
+	PandoraTypeFloat  = "float"
+	PandoraTypeString = "string"
+	PandoraTypeDate   = "date"
+	PandoraTypeBool   = "boolean"
+	PandoraTypeArray  = "array"
+	PandoraTypeMap    = "map"
+)
+
+type Data map[string]interface{}
+type Datas []Data
+
 var schemaTypes = map[string]bool{
-	"float":   true,
-	"string":  true,
-	"long":    true,
-	"date":    true,
-	"array":   true,
-	"map":     true,
-	"boolean": true,
+	PandoraTypeFloat:  true,
+	PandoraTypeString: true,
+	PandoraTypeLong:   true,
+	PandoraTypeDate:   true,
+	PandoraTypeArray:  true,
+	PandoraTypeMap:    true,
+	PandoraTypeBool:   true,
 }
 
 func validateGroupName(g string) error {
@@ -262,12 +281,12 @@ func (e *RepoSchemaEntry) Validate() (err error) {
 		return
 	}
 	if e.ValueType == "array" {
-		if e.ElemType != "float" && e.ElemType != "long" && e.ElemType != "string" {
+		if e.ElemType != PandoraTypeFloat && e.ElemType != PandoraTypeLong && e.ElemType != PandoraTypeString {
 			err = reqerr.NewInvalidArgs("Schema", fmt.Sprintf("invalid field type in array: %s, field type should be one of \"float\", \"string\", and \"long\"", e.ValueType))
 			return
 		}
 	}
-	if e.ValueType == "map" {
+	if e.ValueType == PandoraTypeMap {
 		for _, ns := range e.Schema {
 			if err = ns.Validate(); err != nil {
 				return
@@ -301,20 +320,20 @@ func getRawType(tp string) (schemaType string, err error) {
 	schemaType = strings.ToLower(tp)
 	switch schemaType {
 	case "l", "long":
-		schemaType = "long"
+		schemaType = PandoraTypeLong
 	case "f", "float":
-		schemaType = "float"
+		schemaType = PandoraTypeFloat
 	case "s", "string":
-		schemaType = "string"
+		schemaType = PandoraTypeString
 	case "d", "date":
-		schemaType = "date"
+		schemaType = PandoraTypeDate
 	case "a", "array":
 		err = errors.New("arrary type must specify data type surrounded by ( )")
 		return
 	case "m", "map":
-		schemaType = "map"
+		schemaType = PandoraTypeMap
 	case "b", "bool", "boolean":
-		schemaType = "boolean"
+		schemaType = PandoraTypeBool
 	case "": //这个是一种缺省
 	default:
 		err = fmt.Errorf("schema type %v not supperted", schemaType)
@@ -432,7 +451,7 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 					}
 					if key != "" {
 						if valueType == "" {
-							valueType = "string"
+							valueType = PandoraTypeString
 						}
 						schemas = append(schemas, RepoSchemaEntry{
 							Key:       key,
@@ -566,6 +585,18 @@ type Point struct {
 	Fields []PointField
 }
 
+func (p Point) ToString() (bs string) {
+	var buf bytes.Buffer
+	for _, field := range p.Fields {
+		buf.WriteString(field.String())
+	}
+	if len(p.Fields) > 0 {
+		buf.Truncate(buf.Len() - 1)
+	}
+	buf.WriteByte('\n')
+	return buf.String()
+}
+
 type Points []Point
 
 func (ps Points) Buffer() []byte {
@@ -606,6 +637,13 @@ type PostDataInput struct {
 	PipelineToken
 	RepoName string
 	Points   Points
+}
+
+type SchemaFreeInput struct {
+	PipelineToken
+	RepoName string
+	Datas    Datas
+	NoUpdate bool
 }
 
 type PostDataFromFileInput struct {
@@ -1461,4 +1499,32 @@ type DeleteJobExportInput struct {
 	PipelineToken
 	JobName    string
 	ExportName string
+}
+
+//SendErrorType 表达是否需要外部对数据做特殊处理
+type SendErrorType string
+
+const (
+	TypeDefault = SendErrorType("")
+	//TypeBinaryUnpack 表示外部需要进一步二分数据
+	TypeBinaryUnpack = SendErrorType("Data Need Binary Unpack")
+)
+
+type SendError struct {
+	failDatas []Data
+	msg       string
+	ErrorType SendErrorType
+}
+
+func NewSendError(msg string, failDatas []Data, eType SendErrorType) *SendError {
+	se := SendError{
+		msg:       msg,
+		failDatas: failDatas,
+		ErrorType: eType,
+	}
+	return &se
+}
+
+func (e *SendError) Error() string {
+	return fmt.Sprintf("SendError: %v, failDatas size : %v", e.msg, len(e.failDatas))
 }

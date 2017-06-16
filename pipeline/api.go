@@ -1,10 +1,12 @@
 package pipeline
 
 import (
+	"bytes"
 	"net/url"
 	"os"
 
 	"github.com/qiniu/pandora-go-sdk/base"
+	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 )
 
 func (c *Pipeline) CreateGroup(input *CreateGroupInput) (err error) {
@@ -70,6 +72,9 @@ func (c *Pipeline) CreateRepo(input *CreateRepoInput) (err error) {
 	op := c.newOperation(base.OpCreateRepo, input.RepoName)
 
 	req := c.newRequest(op, input.Token, nil)
+	if input.Region == "" {
+		input.Region = c.defaultRegion
+	}
 	if err = req.SetVariantBody(input); err != nil {
 		return
 	}
@@ -92,6 +97,10 @@ func (c *Pipeline) CreateRepoFromDSL(input *CreateRepoDSLInput) (err error) {
 }
 
 func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
+	err = c.getSchemaSorted(input)
+	if err != nil {
+		return
+	}
 	op := c.newOperation(base.OpUpdateRepo, input.RepoName)
 
 	req := c.newRequest(op, input.Token, nil)
@@ -134,6 +143,78 @@ func (c *Pipeline) PostData(input *PostDataInput) (err error) {
 	req.SetFlowLimiter(c.flowLimit)
 	req.SetReqLimiter(c.reqLimit)
 	return req.Send()
+}
+
+type pointContext struct {
+	datas  []Data
+	inputs *PostDataFromBytesInput
+}
+
+func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err error) {
+	packages = []pointContext{}
+	var buf bytes.Buffer
+	var start = 0
+	for i, d := range input.Datas {
+		point, err := c.generatePoint(input.RepoName, d, !input.NoUpdate)
+		if err != nil {
+			return nil, err
+		}
+		pointString := point.ToString()
+		// 当buf中有数据，并且加入该条数据后就超过了最大的限制，则提交这个input
+		if start < i && buf.Len() > 0 && buf.Len()+len(pointString) >= PandoraMaxBatchSize {
+			packages = append(packages, pointContext{
+				datas: input.Datas[start:i],
+				inputs: &PostDataFromBytesInput{
+					RepoName: input.RepoName,
+					Buffer:   buf.Bytes(),
+				},
+			})
+			buf.Reset()
+			start = i
+		}
+		buf.WriteString(pointString)
+	}
+	packages = append(packages, pointContext{
+		datas: input.Datas[start:],
+		inputs: &PostDataFromBytesInput{
+			RepoName: input.RepoName,
+			Buffer:   buf.Bytes(),
+		},
+	})
+	return
+}
+
+// PostDataSchemaFree 会更新schema，newSchemas不为nil时就表示更新了，error与否不影响
+func (c *Pipeline) PostDataSchemaFree(input *SchemaFreeInput) (newSchemas map[string]RepoSchemaEntry, err error) {
+	contexts, err := c.unpack(input)
+	if err != nil {
+		err = NewSendError("Cannot send data to pandora, "+err.Error(), input.Datas, TypeDefault)
+		return
+	}
+	failDatas := Datas{}
+	errType := TypeDefault
+	var lastErr error
+	c.repoSchemaMux.Lock()
+	newSchemas = c.repoSchemas[input.RepoName]
+	c.repoSchemaMux.Unlock()
+	for _, pContext := range contexts {
+		err := c.PostDataFromBytes(pContext.inputs)
+		if err != nil {
+			reqErr, ok := err.(*reqerr.RequestError)
+			if ok {
+				switch reqErr.ErrorType {
+				case reqerr.InvalidDataSchemaError, reqerr.EntityTooLargeError:
+					errType = TypeBinaryUnpack
+				}
+			}
+			failDatas = append(failDatas, pContext.datas...)
+			lastErr = err
+		}
+	}
+	if len(failDatas) > 0 {
+		err = NewSendError("Cannot send data to pandora, "+lastErr.Error(), failDatas, errType)
+	}
+	return
 }
 
 func (c *Pipeline) PostDataFromFile(input *PostDataFromFileInput) (err error) {
@@ -472,4 +553,26 @@ func (c *Pipeline) RetrieveSchema(input *RetrieveSchemaInput) (output *RetrieveS
 
 func (c *Pipeline) MakeToken(desc *base.TokenDesc) (string, error) {
 	return base.MakeTokenInternal(c.Config.Ak, c.Config.Sk, desc)
+}
+
+func (c *Pipeline) GetDefault(entry RepoSchemaEntry) interface{} {
+	return getDefault(entry)
+}
+
+func (c *Pipeline) GetUpdateSchemas(repoName string) (schemas map[string]RepoSchemaEntry, err error) {
+	repo, err := c.GetRepo(&GetRepoInput{
+		RepoName: repoName,
+	})
+
+	if err != nil {
+		return
+	}
+	schemas = make(map[string]RepoSchemaEntry)
+	for _, sc := range repo.Schema {
+		schemas[sc.Key] = sc
+	}
+	c.repoSchemaMux.Lock()
+	c.repoSchemas[repoName] = schemas
+	c.repoSchemaMux.Unlock()
+	return
 }

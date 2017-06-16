@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/qiniu/pandora-go-sdk/base"
@@ -16,11 +17,16 @@ import (
 var builder errBuilder
 
 type Pipeline struct {
-	Config     *config.Config
-	HTTPClient *http.Client
-	reqLimit   *ratelimit.Limiter
-	flowLimit  *ratelimit.Limiter
+	Config        *config.Config
+	HTTPClient    *http.Client
+	reqLimit      *ratelimit.Limiter
+	flowLimit     *ratelimit.Limiter
+	repoSchemas   map[string]RepoSchema
+	repoSchemaMux sync.Mutex
+	defaultRegion string
 }
+
+type RepoSchema map[string]RepoSchemaEntry
 
 func NewConfig() *config.Config {
 	return config.NewConfig()
@@ -65,8 +71,11 @@ func newClient(c *config.Config) (p *Pipeline, err error) {
 	}
 
 	p = &Pipeline{
-		Config:     c,
-		HTTPClient: &http.Client{Transport: t},
+		Config:        c,
+		HTTPClient:    &http.Client{Transport: t},
+		repoSchemas:   make(map[string]RepoSchema),
+		repoSchemaMux: sync.Mutex{},
+		defaultRegion: defaultRegion,
 	}
 	if c.RequestRateLimit > 0 {
 		p.reqLimit = ratelimit.NewLimiter(c.RequestRateLimit)

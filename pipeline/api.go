@@ -184,15 +184,23 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 	return
 }
 
+func convertDatas(datas Datas) []map[string]interface{} {
+	cdatas := make([]map[string]interface{}, 0)
+	for _, v := range datas {
+		cdatas = append(cdatas, map[string]interface{}(v))
+	}
+	return cdatas
+}
+
 // PostDataSchemaFree 会更新schema，newSchemas不为nil时就表示更新了，error与否不影响
 func (c *Pipeline) PostDataSchemaFree(input *SchemaFreeInput) (newSchemas map[string]RepoSchemaEntry, err error) {
 	contexts, err := c.unpack(input)
 	if err != nil {
-		err = NewSendError("Cannot send data to pandora, "+err.Error(), input.Datas, TypeDefault)
+		err = reqerr.NewSendError("Cannot send data to pandora, "+err.Error(), convertDatas(input.Datas), reqerr.TypeDefault)
 		return
 	}
 	failDatas := Datas{}
-	errType := TypeDefault
+	errType := reqerr.TypeDefault
 	var lastErr error
 	c.repoSchemaMux.Lock()
 	newSchemas = c.repoSchemas[input.RepoName]
@@ -204,7 +212,7 @@ func (c *Pipeline) PostDataSchemaFree(input *SchemaFreeInput) (newSchemas map[st
 			if ok {
 				switch reqErr.ErrorType {
 				case reqerr.InvalidDataSchemaError, reqerr.EntityTooLargeError:
-					errType = TypeBinaryUnpack
+					errType = reqerr.TypeBinaryUnpack
 				}
 			}
 			failDatas = append(failDatas, pContext.datas...)
@@ -212,7 +220,7 @@ func (c *Pipeline) PostDataSchemaFree(input *SchemaFreeInput) (newSchemas map[st
 		}
 	}
 	if len(failDatas) > 0 {
-		err = NewSendError("Cannot send data to pandora, "+lastErr.Error(), failDatas, errType)
+		err = reqerr.NewSendError("Cannot send data to pandora, "+lastErr.Error(), convertDatas(failDatas), errType)
 	}
 	return
 }

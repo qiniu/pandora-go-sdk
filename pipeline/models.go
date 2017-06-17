@@ -1500,31 +1500,3 @@ type DeleteJobExportInput struct {
 	JobName    string
 	ExportName string
 }
-
-//SendErrorType 表达是否需要外部对数据做特殊处理
-type SendErrorType string
-
-const (
-	TypeDefault = SendErrorType("")
-	//TypeBinaryUnpack 表示外部需要进一步二分数据
-	TypeBinaryUnpack = SendErrorType("Data Need Binary Unpack")
-)
-
-type SendError struct {
-	failDatas []Data
-	msg       string
-	ErrorType SendErrorType
-}
-
-func NewSendError(msg string, failDatas []Data, eType SendErrorType) *SendError {
-	se := SendError{
-		msg:       msg,
-		failDatas: failDatas,
-		ErrorType: eType,
-	}
-	return &se
-}
-
-func (e *SendError) Error() string {
-	return fmt.Sprintf("SendError: %v, failDatas size : %v", e.msg, len(e.failDatas))
-}

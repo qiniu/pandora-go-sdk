@@ -73,65 +73,6 @@ func writeToFile(path string, content []byte, t *testing.T) {
 	}
 }
 
-func TestGroup(t *testing.T) {
-	groupName := "group"
-	createInput := &pipeline.CreateGroupInput{
-		GroupName:       groupName,
-		Container:       defaultContainer,
-		Region:          region,
-		AllocateOnStart: false,
-	}
-	err := client.CreateGroup(createInput)
-	if err != nil {
-		t.Error(err)
-	}
-
-	getOutput, err := client.GetGroup(&pipeline.GetGroupInput{GroupName: groupName})
-	if err != nil {
-		t.Error(err)
-	}
-	if getOutput == nil {
-		t.Errorf("get output should not be empty")
-	}
-
-	if getOutput.Region != region {
-		t.Errorf("region of group should be nb")
-	}
-	if getOutput.Container.Count != defaultContainer.Count ||
-		getOutput.Container.Type != defaultContainer.Type {
-		t.Errorf("container of group %v should equal to default container %v", getOutput.Container, defaultContainer)
-	}
-	if getOutput.CreateTime == "" || getOutput.UpdateTime == "" {
-		t.Errorf("create time and update time should not be empty")
-	}
-
-	listOutput, err := client.ListGroups(&pipeline.ListGroupsInput{})
-	if err != nil {
-		t.Error(err)
-	}
-	if listOutput == nil {
-		t.Error("listOutput should not be empty")
-	}
-	if len(listOutput.Groups) != 1 {
-		t.Errorf("group count should be 1 but %d", len(listOutput.Groups))
-	}
-
-	err = client.StartGroupTask(&pipeline.StartGroupTaskInput{GroupName: groupName})
-	if err != nil {
-		t.Error(err)
-	}
-
-	err = client.StopGroupTask(&pipeline.StopGroupTaskInput{GroupName: groupName})
-	if err != nil {
-		t.Error(err)
-	}
-
-	err = client.DeleteGroup(&pipeline.DeleteGroupInput{GroupName: groupName})
-	if err != nil {
-		t.Error(err)
-	}
-}
-
 func TestRepo(t *testing.T) {
 	repoName := "repo"
 	createInput := &pipeline.CreateRepoInput{

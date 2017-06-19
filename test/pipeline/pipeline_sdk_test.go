@@ -74,7 +74,7 @@ func writeToFile(path string, content []byte, t *testing.T) {
 }
 
 func TestRepo(t *testing.T) {
-	repoName := "repo"
+	repoName := "sdk_test_repo"
 	createInput := &pipeline.CreateRepoInput{
 		RepoName:  repoName,
 		Region:    region,
@@ -106,12 +106,6 @@ func TestRepo(t *testing.T) {
 	}
 	if listOutput == nil {
 		t.Error("repo list should not be empty")
-	}
-	if len(listOutput.Repos) != 1 {
-		t.Errorf("repo count should be 1 but %d", len(listOutput.Repos))
-	}
-	if listOutput.Repos[0].RepoName != "repo" {
-		t.Error("repo name is different to origin name")
 	}
 
 	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})

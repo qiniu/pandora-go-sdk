@@ -2,7 +2,6 @@ package logdb
 
 import (
 	"os"
-	"reflect"
 	"testing"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	. "github.com/qiniu/pandora-go-sdk/logdb"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -41,7 +41,7 @@ func init() {
 		RepoSchemaEntry{
 			Key:       "f1",
 			ValueType: "string",
-			SearchWay: "keyword",
+			Analyzer:  "standard",
 		},
 		RepoSchemaEntry{
 			Key:       "f2",
@@ -59,7 +59,7 @@ func init() {
 }
 
 func TestRepo(t *testing.T) {
-	repoName := "repo"
+	repoName := "repo_sdk_test"
 	createInput := &CreateRepoInput{
 		RepoName:  repoName,
 		Region:    region,
@@ -82,9 +82,7 @@ func TestRepo(t *testing.T) {
 	if region != getOutput.Region {
 		t.Errorf("unexpected region: %s", region)
 	}
-	if !reflect.DeepEqual(defaultRepoSchema, getOutput.Schema) {
-		t.Error("schema is different to default schema")
-	}
+	assert.Equal(t, defaultRepoSchema, getOutput.Schema)
 	if getOutput.Retention != "2d" {
 		t.Errorf("retention should be 2d but %s", getOutput.Retention)
 	}
@@ -108,10 +106,10 @@ func TestRepo(t *testing.T) {
 	if getOutput == nil {
 		t.Error("schema ret is empty")
 	}
-	if "nb" != getOutput.Region ||
-		!reflect.DeepEqual(defaultRepoSchema, getOutput.Schema) {
-		t.Error("spec is different to default spec")
+	if "nb" != getOutput.Region {
+		t.Error("region should be nb", getOutput.Region)
 	}
+	assert.Equal(t, defaultRepoSchema, getOutput.Schema)
 	if getOutput.Retention != "3d" {
 		t.Errorf("retention should be 3d but %s", getOutput.Retention)
 	}
@@ -122,9 +120,6 @@ func TestRepo(t *testing.T) {
 	}
 	if listOutput == nil {
 		t.Error("repo list should not be empty")
-	}
-	if len(listOutput.Repos) != 1 {
-		t.Errorf("repo count should be 1 but %d", len(listOutput.Repos))
 	}
 	if listOutput.Repos[0].RepoName != repoName {
 		t.Error("repo name is different to origin name")
@@ -192,6 +187,7 @@ func TestSendAndQueryLog(t *testing.T) {
 		time.Sleep(10 * time.Second)
 	}
 	endTime := time.Now().Unix() * 1000
+	time.Sleep(2 * time.Minute)
 
 	histogramInput := &QueryHistogramLogInput{
 		RepoName: repoName,
@@ -234,11 +230,11 @@ func TestSendAndQueryLog(t *testing.T) {
 	if len(queryOut.Data) != 20 {
 		t.Errorf("log count should be 20, but %d", len(queryOut.Data))
 	}
-
 	err = client.DeleteRepo(&DeleteRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}
+
 }
 
 func TestSendLogWithToken(t *testing.T) {
@@ -323,7 +319,7 @@ func TestSendLogWithToken(t *testing.T) {
 }
 
 func TestQueryLogWithHighlight(t *testing.T) {
-	repoName := "repo_send_log_with_highlight"
+	repoName := "test_sdk_repo_send_log_with_highlight"
 	createInput := &CreateRepoInput{
 		RepoName:  repoName,
 		Region:    region,
@@ -373,6 +369,7 @@ func TestQueryLogWithHighlight(t *testing.T) {
 			FragmentSize:      1,
 		},
 	}
+	time.Sleep(2 * time.Minute)
 	queryOut, err := client.QueryLog(queryInput)
 	if err != nil {
 		t.Error(err)

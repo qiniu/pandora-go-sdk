@@ -1,6 +1,4 @@
-# Pandora SDK
-
-[![Qiniu Logo](http://qiniutek.com/images/logo-2.png)](http://qiniu.com/)
+# Pandora SDK [![Qiniu Logo](http://qiniutek.com/images/logo-2.png)](http://qiniu.com/)
 
 # Pandora SDK使用说明
 

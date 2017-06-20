@@ -533,3 +533,44 @@ type GetRepoConfigInput struct {
 type GetRepoConfigOutput struct {
 	TimeFieldName string `json:"timeFieldName"`
 }
+
+
+
+type PartialQueryInput struct {
+	LogdbToken
+	RepoName string `json:"-"`
+	StartTime   int64    `json:"startTime"`
+	EndTime   int64 `json:"endTime"`
+	Highlight struct {
+		PostTag string `json:"post_tag,omitempty"`
+		PreTag  string `json:"pre_tag,omitempty"`
+	} `json:"highlight"`
+	QueryString string `json:"query_String"`
+	SearchType  int    `json:"searchType"`
+	Size        int    `json:"size"`
+	Sort        string `json:"sort"`
+}
+const (
+	PartialQuerySearchTypeA int = iota 		  //混合模式
+	PartialQuerySearchTypeQ                   //searching模式
+	PartialQuerySearchTypeH                   //直方图模式
+)
+func (partialQueryInput *PartialQueryInput) Buf() (buf []byte, err error) {
+	buf, err = json.Marshal(partialQueryInput)
+	if err != nil {
+		return
+	}
+	return
+}
+
+type PartialQueryOutput struct {
+	Buckets []struct {
+		Count int `json:"count"`
+		Key   int `json:"key"`
+	} `json:"buckets,omitempty"`
+	Hits []map[string]interface{} `json:"hits,omitempty"`
+	PartialSuccess bool `json:"partialSuccess"`
+	Process        int  `json:"process"`
+	Took           int  `json:"took"`
+	Total          int  `json:"total"`
+}

@@ -108,3 +108,16 @@ func (c *Logdb) QueryHistogramLog(input *QueryHistogramLogInput) (output *QueryH
 func (c *Logdb) MakeToken(desc *base.TokenDesc) (string, error) {
 	return base.MakeTokenInternal(c.Config.Ak, c.Config.Sk, desc)
 }
+
+func (c *Logdb) PartialQuery(input *PartialQueryInput)(output *PartialQueryOutput,err error){
+	op := c.newOperation(base.OpPartialQuery,input.RepoName)
+	output = &PartialQueryOutput{}
+	req := c.newRequest(op,input.Token,output)
+	buf, err := input.Buf()
+	if err != nil {
+		return
+	}
+	req.SetBufferBody(buf)
+	req.SetHeader(base.HTTPHeaderContentType,base.ContentTypeJson)
+	return output,req.Send()
+}

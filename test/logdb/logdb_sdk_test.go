@@ -10,6 +10,8 @@ import (
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	"github.com/qiniu/pandora-go-sdk/logdb"
 	"github.com/stretchr/testify/assert"
+	"fmt"
+	"encoding/json"
 )
 
 var (
@@ -387,6 +389,108 @@ func TestQueryLogWithHighlight(t *testing.T) {
 		t.Errorf("result don't contain highlight")
 	}
 
+	err = client.DeleteRepo(&logdb.DeleteRepoInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestPartialQuery(t *testing.T){
+	repoName := "repo_send_log"
+	createInput := &logdb.CreateRepoInput{
+		RepoName:  repoName,
+		Region:    region,
+		Schema:    defaultRepoSchema,
+		Retention: "2d",
+	}
+	err := client.CreateRepo(createInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	startTime := time.Now().Unix() * 1000
+	for i := 0; i < 5; i++ {
+		sendLogInput := &logdb.SendLogInput{
+			RepoName:       repoName,
+			OmitInvalidLog: false,
+			Logs: logdb.Logs{
+				logdb.Log{
+					"f1": "v11",
+					"f2": 1.0,
+					"f3": time.Now().UTC().Format(time.RFC3339),
+					"f4": 1312,
+				},
+				logdb.Log{
+					"f1": "v21",
+					"f2": 1.2,
+					"f3": time.Now().UTC().Format(time.RFC3339),
+					"f4": 3082,
+				},
+				logdb.Log{
+					"f1": "v31",
+					"f2": 0.0,
+					"f3": time.Now().UTC().Format(time.RFC3339),
+					"f4": 1,
+				},
+				logdb.Log{
+					"f1": "v41",
+					"f2": 0.3,
+					"f3": time.Now().UTC().Format(time.RFC3339),
+					"f4": 12345671,
+				},
+			},
+		}
+		sendOutput, err := client.SendLog(sendLogInput)
+		if err != nil {
+			t.Error(err)
+		}
+		if sendOutput.Success != 4 || sendOutput.Failed != 0 || sendOutput.Total != 4 {
+			t.Errorf("send log failed, success: %d, failed: %d, total: %d", sendOutput.Success, sendOutput.Failed, sendOutput.Total)
+		}
+	}
+	endTime := time.Now().Unix() * 1000
+	time.Sleep(3 * time.Minute)
+
+	queryInput := &logdb.PartialQueryInput{
+		RepoName:repoName,
+		StartTime:startTime,
+		EndTime:endTime,
+		QueryString:"f1:v11",
+		Size:1,
+		Sort:"f3",
+		SearchType:logdb.PartialQuerySearchTypeA,
+	}
+	queryInput.Highlight.PostTag="@test@"
+	queryInput.Highlight.PreTag = "@test/@"
+	queryOut,err := client.PartialQuery(queryInput)
+	if err!=nil{
+		t.Error(err)
+	}
+	bodystring,err := json.Marshal(queryOut)
+	if err!=nil{
+		t.Error(err)
+	}
+	fmt.Println(string(bodystring))
+	for queryOut.PartialSuccess == true  {
+		queryOut,err = client.PartialQuery(queryInput)
+		if err!=nil{
+			t.Error(err)
+		}
+		bodystring,err = json.Marshal(queryOut)
+		if err!=nil{
+			t.Error(err)
+		}
+		fmt.Println(string(bodystring))
+	}
+	if queryOut.Total != 5 {
+		t.Errorf("log count should be 5, but %d", queryOut.Total)
+	}
+	if queryOut.PartialSuccess != false {
+		t.Error("query partialSuccess should be false, but true")
+	}
+	if len(queryOut.Hits) != 1 {
+		t.Errorf("log count should be 1, but %d", len(queryOut.Hits))
+	}
 	err = client.DeleteRepo(&logdb.DeleteRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)

@@ -3,17 +3,17 @@ package logdb
 import (
 	"net/url"
 
-	. "github.com/qiniu/pandora-go-sdk/base"
+	"github.com/qiniu/pandora-go-sdk/base"
 )
 
 func (c *Logdb) CreateRepo(input *CreateRepoInput) (err error) {
-	op := c.newOperation(OpCreateRepo, input.RepoName)
+	op := c.newOperation(base.OpCreateRepo, input.RepoName)
 
 	req := c.newRequest(op, input.Token, nil)
 	if err = req.SetVariantBody(input); err != nil {
 		return
 	}
-	req.SetHeader(HTTPHeaderContentType, ContentTypeJson)
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
 	return req.Send()
 }
 
@@ -32,18 +32,18 @@ func (c *Logdb) CreateRepoFromDSL(input *CreateRepoDSLInput) (err error) {
 }
 
 func (c *Logdb) UpdateRepo(input *UpdateRepoInput) (err error) {
-	op := c.newOperation(OpUpdateRepo, input.RepoName)
+	op := c.newOperation(base.OpUpdateRepo, input.RepoName)
 
 	req := c.newRequest(op, input.Token, nil)
 	if err = req.SetVariantBody(input); err != nil {
 		return
 	}
-	req.SetHeader(HTTPHeaderContentType, ContentTypeJson)
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
 	return req.Send()
 }
 
 func (c *Logdb) GetRepo(input *GetRepoInput) (output *GetRepoOutput, err error) {
-	op := c.newOperation(OpGetRepo, input.RepoName)
+	op := c.newOperation(base.OpGetRepo, input.RepoName)
 
 	output = &GetRepoOutput{}
 	req := c.newRequest(op, input.Token, output)
@@ -51,7 +51,7 @@ func (c *Logdb) GetRepo(input *GetRepoInput) (output *GetRepoOutput, err error) 
 }
 
 func (c *Logdb) ListRepos(input *ListReposInput) (output *ListReposOutput, err error) {
-	op := c.newOperation(OpListRepos)
+	op := c.newOperation(base.OpListRepos)
 
 	output = &ListReposOutput{}
 	req := c.newRequest(op, input.Token, &output)
@@ -59,14 +59,14 @@ func (c *Logdb) ListRepos(input *ListReposInput) (output *ListReposOutput, err e
 }
 
 func (c *Logdb) DeleteRepo(input *DeleteRepoInput) (err error) {
-	op := c.newOperation(OpDeleteRepo, input.RepoName)
+	op := c.newOperation(base.OpDeleteRepo, input.RepoName)
 
 	req := c.newRequest(op, input.Token, nil)
 	return req.Send()
 }
 
 func (c *Logdb) SendLog(input *SendLogInput) (output *SendLogOutput, err error) {
-	op := c.newOperation(OpSendLog, input.RepoName, input.OmitInvalidLog)
+	op := c.newOperation(base.OpSendLog, input.RepoName, input.OmitInvalidLog)
 
 	output = &SendLogOutput{}
 	req := c.newRequest(op, input.Token, &output)
@@ -75,7 +75,7 @@ func (c *Logdb) SendLog(input *SendLogInput) (output *SendLogOutput, err error) 
 		return
 	}
 	req.SetBufferBody(buf)
-	req.SetHeader(HTTPHeaderContentType, ContentTypeJson)
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
 	return output, req.Send()
 }
 
@@ -84,7 +84,7 @@ func (c *Logdb) QueryLog(input *QueryLogInput) (output *QueryLogOutput, err erro
 	if input.Highlight != nil {
 		highlight = true
 	}
-	op := c.newOperation(OpQueryLog, input.RepoName, url.QueryEscape(input.Query), input.Sort, input.From, input.Size, highlight)
+	op := c.newOperation(base.OpQueryLog, input.RepoName, url.QueryEscape(input.Query), input.Sort, input.From, input.Size, highlight)
 
 	output = &QueryLogOutput{}
 	req := c.newRequest(op, input.Token, output)
@@ -92,19 +92,19 @@ func (c *Logdb) QueryLog(input *QueryLogInput) (output *QueryLogOutput, err erro
 		if err = req.SetVariantBody(input.Highlight); err != nil {
 			return
 		}
-		req.SetHeader(HTTPHeaderContentType, ContentTypeJson)
+		req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
 	}
 	return output, req.Send()
 }
 
 func (c *Logdb) QueryHistogramLog(input *QueryHistogramLogInput) (output *QueryHistogramLogOutput, err error) {
-	op := c.newOperation(OpQueryHistogramLog, input.RepoName, url.QueryEscape(input.Query), input.From, input.To, input.Field)
+	op := c.newOperation(base.OpQueryHistogramLog, input.RepoName, url.QueryEscape(input.Query), input.From, input.To, input.Field)
 
 	output = &QueryHistogramLogOutput{}
 	req := c.newRequest(op, input.Token, output)
 	return output, req.Send()
 }
 
-func (c *Logdb) MakeToken(desc *TokenDesc) (string, error) {
-	return MakeTokenInternal(c.Config.Ak, c.Config.Sk, desc)
+func (c *Logdb) MakeToken(desc *base.TokenDesc) (string, error) {
+	return base.MakeTokenInternal(c.Config.Ak, c.Config.Sk, desc)
 }

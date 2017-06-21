@@ -52,7 +52,16 @@ func deepDeleteCheck(data interface{}, schema RepoSchemaEntry) bool {
 	return true
 }
 
-func (c *Pipeline) generatePoint(repoName string, data Data, schemaFree bool) (point Point, err error) {
+func copyData(d Data) Data {
+	md := make(Data)
+	for k, v := range d {
+		md[k] = v
+	}
+	return md
+}
+
+func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool) (point Point, err error) {
+	data := copyData(oldData)
 	point = Point{}
 	c.repoSchemaMux.Lock()
 	schemas := c.repoSchemas[repoName]
@@ -279,8 +288,10 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 						sc.ElemType = PandoraTypeFloat
 					}
 				case nil: // 不处理，不加入
-				default:
+				case string:
 					sc.ElemType = PandoraTypeString
+				default:
+					sc.ValueType = PandoraTypeString
 				}
 				valueType[k] = sc
 			}

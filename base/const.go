@@ -64,6 +64,7 @@ const (
 	OpSendLog           string = "SendLog"
 	OpQueryLog          string = "QueryLog"
 	OpQueryHistogramLog string = "QueryHistogramLog"
+	OpPartialQuery   	string = "PartialQuery"
 
 	OpUpdateRepoMetadata string = "UpdataRepoMetadata"
 	OpDeleteRepoMetadata string = "DeleteRepoMetadata"

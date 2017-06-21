@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	. "github.com/qiniu/pandora-go-sdk/base"
+	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/base/request"
 )
@@ -62,22 +62,24 @@ func (c *Logdb) newRequest(op *request.Operation, token string, v interface{}) *
 func (c *Logdb) newOperation(opName string, args ...interface{}) *request.Operation {
 	var method, urlTmpl string
 	switch opName {
-	case OpCreateRepo:
-		method, urlTmpl = MethodPost, "/v5/repos/%s"
-	case OpUpdateRepo:
-		method, urlTmpl = MethodPut, "/v5/repos/%s"
-	case OpListRepos:
-		method, urlTmpl = MethodGet, "/v5/repos"
-	case OpGetRepo:
-		method, urlTmpl = MethodGet, "/v5/repos/%s"
-	case OpDeleteRepo:
-		method, urlTmpl = MethodDelete, "/v5/repos/%s"
-	case OpSendLog:
-		method, urlTmpl = MethodPost, "/v5/repos/%s/data?omitInvalidLog=%t"
-	case OpQueryLog:
-		method, urlTmpl = MethodGet, "/v5/repos/%s/search?q=%s&sort=%s&from=%d&size=%d&highlight=%t"
-	case OpQueryHistogramLog:
-		method, urlTmpl = MethodGet, "/v5/repos/%s/histogram?q=%s&from=%d&to=%d&field=%s"
+	case base.OpCreateRepo:
+		method, urlTmpl = base.MethodPost, "/v5/repos/%s"
+	case base.OpUpdateRepo:
+		method, urlTmpl = base.MethodPut, "/v5/repos/%s"
+	case base.OpListRepos:
+		method, urlTmpl = base.MethodGet, "/v5/repos"
+	case base.OpGetRepo:
+		method, urlTmpl = base.MethodGet, "/v5/repos/%s"
+	case base.OpDeleteRepo:
+		method, urlTmpl = base.MethodDelete, "/v5/repos/%s"
+	case base.OpSendLog:
+		method, urlTmpl = base.MethodPost, "/v5/repos/%s/data?omitInvalidLog=%t"
+	case base.OpQueryLog:
+		method, urlTmpl = base.MethodGet, "/v5/repos/%s/search?q=%s&sort=%s&from=%d&size=%d&highlight=%t"
+	case base.OpQueryHistogramLog:
+		method, urlTmpl = base.MethodGet, "/v5/repos/%s/histogram?q=%s&from=%d&to=%d&field=%s"
+	case base.OpPartialQuery:
+		method, urlTmpl = base.MethodPost,"/v5/repos/%s/s"
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

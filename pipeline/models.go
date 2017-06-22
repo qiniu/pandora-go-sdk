@@ -46,6 +46,14 @@ const (
 	PandoraTypeMap    = "map"
 )
 
+const (
+	ExportTypeLogDB = "logdb"
+	ExportTypeTSDB  = "tsdb"
+	ExportTypeKODO  = "kodo"
+	ExportTypeHTTP  = "http"
+	ExportTypeMongo = "mongo"
+)
+
 type Data map[string]interface{}
 type Datas []Data
 
@@ -386,6 +394,10 @@ func getField(f string) (key, valueType, elementType string, required bool, err 
 		err = fmt.Errorf("normal 【%v】: %v, key %v valuetype %v", f, err, key, valueType)
 	}
 	return
+}
+
+func DSLtoSchema(dsl string) (schemas []RepoSchemaEntry, err error) {
+	return toSchema(dsl, 0)
 }
 
 func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
@@ -992,15 +1004,15 @@ func (e *CreateExportInput) Validate() (err error) {
 
 	switch e.Spec.(type) {
 	case *ExportTsdbSpec, ExportTsdbSpec:
-		e.Type = "tsdb"
+		e.Type = ExportTypeTSDB
 	case *ExportMongoSpec, ExportMongoSpec:
-		e.Type = "mongo"
+		e.Type = ExportTypeMongo
 	case *ExportLogDBSpec, ExportLogDBSpec:
-		e.Type = "logdb"
+		e.Type = ExportTypeLogDB
 	case *ExportKodoSpec, ExportKodoSpec:
-		e.Type = "kodo"
+		e.Type = ExportTypeKODO
 	case *ExportHttpSpec, ExportHttpSpec:
-		e.Type = "http"
+		e.Type = ExportTypeHTTP
 	default:
 		return
 	}

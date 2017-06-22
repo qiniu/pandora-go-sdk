@@ -250,7 +250,7 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 	valueType = make(map[string]RepoSchemaEntry)
 	for k, v := range data {
 		switch nv := v.(type) {
-		case int, int8, int16, int32, int64:
+		case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 			valueType[k] = formValueType(k, PandoraTypeLong)
 		case float32, float64:
 			valueType[k] = formValueType(k, PandoraTypeFloat)
@@ -274,7 +274,7 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 			sc := formValueType(k, PandoraTypeArray)
 			if len(nv) > 0 {
 				switch nnv := nv[0].(type) {
-				case int, int8, int16, int32, int64:
+				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 					sc.ElemType = PandoraTypeLong
 				case float32, float64:
 					sc.ElemType = PandoraTypeFloat

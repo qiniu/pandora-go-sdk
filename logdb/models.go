@@ -247,6 +247,10 @@ func checkPrimary(hasPrimary, key, valueType string, depth int) error {
 	return nil
 }
 
+func DSLtoSchema(dsl string) (schemas []RepoSchemaEntry, err error) {
+	return toSchema(dsl, 0)
+}
+
 func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 	if depth > base.NestLimit {
 		err = reqerr.NewInvalidArgs("Schema", fmt.Sprintf("RepoSchemaEntry are nested out of limit %v", base.NestLimit))
@@ -534,13 +538,11 @@ type GetRepoConfigOutput struct {
 	TimeFieldName string `json:"timeFieldName"`
 }
 
-
-
 type PartialQueryInput struct {
 	LogdbToken
-	RepoName string `json:"-"`
-	StartTime   int64    `json:"startTime"`
-	EndTime   int64 `json:"endTime"`
+	RepoName  string `json:"-"`
+	StartTime int64  `json:"startTime"`
+	EndTime   int64  `json:"endTime"`
 	Highlight struct {
 		PostTag string `json:"post_tag,omitempty"`
 		PreTag  string `json:"pre_tag,omitempty"`
@@ -550,11 +552,13 @@ type PartialQueryInput struct {
 	Size        int    `json:"size"`
 	Sort        string `json:"sort"`
 }
+
 const (
-	PartialQuerySearchTypeA int = iota 		  //混合模式
-	PartialQuerySearchTypeQ                   //searching模式
-	PartialQuerySearchTypeH                   //直方图模式
+	PartialQuerySearchTypeA int = iota //混合模式
+	PartialQuerySearchTypeQ            //searching模式
+	PartialQuerySearchTypeH            //直方图模式
 )
+
 func (partialQueryInput *PartialQueryInput) Buf() (buf []byte, err error) {
 	buf, err = json.Marshal(partialQueryInput)
 	if err != nil {
@@ -568,9 +572,9 @@ type PartialQueryOutput struct {
 		Count int `json:"count"`
 		Key   int `json:"key"`
 	} `json:"buckets,omitempty"`
-	Hits []map[string]interface{} `json:"hits,omitempty"`
-	PartialSuccess bool `json:"partialSuccess"`
-	Process        int  `json:"process"`
-	Took           int  `json:"took"`
-	Total          int  `json:"total"`
+	Hits           []map[string]interface{} `json:"hits,omitempty"`
+	PartialSuccess bool                     `json:"partialSuccess"`
+	Process        int                      `json:"process"`
+	Took           int                      `json:"took"`
+	Total          int                      `json:"total"`
 }

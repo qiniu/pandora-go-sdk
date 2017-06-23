@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
-	. "github.com/qiniu/pandora-go-sdk/base"
+	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/base/request"
 )
@@ -28,12 +27,13 @@ func New(c *config.Config) (TsdbAPI, error) {
 }
 
 func newClient(c *config.Config) (p *Tsdb, err error) {
-	if !strings.HasPrefix(c.Endpoint, "http://") && !strings.HasPrefix(c.Endpoint, "https://") {
-		err = fmt.Errorf("endpoint should start with 'http://' or 'https://'")
-		return
+	if c.TsdbEndpoint != "" {
+		c.Endpoint = c.TsdbEndpoint
 	}
-	if strings.HasSuffix(c.Endpoint, "/") {
-		err = fmt.Errorf("endpoint should not end with '/'")
+	if c.Endpoint == "" {
+		c.Endpoint = config.DefaultTSDBEndpoint
+	}
+	if err = base.CheckEndPoint(c.Endpoint); err != nil {
 		return
 	}
 
@@ -62,40 +62,40 @@ func (c *Tsdb) newRequest(op *request.Operation, token string, v interface{}) *r
 func (c *Tsdb) newOperation(opName string, args ...interface{}) *request.Operation {
 	var method, urlTmpl string
 	switch opName {
-	case OpCreateRepo:
-		method, urlTmpl = MethodPost, "/v4/repos/%s"
-	case OpListRepos:
-		method, urlTmpl = MethodGet, "/v4/repos"
-	case OpGetRepo:
-		method, urlTmpl = MethodGet, "/v4/repos/%s"
-	case OpDeleteRepo:
-		method, urlTmpl = MethodDelete, "/v4/repos/%s"
-	case OpUpdateRepoMetadata:
-		method, urlTmpl = MethodPost, "/v4/repos/%s/meta"
-	case OpDeleteRepoMetadata:
-		method, urlTmpl = MethodDelete, "/v4/repos/%s/meta"
-	case OpCreateSeries:
-		method, urlTmpl = MethodPost, "/v4/repos/%s/series/%s"
-	case OpUpdateSeriesMetadata:
-		method, urlTmpl = MethodPost, "/v4/repos/%s/series/%s/meta"
-	case OpDeleteSeriesMetadata:
-		method, urlTmpl = MethodDelete, "/v4/repos/%s/series/%s/meta"
-	case OpListSeries:
-		method, urlTmpl = MethodGet, "/v4/repos/%s/series"
-	case OpDeleteSeries:
-		method, urlTmpl = MethodDelete, "/v4/repos/%s/series/%s"
-	case OpCreateView:
-		method, urlTmpl = MethodPost, "/v4/repos/%s/views/%s"
-	case OpListView:
-		method, urlTmpl = MethodGet, "/v4/repos/%s/views"
-	case OpDeleteView:
-		method, urlTmpl = MethodDelete, "/v4/repos/%s/views/%s"
-	case OpGetView:
-		method, urlTmpl = MethodGet, "/v4/repos/%s/views/%s"
-	case OpQueryPoints:
-		method, urlTmpl = MethodPost, "/v4/repos/%s/query"
-	case OpWritePoints:
-		method, urlTmpl = MethodPost, "/v4/repos/%s/points"
+	case base.OpCreateRepo:
+		method, urlTmpl = base.MethodPost, "/v4/repos/%s"
+	case base.OpListRepos:
+		method, urlTmpl = base.MethodGet, "/v4/repos"
+	case base.OpGetRepo:
+		method, urlTmpl = base.MethodGet, "/v4/repos/%s"
+	case base.OpDeleteRepo:
+		method, urlTmpl = base.MethodDelete, "/v4/repos/%s"
+	case base.OpUpdateRepoMetadata:
+		method, urlTmpl = base.MethodPost, "/v4/repos/%s/meta"
+	case base.OpDeleteRepoMetadata:
+		method, urlTmpl = base.MethodDelete, "/v4/repos/%s/meta"
+	case base.OpCreateSeries:
+		method, urlTmpl = base.MethodPost, "/v4/repos/%s/series/%s"
+	case base.OpUpdateSeriesMetadata:
+		method, urlTmpl = base.MethodPost, "/v4/repos/%s/series/%s/meta"
+	case base.OpDeleteSeriesMetadata:
+		method, urlTmpl = base.MethodDelete, "/v4/repos/%s/series/%s/meta"
+	case base.OpListSeries:
+		method, urlTmpl = base.MethodGet, "/v4/repos/%s/series"
+	case base.OpDeleteSeries:
+		method, urlTmpl = base.MethodDelete, "/v4/repos/%s/series/%s"
+	case base.OpCreateView:
+		method, urlTmpl = base.MethodPost, "/v4/repos/%s/views/%s"
+	case base.OpListView:
+		method, urlTmpl = base.MethodGet, "/v4/repos/%s/views"
+	case base.OpDeleteView:
+		method, urlTmpl = base.MethodDelete, "/v4/repos/%s/views/%s"
+	case base.OpGetView:
+		method, urlTmpl = base.MethodGet, "/v4/repos/%s/views/%s"
+	case base.OpQueryPoints:
+		method, urlTmpl = base.MethodPost, "/v4/repos/%s/query"
+	case base.OpWritePoints:
+		method, urlTmpl = base.MethodPost, "/v4/repos/%s/points"
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

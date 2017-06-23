@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
@@ -12,6 +11,8 @@ import (
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/base/ratelimit"
 	"github.com/qiniu/pandora-go-sdk/base/request"
+	"github.com/qiniu/pandora-go-sdk/logdb"
+	"github.com/qiniu/pandora-go-sdk/tsdb"
 )
 
 var builder errBuilder
@@ -24,6 +25,9 @@ type Pipeline struct {
 	repoSchemas   map[string]RepoSchema
 	repoSchemaMux sync.Mutex
 	defaultRegion string
+
+	LogDB logdb.LogdbAPI
+	TSDB  tsdb.TsdbAPI
 }
 
 type RepoSchema map[string]RepoSchemaEntry
@@ -53,15 +57,15 @@ func (c *Pipeline) Close() (err error) {
 }
 
 func newClient(c *config.Config) (p *Pipeline, err error) {
-	if !strings.HasPrefix(c.Endpoint, "http://") && !strings.HasPrefix(c.Endpoint, "https://") {
-		err = fmt.Errorf("endpoint should start with 'http://' or 'https://'")
+	if c.PipelineEndpoint != "" {
+		c.Endpoint = c.PipelineEndpoint
+	}
+	if c.Endpoint == "" {
+		c.Endpoint = config.DefaultPipelineEndpoint
+	}
+	if err = base.CheckEndPoint(c.Endpoint); err != nil {
 		return
 	}
-	if strings.HasSuffix(c.Endpoint, "/") {
-		err = fmt.Errorf("endpoint should not end with '/'")
-		return
-	}
-
 	var t = &http.Transport{
 		Dial: (&net.Dialer{
 			Timeout:   c.DialTimeout,

@@ -484,6 +484,44 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 	return
 }
 
+type CreateRepoForLogInput struct {
+	RepoName    string
+	LogRepoName string
+	Region      string
+	Schema      []RepoSchemaEntry
+	Retention   string
+}
+
+type CreateRepoForLogDSLInput struct {
+	RepoName    string
+	LogRepoName string
+	Region      string
+	Schema      string
+	Retention   string
+}
+
+type CreateRepoForTSInput struct {
+	RepoName     string
+	TSDBRepoName string
+	Region       string
+	Schema       []RepoSchemaEntry
+	Retention    string
+	SeriesName   string
+	Tags         []string
+}
+
+func (r *CreateRepoForTSInput) IsTag(key string) bool {
+	if r == nil || len(r.Tags) <= 0 {
+		return false
+	}
+	for _, k := range r.Tags {
+		if key == k {
+			return true
+		}
+	}
+	return false
+}
+
 type CreateRepoInput struct {
 	PipelineToken
 	RepoName  string
@@ -520,10 +558,26 @@ func (r *CreateRepoInput) Validate() (err error) {
 	return
 }
 
+// ExportType选项表示同时更新的下游export和repo
+// 目前支持 tsdb、logdb、kodo、all
 type UpdateRepoInput struct {
 	PipelineToken
-	RepoName string
-	Schema   []RepoSchemaEntry `json:"schema"`
+	RepoName   string
+	Schema     []RepoSchemaEntry `json:"schema"`
+	ExportType string
+	Tags       []string
+}
+
+func (r *UpdateRepoInput) IsTag(key string) bool {
+	if r == nil || len(r.Tags) <= 0 {
+		return false
+	}
+	for _, k := range r.Tags {
+		if key == k {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *UpdateRepoInput) Validate() (err error) {
@@ -540,7 +594,6 @@ func (r *UpdateRepoInput) Validate() (err error) {
 			return
 		}
 	}
-
 	return
 }
 

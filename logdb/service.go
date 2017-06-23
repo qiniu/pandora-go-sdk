@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/qiniu/pandora-go-sdk/base"
@@ -28,12 +27,13 @@ func New(c *config.Config) (LogdbAPI, error) {
 }
 
 func newClient(c *config.Config) (p *Logdb, err error) {
-	if !strings.HasPrefix(c.Endpoint, "http://") && !strings.HasPrefix(c.Endpoint, "https://") {
-		err = fmt.Errorf("endpoint should start with 'http://' or 'https://'")
-		return
+	if c.LogdbEndpoint != "" {
+		c.Endpoint = c.LogdbEndpoint
 	}
-	if strings.HasSuffix(c.Endpoint, "/") {
-		err = fmt.Errorf("endpoint should not end with '/'")
+	if c.Endpoint == "" {
+		c.Endpoint = config.DefaultLogDBEndpoint
+	}
+	if err = base.CheckEndPoint(c.Endpoint); err != nil {
 		return
 	}
 
@@ -79,7 +79,7 @@ func (c *Logdb) newOperation(opName string, args ...interface{}) *request.Operat
 	case base.OpQueryHistogramLog:
 		method, urlTmpl = base.MethodGet, "/v5/repos/%s/histogram?q=%s&from=%d&to=%d&field=%s"
 	case base.OpPartialQuery:
-		method, urlTmpl = base.MethodPost,"/v5/repos/%s/s"
+		method, urlTmpl = base.MethodPost, "/v5/repos/%s/s"
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

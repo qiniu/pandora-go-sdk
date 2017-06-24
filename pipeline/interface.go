@@ -5,6 +5,12 @@ import (
 )
 
 type PipelineAPI interface {
+	CreateForLogDB(*CreateRepoForLogDBInput) error
+
+	CreateForLogDBDSL(*CreateRepoForLogDBDSLInput) error
+
+	CreateForTSDB(*CreateRepoForTSDBInput) error
+
 	CreateGroup(*CreateGroupInput) error
 
 	UpdateGroup(*UpdateGroupInput) error

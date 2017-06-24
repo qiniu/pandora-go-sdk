@@ -1,8 +1,6 @@
 package reqerr
 
-import (
-	"fmt"
-)
+import "fmt"
 
 const (
 	DefaultRequestError int = iota
@@ -75,6 +73,17 @@ func New(message, rawText, reqId string, statusCode int) *RequestError {
 
 func (r RequestError) Error() string {
 	return fmt.Sprintf("pandora error: StatusCode=%d, ErrorMessage=%s, RequestId=%s", r.StatusCode, r.Message, r.RequestId)
+}
+
+func IsExistError(err error) bool {
+	reqErr, ok := err.(*RequestError)
+	if !ok {
+		return false
+	}
+	if reqErr.ErrorType == RepoAlreadyExistsError || reqErr.ErrorType == SeriesAlreadyExistsError {
+		return true
+	}
+	return false
 }
 
 //SendErrorType 表达是否需要外部对数据做特殊处理

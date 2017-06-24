@@ -389,7 +389,6 @@ func checkRetention(retention string) error {
 type UpdateRepoInput struct {
 	LogdbToken
 	RepoName  string
-	Region    string            `json:"region"`
 	Retention string            `json:"retention"`
 	Schema    []RepoSchemaEntry `json:"schema"`
 }
@@ -398,7 +397,6 @@ func (r *UpdateRepoInput) Validate() (err error) {
 	if err = validateRepoName(r.RepoName); err != nil {
 		return
 	}
-
 	if r.Schema == nil || len(r.Schema) == 0 {
 		err = reqerr.NewInvalidArgs("Schema", "schema should not be empty")
 		return
@@ -408,7 +406,6 @@ func (r *UpdateRepoInput) Validate() (err error) {
 			return
 		}
 	}
-
 	return checkRetention(r.Retention)
 }
 

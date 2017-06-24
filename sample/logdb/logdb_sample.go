@@ -74,7 +74,6 @@ func Sample_Repo() {
 	updateInput := &UpdateRepoInput{
 		RepoName:  "repo",
 		Schema:    defaultRepoSchema,
-		Region:    region,
 		Retention: "1d",
 	}
 

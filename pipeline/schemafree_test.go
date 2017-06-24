@@ -133,11 +133,13 @@ func TestGetPandoraKeyValueType(t *testing.T) {
 func TestDeepDeleteCheck(t *testing.T) {
 	tests := []struct {
 		value  interface{}
+		left   interface{}
 		schema RepoSchemaEntry
 		exp    bool
 	}{
 		{
 			value: map[string]interface{}{},
+			left:  map[string]interface{}{},
 			schema: RepoSchemaEntry{
 				Key:       "hello",
 				ValueType: PandoraTypeMap,
@@ -146,6 +148,7 @@ func TestDeepDeleteCheck(t *testing.T) {
 		},
 		{
 			value: 123,
+			left:  123,
 			schema: RepoSchemaEntry{
 				Key:       "hello",
 				ValueType: PandoraTypeMap,
@@ -154,6 +157,7 @@ func TestDeepDeleteCheck(t *testing.T) {
 		},
 		{
 			value: map[string]interface{}{},
+			left:  map[string]interface{}{},
 			schema: RepoSchemaEntry{
 				Key:       "hello",
 				ValueType: PandoraTypeLong,
@@ -162,6 +166,9 @@ func TestDeepDeleteCheck(t *testing.T) {
 		},
 		{
 			value: map[string]interface{}{
+				"x": 123,
+			},
+			left: map[string]interface{}{
 				"x": 123,
 			},
 			schema: RepoSchemaEntry{
@@ -173,6 +180,9 @@ func TestDeepDeleteCheck(t *testing.T) {
 		},
 		{
 			value: map[string]interface{}{
+				"x": 123,
+			},
+			left: map[string]interface{}{
 				"x": 123,
 			},
 			schema: RepoSchemaEntry{
@@ -191,6 +201,9 @@ func TestDeepDeleteCheck(t *testing.T) {
 			value: map[string]interface{}{
 				"x": 123,
 			},
+			left: map[string]interface{}{
+				"x": 123,
+			},
 			schema: RepoSchemaEntry{
 				Key:       "hello",
 				ValueType: PandoraTypeMap,
@@ -205,6 +218,9 @@ func TestDeepDeleteCheck(t *testing.T) {
 		},
 		{
 			value: map[string]interface{}{
+				"x": map[string]interface{}{},
+			},
+			left: map[string]interface{}{
 				"x": map[string]interface{}{},
 			},
 			schema: RepoSchemaEntry{
@@ -225,6 +241,11 @@ func TestDeepDeleteCheck(t *testing.T) {
 					"y": 123,
 				},
 			},
+			left: map[string]interface{}{
+				"x": map[string]interface{}{
+					"y": 123,
+				},
+			},
 			schema: RepoSchemaEntry{
 				Key:       "hello",
 				ValueType: PandoraTypeMap,
@@ -239,6 +260,11 @@ func TestDeepDeleteCheck(t *testing.T) {
 		},
 		{
 			value: map[string]interface{}{
+				"x": map[string]interface{}{
+					"y": 123,
+				},
+			},
+			left: map[string]interface{}{
 				"x": map[string]interface{}{
 					"y": 123,
 				},
@@ -267,6 +293,12 @@ func TestDeepDeleteCheck(t *testing.T) {
 				},
 				"z": 123,
 			},
+			left: map[string]interface{}{
+				"x": map[string]interface{}{
+					"y": 123,
+				},
+				"z": 123,
+			},
 			schema: RepoSchemaEntry{
 				Key:       "hello",
 				ValueType: PandoraTypeMap,
@@ -286,6 +318,12 @@ func TestDeepDeleteCheck(t *testing.T) {
 		},
 		{
 			value: map[string]interface{}{
+				"x": map[string]interface{}{
+					"y": 123,
+					"z": 123,
+				},
+			},
+			left: map[string]interface{}{
 				"x": map[string]interface{}{
 					"y": 123,
 					"z": 123,
@@ -319,6 +357,13 @@ func TestDeepDeleteCheck(t *testing.T) {
 					"a": true,
 				},
 			},
+			left: map[string]interface{}{
+				"x": map[string]interface{}{
+					"y": 123,
+					"z": 123,
+					"a": true,
+				},
+			},
 			schema: RepoSchemaEntry{
 				Key:       "hello",
 				ValueType: PandoraTypeMap,
@@ -343,6 +388,7 @@ func TestDeepDeleteCheck(t *testing.T) {
 	for _, ti := range tests {
 		got := deepDeleteCheck(ti.value, ti.schema)
 		assert.Equal(t, ti.exp, got)
+		assert.Equal(t, ti.left, ti.value)
 	}
 }
 

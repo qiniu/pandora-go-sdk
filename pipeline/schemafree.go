@@ -36,18 +36,22 @@ func deepDeleteCheck(data interface{}, schema RepoSchemaEntry) bool {
 	if !ok {
 		return true
 	}
-	for _, v := range schema.Schema {
-		mmval, ok := mval[v.Key]
-		if !ok {
-			continue
+	if len(mval) > len(schema.Schema) {
+		return false
+	}
+	for k, v := range mval {
+		notfind := true
+		for _, sv := range schema.Schema {
+			if sv.Key == k {
+				notfind = false
+				if sv.ValueType == PandoraTypeMap && !deepDeleteCheck(v, sv) {
+					return false
+				}
+			}
 		}
-		if v.ValueType == PandoraTypeMap && !deepDeleteCheck(mmval, v) {
+		if notfind {
 			return false
 		}
-		delete(mval, v.Key)
-	}
-	if len(mval) > 0 {
-		return false
 	}
 	return true
 }
@@ -88,6 +92,7 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool)
 				continue
 			}
 		}
+
 		//对于没有autoupdate的情况就不delete了，节省CPU
 		if schemaFree {
 			if deepDeleteCheck(value, v) {

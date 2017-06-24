@@ -178,7 +178,7 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 	})
 }
 
-func (c *Pipeline) UpdateRepoWithKODO(input *UpdateRepoInput, ex ExportDesc) error {
+func (c *Pipeline) UpdateRepoWithKodo(input *UpdateRepoInput, ex ExportDesc) error {
 	fields, ok := ex.Spec["fields"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("export KODO spec doc assert error %v is not map[string]interface{}", ex.Spec["fields"])
@@ -226,7 +226,7 @@ func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
 					return
 				}
 			case ExportTypeKODO:
-				err = c.UpdateRepoWithKODO(input, ex)
+				err = c.UpdateRepoWithKodo(input, ex)
 				if err != nil {
 					return
 				}
@@ -336,6 +336,7 @@ func (c *Pipeline) PostDataSchemaFree(input *SchemaFreeInput) (newSchemas map[st
 		err = reqerr.NewSendError("Cannot send data to pandora, "+err.Error(), convertDatas(input.Datas), reqerr.TypeDefault)
 		return
 	}
+
 	failDatas := Datas{}
 	errType := reqerr.TypeDefault
 	var lastErr error
@@ -744,7 +745,7 @@ func (c *Pipeline) GetTSDBAPI() (tsdb.TsdbAPI, error) {
 	return c.TSDB, nil
 }
 
-func (c *Pipeline) CreateForLogDB(input *CreateRepoForLogInput) error {
+func (c *Pipeline) CreateForLogDB(input *CreateRepoForLogDBInput) error {
 	pinput := formPipelineRepoInput(input.RepoName, input.Region, input.Schema)
 	err := c.CreateRepo(pinput)
 	if err != nil && !reqerr.IsExistError(err) {
@@ -763,12 +764,12 @@ func (c *Pipeline) CreateForLogDB(input *CreateRepoForLogInput) error {
 	return c.CreateExport(c.FormExportInput(input.RepoName, ExportTypeLogDB, c.FormLogDBSpec(input)))
 }
 
-func (c *Pipeline) CreateForLogDBDSL(input *CreateRepoForLogDSLInput) error {
+func (c *Pipeline) CreateForLogDBDSL(input *CreateRepoForLogDBDSLInput) error {
 	schemas, err := toSchema(input.Schema, 0)
 	if err != nil {
 		return err
 	}
-	ci := &CreateRepoForLogInput{
+	ci := &CreateRepoForLogDBInput{
 		RepoName:    input.RepoName,
 		LogRepoName: input.LogRepoName,
 		Region:      input.Region,
@@ -778,7 +779,7 @@ func (c *Pipeline) CreateForLogDBDSL(input *CreateRepoForLogDSLInput) error {
 	return c.CreateForLogDB(ci)
 }
 
-func (c *Pipeline) CreateForTSDB(input *CreateRepoForTSInput) error {
+func (c *Pipeline) CreateForTSDB(input *CreateRepoForTSDBInput) error {
 	pinput := formPipelineRepoInput(input.RepoName, input.Region, input.Schema)
 	err := c.CreateRepo(pinput)
 	if err != nil && !reqerr.IsExistError(err) {

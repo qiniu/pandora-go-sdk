@@ -12,7 +12,7 @@ func (c *Pipeline) FormExportInput(repoName, exportType string, spec interface{}
 	}
 }
 
-func (c *Pipeline) FormLogDBSpec(input *CreateRepoForLogInput) *ExportLogDBSpec {
+func (c *Pipeline) FormLogDBSpec(input *CreateRepoForLogDBInput) *ExportLogDBSpec {
 	doc := make(map[string]interface{})
 	for _, v := range input.Schema {
 		doc[v.Key] = v.Key
@@ -23,7 +23,7 @@ func (c *Pipeline) FormLogDBSpec(input *CreateRepoForLogInput) *ExportLogDBSpec 
 	}
 }
 
-func (c *Pipeline) FormTSDBSpec(input *CreateRepoForTSInput) *ExportTsdbSpec {
+func (c *Pipeline) FormTSDBSpec(input *CreateRepoForTSDBInput) *ExportTsdbSpec {
 	tags := make(map[string]string)
 	fields := make(map[string]string)
 	for _, v := range input.Schema {
@@ -49,7 +49,7 @@ func formPipelineRepoInput(repoName, region string, schemas []RepoSchemaEntry) *
 	}
 }
 
-func convertCreate2LogDB(input *CreateRepoForLogInput) *logdb.CreateRepoInput {
+func convertCreate2LogDB(input *CreateRepoForLogDBInput) *logdb.CreateRepoInput {
 	if input.LogRepoName == "" {
 		input.LogRepoName = input.RepoName
 	}

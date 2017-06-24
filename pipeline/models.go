@@ -484,7 +484,7 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 	return
 }
 
-type CreateRepoForLogInput struct {
+type CreateRepoForLogDBInput struct {
 	RepoName    string
 	LogRepoName string
 	Region      string
@@ -492,7 +492,7 @@ type CreateRepoForLogInput struct {
 	Retention   string
 }
 
-type CreateRepoForLogDSLInput struct {
+type CreateRepoForLogDBDSLInput struct {
 	RepoName    string
 	LogRepoName string
 	Region      string
@@ -500,7 +500,7 @@ type CreateRepoForLogDSLInput struct {
 	Retention   string
 }
 
-type CreateRepoForTSInput struct {
+type CreateRepoForTSDBInput struct {
 	RepoName     string
 	TSDBRepoName string
 	Region       string
@@ -510,7 +510,7 @@ type CreateRepoForTSInput struct {
 	Tags         []string
 }
 
-func (r *CreateRepoForTSInput) IsTag(key string) bool {
+func (r *CreateRepoForTSDBInput) IsTag(key string) bool {
 	if r == nil || len(r.Tags) <= 0 {
 		return false
 	}

@@ -635,6 +635,9 @@ type PointField struct {
 }
 
 func (p *PointField) String() string {
+	if p == nil || p.Value == nil {
+		return ""
+	}
 	typ := reflect.TypeOf(p.Value).Kind()
 	var value string
 	if typ == reflect.Map || typ == reflect.Slice {

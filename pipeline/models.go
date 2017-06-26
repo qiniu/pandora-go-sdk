@@ -484,6 +484,12 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 	return
 }
 
+type AutoExportToLogDBInput struct {
+	RepoName    string
+	LogRepoName string
+	Retention   string
+}
+
 type CreateRepoForLogDBInput struct {
 	RepoName    string
 	LogRepoName string
@@ -500,6 +506,14 @@ type CreateRepoForLogDBDSLInput struct {
 	Retention   string
 }
 
+type AutoExportToTSDBInput struct {
+	RepoName     string
+	TSDBRepoName string
+	Retention    string
+	SeriesName   string
+	Tags         []string
+}
+
 type CreateRepoForTSDBInput struct {
 	RepoName     string
 	TSDBRepoName string
@@ -510,11 +524,11 @@ type CreateRepoForTSDBInput struct {
 	Tags         []string
 }
 
-func (r *CreateRepoForTSDBInput) IsTag(key string) bool {
-	if r == nil || len(r.Tags) <= 0 {
+func IsTag(key string, tags []string) bool {
+	if tags == nil || len(tags) <= 0 {
 		return false
 	}
-	for _, k := range r.Tags {
+	for _, k := range tags {
 		if key == k {
 			return true
 		}
@@ -562,17 +576,16 @@ func (r *CreateRepoInput) Validate() (err error) {
 // 目前支持 tsdb、logdb、kodo、all
 type UpdateRepoInput struct {
 	PipelineToken
-	RepoName   string
-	Schema     []RepoSchemaEntry `json:"schema"`
-	ExportType string
-	Tags       []string
+	RepoName string
+	Schema   []RepoSchemaEntry `json:"schema"`
+	Option   *SchemaFreeOption
 }
 
 func (r *UpdateRepoInput) IsTag(key string) bool {
-	if r == nil || len(r.Tags) <= 0 {
+	if r == nil || r.Option == nil || len(r.Option.TSDBtags) <= 0 {
 		return false
 	}
-	for _, k := range r.Tags {
+	for _, k := range r.Option.TSDBtags {
 		if key == k {
 			return true
 		}
@@ -712,6 +725,21 @@ type SchemaFreeInput struct {
 	RepoName string
 	Datas    Datas
 	NoUpdate bool
+	Option   *SchemaFreeOption
+}
+
+type SchemaFreeOption struct {
+	ToLogDB        bool
+	LogDBRepoName  string
+	LogDBRetention string
+	ToTSDB         bool
+	TSDBRepoName   string
+	TSDBtags       []string
+	TSDBSeriesName string
+	TSDBRetention  string
+	ToKODO         bool
+	KodoBucketName string
+	KODORetention  string
 }
 
 type PostDataFromFileInput struct {
@@ -1037,7 +1065,7 @@ func (e *UpdateExportInput) Validate() (err error) {
 		*ExportLogDBSpec, ExportLogDBSpec, *ExportKodoSpec, ExportKodoSpec,
 		*ExportHttpSpec, ExportHttpSpec:
 	default:
-		return
+		return reqerr.NewInvalidArgs("ExportSpec", "spec Type not support "+reflect.TypeOf(e.Spec).Name())
 	}
 	vv, ok := e.Spec.(base.Validator)
 	if !ok {

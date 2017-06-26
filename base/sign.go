@@ -84,7 +84,6 @@ func signRequest(sk []byte, req *http.Request) ([]byte, error) {
 
 	io.WriteString(h, SignQiniuHeader(req.Header))
 	io.WriteString(h, SignQiniuResource(req.URL.Path, req.URL.Query()))
-
 	return h.Sum(nil), nil
 }
 

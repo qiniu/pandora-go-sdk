@@ -23,6 +23,7 @@ const (
 	RepoInCreatingError
 	InvalidTransformSpecError
 	InvalidExportSpecError
+	ExportSpecRemainUnchanged
 	NoSuchRetentionError
 	SeriesAlreadyExistsError
 	NoSuchSeriesError
@@ -81,6 +82,34 @@ func IsExistError(err error) bool {
 		return false
 	}
 	if reqErr.ErrorType == RepoAlreadyExistsError || reqErr.ErrorType == SeriesAlreadyExistsError {
+		return true
+	}
+	return false
+}
+
+func IsNoSuchResourceError(err error) bool {
+	reqErr, ok := err.(*RequestError)
+	if !ok {
+		return false
+	}
+	if reqErr.ErrorType == NoSuchRepoError {
+		return true
+	}
+	if reqErr.ErrorType == NoSuchExportError {
+		return true
+	}
+	if reqErr.ErrorType == NoSuchSeriesError {
+		return true
+	}
+	return false
+}
+
+func IsExportRemainUnchanged(err error) bool {
+	reqErr, ok := err.(*RequestError)
+	if !ok {
+		return false
+	}
+	if reqErr.ErrorType == ExportSpecRemainUnchanged {
 		return true
 	}
 	return false

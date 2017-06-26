@@ -3,22 +3,27 @@ package pipeline
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/qiniu/log"
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
+	"github.com/qiniu/pandora-go-sdk/logdb"
 	"github.com/qiniu/pandora-go-sdk/pipeline"
+	"github.com/qiniu/pandora-go-sdk/tsdb"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
 	cfg               *config.Config
 	client            pipeline.PipelineAPI
+	logdbapi          logdb.LogdbAPI
+	tsdbapi           tsdb.TsdbAPI
 	region            = os.Getenv("REGION")
 	endpoint          = os.Getenv("PIPELINE_HOST")
 	ak                = os.Getenv("ACCESS_KEY")
@@ -35,11 +40,30 @@ func init() {
 		WithEndpoint(endpoint).
 		WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
-		WithLoggerLevel(base.LogDebug)
+		WithLoggerLevel(base.LogDebug).
+		WithLogDBEndpoint("https://logdb.qiniu.com").
+		WithTSDBEndpoint("https://tsdb.qiniu.com")
 
-	client, err = pipeline.New(cfg)
+	tsdbapi, err = tsdb.New(cfg.Clone())
+	if err != nil {
+		logger.Errorf("new tsdb client failed, err: %v", err)
+	}
+	client, err = pipeline.New(cfg.Clone())
 	if err != nil {
 		logger.Errorf("new pipeline client failed, err: %v", err)
+	}
+	logdbapi, err = logdb.New(cfg.Clone())
+	if err != nil {
+		logger.Errorf("new logdb client failed, err: %v", err)
+	}
+	if _, err = logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: "testpandora_go_sdk_init"}); err != nil && !reqerr.IsNoSuchResourceError(err) {
+		log.Error(err)
+	}
+	if _, err = client.GetRepo(&pipeline.GetRepoInput{RepoName: "testpandora_go_sdk_init"}); err != nil && !reqerr.IsNoSuchResourceError(err) {
+		log.Error(err)
+	}
+	if _, err = tsdbapi.GetRepo(&tsdb.GetRepoInput{RepoName: "testpandora_go_sdk_init"}); err != nil && !reqerr.IsNoSuchResourceError(err) {
+		log.Error(err)
 	}
 
 	defaultRepoSchema = []pipeline.RepoSchemaEntry{
@@ -661,7 +685,7 @@ func TestTransform(t *testing.T) {
 }
 
 func TestExport(t *testing.T) {
-	repoName := "repo_for_export"
+	repoName := "PandoraSdkTestExport"
 	createRepoInput := &pipeline.CreateRepoInput{
 		RepoName: repoName,
 		Schema:   defaultRepoSchema,
@@ -671,6 +695,12 @@ func TestExport(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	logdbapi.CreateRepo(&logdb.CreateRepoInput{
+		RepoName:  "lg_dest_repo",
+		Retention: "1d",
+		Region:    "nb",
+		Schema:    []logdb.RepoSchemaEntry{logdb.RepoSchemaEntry{Key: "f1", ValueType: "string"}},
+	})
 
 	exports := []pipeline.CreateExportInput{
 		pipeline.CreateExportInput{
@@ -686,10 +716,10 @@ func TestExport(t *testing.T) {
 		},
 		pipeline.CreateExportInput{
 			RepoName:   repoName,
-			ExportName: "lg_export",
+			ExportName: "lg_export_testsdk",
 			Spec: &pipeline.ExportLogDBSpec{
 				DestRepoName: "lg_dest_repo",
-				Doc:          map[string]interface{}{"f1": "#f1"},
+				Doc:          map[string]interface{}{"f1": "f1"},
 			},
 			Whence: "newest",
 		},
@@ -756,7 +786,7 @@ func TestExport(t *testing.T) {
 		if getExportOutput.Whence != export.Whence {
 			t.Errorf("whence %s is different to expected whence %s", getExportOutput.Whence, export.Whence)
 		}
-		if export.ExportName == "lg_export" {
+		if export.ExportName == "lg_export_testsdk" {
 			err = client.UpdateExport(&pipeline.UpdateExportInput{
 				RepoName:   export.RepoName,
 				ExportName: export.ExportName,
@@ -801,6 +831,146 @@ func TestExport(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+func TestUpdateExport(t *testing.T) {
+	exportSchema := []pipeline.RepoSchemaEntry{
+		{
+			Key:       "f1",
+			ValueType: "string",
+		},
+		{
+			Key:       "f2",
+			ValueType: "float",
+		},
+		{
+			Key:       "f3",
+			ValueType: "map",
+			Schema: []pipeline.RepoSchemaEntry{
+				{
+					Key:       "f1",
+					ValueType: "string",
+				},
+				{
+					Key:       "f2",
+					ValueType: "float",
+				},
+			},
+		},
+	}
+	repoName := "pandorasdktestupdateexport"
+	createRepoInput := &pipeline.CreateRepoInput{
+		RepoName: repoName,
+		Schema:   exportSchema,
+		Region:   "nb",
+	}
+	err := client.CreateRepo(createRepoInput)
+	if err != nil {
+		t.Error(err)
+	}
+	err = logdbapi.CreateRepo(&logdb.CreateRepoInput{
+		RepoName:  repoName,
+		Retention: "1d",
+		Region:    "nb",
+		Schema: []logdb.RepoSchemaEntry{
+			{Key: "f1", ValueType: "string"},
+			{Key: "f3", ValueType: "object", Schemas: []logdb.RepoSchemaEntry{
+				{
+					Key:       "f1",
+					ValueType: "string",
+				},
+				{
+					Key:       "f2",
+					ValueType: "float",
+				},
+			}},
+		},
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	input := &pipeline.CreateExportInput{
+		RepoName:   repoName,
+		ExportName: "lg_export",
+		Spec: &pipeline.ExportLogDBSpec{
+			DestRepoName: repoName,
+			Doc:          map[string]interface{}{"f1": "#f1"},
+		},
+		Whence: "oldest",
+	}
+
+	newspec := &pipeline.ExportLogDBSpec{
+		DestRepoName: repoName,
+		Doc:          map[string]interface{}{"f1": "#f1", "f3": "#f3"},
+	}
+	err = client.CreateExport(input)
+	if err != nil {
+		t.Errorf("export: %s create failed, err: %v", input.ExportName, err)
+	}
+
+	getExportOutput, err := client.GetExport(&pipeline.GetExportInput{
+		RepoName:   input.RepoName,
+		ExportName: input.ExportName,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	if getExportOutput == nil {
+		t.Error("getExportInput should not be nil")
+	}
+	if getExportOutput.Type != input.Type {
+		t.Errorf("type %s is different to expected type %s", getExportOutput.Type, input.Type)
+	}
+	if getExportOutput.Whence != input.Whence {
+		t.Errorf("whence %s is different to expected whence %s", getExportOutput.Whence, input.Whence)
+	}
+	if input.ExportName == "lg_export" {
+		err = client.UpdateExport(&pipeline.UpdateExportInput{
+			RepoName:   input.RepoName,
+			ExportName: input.ExportName,
+			Spec:       newspec,
+		})
+		if err != nil {
+			t.Error(err)
+		}
+		getExportOutput, err = client.GetExport(&pipeline.GetExportInput{
+			RepoName:   input.RepoName,
+			ExportName: input.ExportName,
+		})
+		if err != nil {
+			t.Error(err)
+		}
+		mmp := getExportOutput.Spec["doc"].(map[string]interface{})
+		if _, ok := mmp["f3"]; !ok {
+			t.Error("spec should be ", newspec, mmp)
+		}
+	}
+
+	listExportsOutput, err := client.ListExports(&pipeline.ListExportsInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+	if listExportsOutput == nil {
+		t.Error("listExportsOutput should not be nil")
+	}
+	if len(listExportsOutput.Exports) != 1 {
+		t.Errorf("list export count %d should be equal to %d", len(listExportsOutput.Exports), 1)
+	}
+
+	deleteExportInput := &pipeline.DeleteExportInput{
+		RepoName:   input.RepoName,
+		ExportName: input.ExportName,
+	}
+	err = client.DeleteExport(deleteExportInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+	logdbapi.DeleteRepo(&logdb.DeleteRepoInput{RepoName: repoName})
 }
 
 func TestPostDataWithToken(t *testing.T) {
@@ -880,6 +1050,151 @@ func TestPostDataWithToken(t *testing.T) {
 
 	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
 	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
+	repoName := "TestPostDataSchemaFreeWithService"
+	var err error
+
+	postDataInput := &pipeline.SchemaFreeInput{
+		RepoName: repoName,
+		Datas: pipeline.Datas{
+			pipeline.Data{
+				"f1": "12.7",
+				"f2": 1.0,
+				"f4": 123,
+				"f5": true,
+			},
+		},
+		Option: &pipeline.SchemaFreeOption{
+			ToLogDB:        true,
+			LogDBRepoName:  "tologdb",
+			LogDBRetention: "3d",
+		},
+	}
+	schemas, err := client.PostDataSchemaFree(postDataInput)
+	if err != nil {
+		t.Error(err)
+	}
+	logdbrepoinfo, err := logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.LogDBRepoName})
+	if err != nil {
+		t.Error(err)
+	}
+	if len(logdbrepoinfo.Schema) != 4 {
+		t.Error("logdb repo info error ,schema should be 4 but ", len(logdbrepoinfo.Schema))
+	}
+	log.Println(logdbrepoinfo.Schema)
+	exs, err := client.ListExports(&pipeline.ListExportsInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+	if len(exs.Exports) != 1 {
+		t.Error("should have 2 exports, but ", len(exs.Exports))
+	}
+	for _, v := range exs.Exports {
+		if v.Type == pipeline.ExportTypeLogDB {
+			log.Println(v)
+		}
+		if v.Type == pipeline.ExportTypeTSDB {
+
+		}
+	}
+	postDataInput = &pipeline.SchemaFreeInput{
+		RepoName: repoName,
+		Datas: pipeline.Datas{
+			pipeline.Data{
+				"f1": "12.7",
+				"f3": map[string]interface{}{
+					"hello": "123",
+				},
+			},
+		},
+		Option: &pipeline.SchemaFreeOption{
+			ToLogDB:        true,
+			LogDBRepoName:  "tologdb",
+			LogDBRetention: "3d",
+		},
+	}
+	schemas, err = client.PostDataSchemaFree(postDataInput)
+	if err != nil {
+		t.Error(err)
+	}
+	logdbrepoinfo, err = logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.LogDBRepoName})
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, 5, len(logdbrepoinfo.Schema))
+	exs, err = client.ListExports(&pipeline.ListExportsInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+	if len(exs.Exports) != 1 {
+		t.Error("should have 2 exports, but ", len(exs.Exports))
+	}
+	for _, v := range exs.Exports {
+		if v.Type == pipeline.ExportTypeLogDB {
+			log.Println(v)
+		}
+		if v.Type == pipeline.ExportTypeTSDB {
+
+		}
+	}
+	postDataInput = &pipeline.SchemaFreeInput{
+		RepoName: repoName,
+		Datas: pipeline.Datas{
+			pipeline.Data{
+				"f1": "12.7",
+				"f3": map[string]interface{}{
+					"hello": "123",
+					"ketty": 1.23,
+				},
+			},
+		},
+		Option: &pipeline.SchemaFreeOption{
+			ToLogDB:        true,
+			LogDBRepoName:  "tologdb",
+			LogDBRetention: "3d",
+		},
+	}
+	schemas, err = client.PostDataSchemaFree(postDataInput)
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println(schemas)
+	repo, err := client.GetRepo(&pipeline.GetRepoInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+	log.Println(repo.Schema)
+
+	listExportsOutput, err := client.ListExports(&pipeline.ListExportsInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+	if listExportsOutput == nil {
+		t.Error("listExportsOutput should not be nil")
+	}
+	if len(listExportsOutput.Exports) != 1 {
+		t.Errorf("list export count %d should be equal to %d", len(listExportsOutput.Exports), 1)
+	}
+
+	for _, export := range listExportsOutput.Exports {
+		deleteExportInput := &pipeline.DeleteExportInput{
+			RepoName:   repoName,
+			ExportName: export.Name,
+		}
+		err = client.DeleteExport(deleteExportInput)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+	if err = logdbapi.DeleteRepo(&logdb.DeleteRepoInput{RepoName: "tologdb"}); err != nil {
 		t.Error(err)
 	}
 }

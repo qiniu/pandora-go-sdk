@@ -21,7 +21,14 @@ type Config struct {
 	LogdbEndpoint    string
 	TsdbEndpoint     string
 	PipelineEndpoint string
+	ConfigType       string
 }
+
+const (
+	TypeLOGDB    = "logdb"
+	TypePipeline = "pipeline"
+	TypeTSDB     = "tsdb"
+)
 
 const (
 	defaultDialTimeout     time.Duration = 10 * time.Second
@@ -36,6 +43,26 @@ func NewConfig() *Config {
 	return &Config{
 		DialTimeout:     defaultDialTimeout,
 		ResponseTimeout: defaultResponseTimeout,
+	}
+}
+
+func (c *Config) Clone() *Config {
+	return &Config{
+		Endpoint:         c.Endpoint,
+		Ak:               c.Ak,
+		Sk:               c.Sk,
+		Logger:           c.Logger,
+		DialTimeout:      c.DialTimeout,
+		ResponseTimeout:  c.ResponseTimeout,
+		RequestRateLimit: c.RequestRateLimit,
+		FlowRateLimit:    c.FlowRateLimit,
+		Gzip:             c.Gzip,
+
+		//以下是新版本，上面的Endpoint是老版本，都兼容，默认使用新版，新版为空则用老的Endpoint
+		LogdbEndpoint:    c.LogdbEndpoint,
+		TsdbEndpoint:     c.TsdbEndpoint,
+		PipelineEndpoint: c.PipelineEndpoint,
+		ConfigType:       c.ConfigType,
 	}
 }
 

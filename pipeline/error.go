@@ -51,6 +51,8 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.InvalidExportSpecError
 	case "E18125", "E18123", "E18111", "E18110", "E18107", "E18104":
 		err.ErrorType = reqerr.InvalidDataSchemaError
+	case "E18305":
+		err.ErrorType = reqerr.ExportSpecRemainUnchanged
 	case "E9000":
 		err.ErrorType = reqerr.InternalServerError
 	default:

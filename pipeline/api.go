@@ -100,11 +100,19 @@ func (c *Pipeline) CreateRepoFromDSL(input *CreateRepoDSLInput) (err error) {
 }
 
 func (c *Pipeline) UpdateRepoWithTSDB(input *UpdateRepoInput, ex ExportDesc) error {
-	tags, ok := ex.Spec["tags"].(map[string]interface{})
+	repoName, ok := ex.Spec["destRepoName"].(string)
+	if !ok {
+		return fmt.Errorf("export tsdb spec destRepoName assert error %v is not string", ex.Spec["destRepoName"])
+	}
+	seriesName, ok := ex.Spec["series"].(string)
+	if !ok {
+		return fmt.Errorf("export tsdb spec series assert error %v is not string", ex.Spec["series"])
+	}
+	tags, ok := ex.Spec["tags"].(map[string]string)
 	if !ok {
 		return fmt.Errorf("export tsdb spec tags assert error %v is not map[string]interface{}", ex.Spec["tags"])
 	}
-	fields, ok := ex.Spec["fields"].(map[string]interface{})
+	fields, ok := ex.Spec["fields"].(map[string]string)
 	if !ok {
 		return fmt.Errorf("export tsdb spec fields assert error %v is not map[string]interface{}", ex.Spec["fields"])
 	}
@@ -115,13 +123,16 @@ func (c *Pipeline) UpdateRepoWithTSDB(input *UpdateRepoInput, ex ExportDesc) err
 			fields[v.Key] = v.Key
 		}
 	}
-	ex.Spec["tags"] = tags
-	ex.Spec["fields"] = fields
-	return c.UpdateExport(&UpdateExportInput{
+	spec := ExportTsdbSpec{DestRepoName: repoName, SeriesName: seriesName, Tags: tags, Fields: fields}
+	err := c.UpdateExport(&UpdateExportInput{
 		RepoName:   input.RepoName,
 		ExportName: ex.Name,
-		Spec:       ex.Spec,
+		Spec:       spec,
 	})
+	if reqerr.IsExportRemainUnchanged(err) {
+		err = nil
+	}
+	return err
 }
 
 func schemaNotIn(key string, schemas []logdb.RepoSchemaEntry) bool {
@@ -169,28 +180,20 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 	}); err != nil {
 		return err
 	}
-	ex.Spec["doc"] = docs
-	return c.UpdateExport(&UpdateExportInput{
-		RepoName:   repoName,
+	spec := &ExportLogDBSpec{DestRepoName: repoName, Doc: docs}
+	err = c.UpdateExport(&UpdateExportInput{
+		RepoName:   input.RepoName,
 		ExportName: ex.Name,
-		Spec:       ex.Spec,
+		Spec:       spec,
 	})
+	if reqerr.IsExportRemainUnchanged(err) {
+		err = nil
+	}
+	return err
 }
 
 func (c *Pipeline) UpdateRepoWithKodo(input *UpdateRepoInput, ex ExportDesc) error {
-	fields, ok := ex.Spec["fields"].(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("export KODO spec doc assert error %v is not map[string]interface{}", ex.Spec["fields"])
-	}
-	for _, v := range input.Schema {
-		fields[v.Key] = v.Key
-	}
-	ex.Spec["fields"] = fields
-	return c.UpdateExport(&UpdateExportInput{
-		RepoName:   input.RepoName,
-		ExportName: ex.Name,
-		Spec:       ex.Spec,
-	})
+	return fmt.Errorf("not supported yet")
 }
 
 func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
@@ -202,7 +205,11 @@ func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
 	if err != nil {
 		return
 	}
-	if input.ExportType == "" {
+	if input.Option == nil {
+		return nil
+	}
+	//这边是一个优化，对于没有任何服务的情况，节省 listexports的rpc调用
+	if !input.Option.ToLogDB && !input.Option.ToTSDB && !input.Option.ToKODO {
 		return nil
 	}
 	exports, err := c.ListExports(&ListExportsInput{
@@ -211,26 +218,70 @@ func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
 	if err != nil {
 		return
 	}
+	exs := make(map[string]ExportDesc)
 	for _, ex := range exports.Exports {
-		if input.ExportType == "all" || ex.Type == input.ExportType {
-			switch ex.Type {
-			case ExportTypeTSDB:
-				err = c.UpdateRepoWithTSDB(input, ex)
-				if err != nil {
-					return
-				}
-			case ExportTypeLogDB:
-				err = c.UpdateRepoWithLogDB(input, ex)
-				if err != nil {
-					return
-				}
-			case ExportTypeKODO:
-				err = c.UpdateRepoWithKodo(input, ex)
-				if err != nil {
-					return
-				}
-			default:
+		exs[ex.Name] = ex
+	}
+	if input.Option.ToLogDB {
+		ex, ok := exs[base.FormExportName(input.RepoName, ExportTypeLogDB)]
+		if ok {
+			if ex.Type != ExportTypeLogDB {
+				err = fmt.Errorf("export name is %v but type is %v not %v", ex.Name, ex.Type, ExportTypeLogDB)
+				return
 			}
+			err = c.UpdateRepoWithLogDB(input, ex)
+			if err != nil {
+				return
+			}
+		} else {
+			err = c.AutoExportToLogDB(&AutoExportToLogDBInput{
+				RepoName:    input.RepoName,
+				LogRepoName: input.Option.LogDBRepoName,
+				Retention:   input.Option.LogDBRetention,
+			})
+			if err != nil {
+				return
+			}
+		}
+	}
+	if input.Option.ToTSDB {
+		ex, ok := exs[base.FormExportName(input.RepoName, ExportTypeTSDB)]
+		if ok {
+			if ex.Type != ExportTypeTSDB {
+				err = fmt.Errorf("export name is %v but type is %v not %v", ex.Name, ex.Type, ExportTypeTSDB)
+				return
+			}
+			err = c.UpdateRepoWithTSDB(input, ex)
+			if err != nil {
+				return
+			}
+		} else {
+			err = c.AutoExportToTSDB(&AutoExportToTSDBInput{
+				RepoName:     input.RepoName,
+				TSDBRepoName: input.Option.TSDBRepoName,
+				SeriesName:   input.Option.TSDBSeriesName,
+				Retention:    input.Option.TSDBRetention,
+				Tags:         input.Option.TSDBtags,
+			})
+			if err != nil {
+				return
+			}
+		}
+	}
+	if input.Option.ToKODO {
+		ex, ok := exs[base.FormExportName(input.RepoName, ExportTypeKODO)]
+		if ok {
+			if ex.Type != ExportTypeKODO {
+				err = fmt.Errorf("export name %v is %v but type is %v not %v", ex.Name, ex.Type, ExportTypeKODO)
+				return
+			}
+			err = c.UpdateRepoWithKodo(input, ex)
+			if err != nil {
+				return
+			}
+		} else {
+			err = fmt.Errorf("auto export to KODO not supported yet")
+			return
 		}
 	}
 	return nil
@@ -291,7 +342,7 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 	var buf bytes.Buffer
 	var start = 0
 	for i, d := range input.Datas {
-		point, err := c.generatePoint(input.RepoName, d, !input.NoUpdate)
+		point, err := c.generatePoint(input.RepoName, d, !input.NoUpdate, input.Option)
 		if err != nil {
 			return nil, err
 		}
@@ -746,28 +797,6 @@ func (c *Pipeline) GetUpdateSchemas(repoName string) (schemas map[string]RepoSch
 	return
 }
 
-func (c *Pipeline) GetLogDBAPI() (logdb.LogdbAPI, error) {
-	if c.LogDB == nil {
-		logdb, err := logdb.New(c.Config)
-		if err != nil {
-			return nil, err
-		}
-		c.LogDB = logdb
-	}
-	return c.LogDB, nil
-}
-
-func (c *Pipeline) GetTSDBAPI() (tsdb.TsdbAPI, error) {
-	if c.TSDB == nil {
-		tsdb, err := tsdb.New(c.Config)
-		if err != nil {
-			return nil, err
-		}
-		c.TSDB = tsdb
-	}
-	return c.TSDB, nil
-}
-
 func (c *Pipeline) CreateForLogDB(input *CreateRepoForLogDBInput) error {
 	pinput := formPipelineRepoInput(input.RepoName, input.Region, input.Schema)
 	err := c.CreateRepo(pinput)
@@ -784,7 +813,7 @@ func (c *Pipeline) CreateForLogDB(input *CreateRepoForLogDBInput) error {
 		return err
 	}
 
-	return c.CreateExport(c.FormExportInput(input.RepoName, ExportTypeLogDB, c.FormLogDBSpec(input)))
+	return c.CreateExport(c.FormExportInput(input.RepoName, ExportTypeLogDB, c.FormLogDBSpec(input.RepoName, input.Schema)))
 }
 
 func (c *Pipeline) CreateForLogDBDSL(input *CreateRepoForLogDBDSLInput) error {
@@ -833,5 +862,5 @@ func (c *Pipeline) CreateForTSDB(input *CreateRepoForTSDBInput) error {
 	if err != nil && !reqerr.IsExistError(err) {
 		return err
 	}
-	return c.CreateExport(c.FormExportInput(input.RepoName, ExportTypeTSDB, c.FormTSDBSpec(input)))
+	return c.CreateExport(c.FormExportInput(input.RepoName, ExportTypeTSDB, c.FormTSDBSpec(input.TSDBRepoName, input.SeriesName, input.Tags, input.Schema)))
 }

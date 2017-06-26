@@ -115,5 +115,21 @@ type PipelineAPI interface {
 
 	GetUpdateSchemas(string) (map[string]RepoSchemaEntry, error)
 
+	UploadUdf(input *UploadUdfInput) (err error)
+
+	UploadUdfFromFile(input *UploadUdfFromFileInput) (err error)
+
+	PutUdfInfoInput(input *PutUdfInfoInput) (err error)
+
+	DeleteUdf(input *DeleteUdfInfoInput) (err error)
+
+	ListUdfs(input *ListUdfsInput) (output *ListUdfsOutput, err error)
+
+	RegisterUdfFunction(input *RegisterUdfFunctionInput) (err error)
+
+	DeRegisterUdfFunction(input *DeregisterUdfFunctionInput) (err error)
+
+	ListUdfFunctions(input *ListUdfFunctionsInput) (output *ListUdfFunctionsOutput, err error)
+
 	Close() error
 }

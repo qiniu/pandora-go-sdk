@@ -14,6 +14,7 @@ import (
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	"github.com/qiniu/pandora-go-sdk/pipeline"
+	"qbox.us/errors"
 )
 
 var (
@@ -57,6 +58,223 @@ func init() {
 	defaultContainer = &pipeline.Container{
 		Type:  "M16C4",
 		Count: 1,
+	}
+}
+
+func TestUploadUdf(t *testing.T) {
+	udfUpload := &pipeline.UploadUdfFromFileInput{
+		UdfName:  "testudf",
+		FilePath: "./lalalala-0.2-SNAPSHOT.jar",
+	}
+	err := client.UploadUdfFromFile(udfUpload)
+	if err != nil {
+		t.Error(err)
+	}
+
+	deleteUdf := &pipeline.DeleteUdfInfoInput{
+		UdfName: "testudf",
+	}
+	err = client.DeleteUdf(deleteUdf)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// 多次删除幂等
+	err = client.DeleteUdf(deleteUdf)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = client.UploadUdfFromFile(udfUpload)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = client.PutUdfInfoInput(&pipeline.PutUdfInfoInput{
+		UdfName:     "testudf",
+		Description: "这是一个完美的udf",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	ret, err := client.ListUdfs(&pipeline.ListUdfsInput{
+		PageRequest: pipeline.PageRequest{
+			Page:   1,
+			Size:   1,
+			SortBy: "+uploadTime",
+		},
+	})
+	if ret.Result[0].Description != "这是一个完美的udf" {
+		t.Error(errors.New("testudf's description should be 这是一个完美的udf, bug got " + ret.Result[0].Description))
+	}
+
+	err = client.PutUdfInfoInput(&pipeline.PutUdfInfoInput{
+		UdfName:     "testudf1",
+		Description: "这是一个完美的udf",
+	})
+	if err == nil {
+		t.Error(errors.New("testudf1 should not be exist"))
+	}
+
+	udfUpload.UdfName = "testudf1"
+	err = client.UploadUdfFromFile(udfUpload)
+	if err != nil {
+		t.Error(err)
+	}
+
+	udfUpload.UdfName = "testudf2"
+	err = client.UploadUdfFromFile(udfUpload)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// 按照jarName 顺序排列，分页查询
+	ret, err = client.ListUdfs(&pipeline.ListUdfsInput{
+		PageRequest: pipeline.PageRequest{
+			Page:   1,
+			Size:   2,
+			SortBy: "+jarName",
+		},
+	})
+	if len(ret.Result) != 2 {
+		t.Error(errors.New("按照分页应该只有两条数据"))
+	}
+	if ret.Result[0].JarName != "testudf" {
+		t.Error(errors.New("testudf 应该是第一个数据"))
+	}
+
+	// 按照jarName 逆序排列，全部查询
+	ret, err = client.ListUdfs(&pipeline.ListUdfsInput{
+		PageRequest: pipeline.PageRequest{
+			SortBy: "-jarName",
+		},
+	})
+	if len(ret.Result) != 3 {
+		t.Error(errors.New("总共应该有3条数据"))
+	}
+	if ret.Result[0].JarName != "testudf2" {
+		t.Error(errors.New("testudf2 应该是第一个数据"))
+	}
+
+	deleteUdf.UdfName = "testudf"
+	client.DeleteUdf(deleteUdf)
+	deleteUdf.UdfName = "testudf1"
+	client.DeleteUdf(deleteUdf)
+	deleteUdf.UdfName = "testudf2"
+	client.DeleteUdf(deleteUdf)
+}
+
+func TestRegisterUdfFunction(t *testing.T) {
+	udfUpload := &pipeline.UploadUdfFromFileInput{
+		UdfName:  "testudf",
+		FilePath: "./lalalala-0.2-SNAPSHOT.jar",
+	}
+	err := client.UploadUdfFromFile(udfUpload)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = client.RegisterUdfFunction(&pipeline.RegisterUdfFunctionInput{
+		FuncName:        "a",
+		JarName:         "testudf",
+		ClassName:       "com.lala.A",
+		FuncDeclaration: "..",
+		Description:     "...",
+	})
+	if err == nil {
+		t.Error(errors.New("com.lala.A 没有继承 UDF、GenericUDF、GenericUDTF or GenericUDAFResolver"))
+	}
+
+	err = client.RegisterUdfFunction(&pipeline.RegisterUdfFunctionInput{
+		FuncName:        "b",
+		JarName:         "testudf",
+		ClassName:       "com.lala.B",
+		FuncDeclaration: "..",
+		Description:     "...",
+	})
+	if err == nil {
+		t.Error(errors.New("com.lala.B 没有实现 evaluate方法"))
+	}
+
+	err = client.RegisterUdfFunction(&pipeline.RegisterUdfFunctionInput{
+		FuncName:        "go",
+		JarName:         "testudf",
+		ClassName:       "com.lala.GOGOGO",
+		FuncDeclaration: "..",
+		Description:     "...",
+	})
+	if err == nil {
+		t.Error(errors.New("com.lala.GOGOGO 并不存在"))
+	}
+
+	err = client.RegisterUdfFunction(&pipeline.RegisterUdfFunctionInput{
+		FuncName:        "d",
+		JarName:         "testudf",
+		ClassName:       "com.lala.D",
+		FuncDeclaration: "..",
+		Description:     "...",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = client.RegisterUdfFunction(&pipeline.RegisterUdfFunctionInput{
+		FuncName:        "f",
+		JarName:         "testudf",
+		ClassName:       "com.lala.F",
+		FuncDeclaration: "..",
+		Description:     "...",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	// 按照funcName 逆序排列，分页查询
+	ret, err := client.ListUdfFunctions(&pipeline.ListUdfFunctionsInput{
+		PageRequest: pipeline.PageRequest{
+			Page:   1,
+			Size:   1,
+			SortBy: "-funcName",
+		},
+	})
+	if len(ret.Result) != 1 {
+		t.Error(errors.New("总共应该有1条数据"))
+	}
+	if ret.Result[0].FuncName != "f" {
+		t.Error(errors.New("f 应该是第一个数据 but got " + ret.Result[0].FuncName))
+	}
+
+	// 按照funcName 逆序排列，全部查询
+	ret, err = client.ListUdfFunctions(&pipeline.ListUdfFunctionsInput{
+		PageRequest: pipeline.PageRequest{
+			SortBy: "-funcName",
+		},
+	})
+	if len(ret.Result) != 2 {
+		t.Error(errors.New("总共应该有2条数据"))
+	}
+	if ret.Result[0].FuncName != "f" {
+		t.Error(errors.New("f 应该是第一个数据 but got " + ret.Result[0].FuncName))
+	}
+
+	err = client.DeRegisterUdfFunction(&pipeline.DeregisterUdfFunctionInput{
+		FuncName: "d",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	err = client.DeRegisterUdfFunction(&pipeline.DeregisterUdfFunctionInput{
+		FuncName: "f",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	// 按照funcName 逆序排列，全部查询
+	ret, err = client.ListUdfFunctions(&pipeline.ListUdfFunctionsInput{})
+	if len(ret.Result) != 0 {
+		t.Error(errors.New("总共应该有0条数据"))
 	}
 }
 

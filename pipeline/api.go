@@ -2,10 +2,9 @@ package pipeline
 
 import (
 	"bytes"
+	"fmt"
 	"net/url"
 	"os"
-
-	"fmt"
 
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
@@ -640,7 +639,7 @@ func (c *Pipeline) GetJobHistory(input *GetJobHistoryInput) (output *GetJobHisto
 	op := c.newOperation(base.OpGetJobHistory, input.JobName)
 
 	output = &GetJobHistoryOutput{}
-	req := c.newRequest(op, input.Token, nil)
+	req := c.newRequest(op, input.Token, output)
 	return output, req.Send()
 }
 
@@ -649,6 +648,30 @@ func (c *Pipeline) StopJob(input *StopJobInput) (err error) {
 
 	req := c.newRequest(op, input.Token, nil)
 	return req.Send()
+}
+
+func (c *Pipeline) StopJobBatch(input *StopJobBatchInput) (output *StopJobBatchOutput, err error) {
+	op := c.newOperation(base.OpStopJobBatch)
+
+	output = &StopJobBatchOutput{}
+	req := c.newRequest(op, input.Token, output)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	return output, req.Send()
+}
+
+func (c *Pipeline) RerunJobBatch(input *RerunJobBatchInput) (output *RerunJobBatchOutput, err error) {
+	op := c.newOperation(base.OpRerunJobBatch)
+
+	output = &RerunJobBatchOutput{}
+	req := c.newRequest(op, input.Token, output)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	return output, req.Send()
 }
 
 func (c *Pipeline) CreateJobExport(input *CreateJobExportInput) (err error) {

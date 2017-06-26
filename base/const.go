@@ -54,6 +54,8 @@ const (
 	OpStartJob         string = "StartJob"
 	OpStopJob          string = "StopJob"
 	OpGetJobHistory    string = "GetJobHistory"
+	OpStopJobBatch     string = "StopJobBatch"
+	OpRerunJobBatch    string = "RerunJobBatch"
 	OpCreateJobExport  string = "CreateJobExport"
 	OpGetJobExport     string = "GetJobExport"
 	OpListJobExports   string = "ListJobExports"
@@ -64,7 +66,7 @@ const (
 	OpSendLog           string = "SendLog"
 	OpQueryLog          string = "QueryLog"
 	OpQueryHistogramLog string = "QueryHistogramLog"
-	OpPartialQuery   	string = "PartialQuery"
+	OpPartialQuery      string = "PartialQuery"
 
 	OpUpdateRepoMetadata string = "UpdataRepoMetadata"
 	OpDeleteRepoMetadata string = "DeleteRepoMetadata"

@@ -175,6 +175,10 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodPost, "/v2/jobs/%s/actions/stop"
 	case base.OpGetJobHistory:
 		method, urlTmpl = base.MethodGet, "/v2/jobs/%s/history"
+	case base.OpStopJobBatch:
+		method, urlTmpl = base.MethodPost, "/v2/batch/actions/stop"
+	case base.OpRerunJobBatch:
+		method, urlTmpl = base.MethodPost, "/v2/batch/actions/rerun"
 	case base.OpCreateJobExport:
 		method, urlTmpl = base.MethodPost, "/v2/jobs/%s/exports/%s"
 	case base.OpGetJobExport:

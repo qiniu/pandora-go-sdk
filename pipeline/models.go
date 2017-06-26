@@ -1037,9 +1037,14 @@ func (e *UpdateExportInput) Validate() (err error) {
 		*ExportLogDBSpec, ExportLogDBSpec, *ExportKodoSpec, ExportKodoSpec,
 		*ExportHttpSpec, ExportHttpSpec:
 	default:
-		return reqerr.NewInvalidArgs("ExportSpec", "spec Type not support")
+		return
 	}
-	return
+	vv, ok := e.Spec.(base.Validator)
+	if !ok {
+		err = reqerr.NewInvalidArgs("ExportSpec", "export spec cannot cast to validator")
+		return
+	}
+	return vv.Validate()
 }
 
 func (e *CreateExportInput) Validate() (err error) {
@@ -1375,6 +1380,7 @@ type JobScheduler struct {
 
 type Param struct {
 	Name    string `json:"name"`
+	Value   string `json:"value,omitempty"`
 	Default string `json:"default"`
 }
 
@@ -1469,16 +1475,55 @@ type GetJobHistoryInput struct {
 }
 
 type JobHistory struct {
-	RunId     int64  `json:"id"`
+	RunId     int64  `json:"runId"`
+	BatchTime string `json:"batchTime"`
 	StartTime string `json:"startTime"`
 	EndTime   string `json:"endTime"`
+	Duration  int64  `json:"duration"`
 	Status    string `json:"status"`
 	Message   string `json:"message"`
 }
 
 type GetJobHistoryOutput struct {
 	Total   int64        `json:"total"`
-	History []JobHistory `json:""`
+	History []JobHistory `json:"history"`
+}
+
+type StopJobBatchInput struct {
+	PipelineToken
+	JobName string `json:"jobName"`
+	RunId   int    `json:"runId"`
+}
+
+func (s *StopJobBatchInput) Validate() (err error) {
+	if s.JobName == "" {
+		return reqerr.NewInvalidArgs("JobName", fmt.Sprintf("job name should not be empty"))
+	}
+	return
+}
+
+type StopJobBatchOutput struct {
+	PreStatus  string `json:"preStatus"`
+	PostStatus string `json:"postStatus"`
+}
+
+type RerunJobBatchInput struct {
+	PipelineToken
+	JobName string `json:"jobName"`
+	RunId   int    `json:"runId"`
+}
+
+func (s *RerunJobBatchInput) Validate() (err error) {
+	if s.JobName == "" {
+		return reqerr.NewInvalidArgs("JobName", fmt.Sprintf("job name should not be empty"))
+	}
+	return
+}
+
+type RerunJobBatchOutput struct {
+	PreStatus  string `json:"preStatus"`
+	PostStatus string `json:"postStatus"`
+	RerunCount int    `json:"rerunCount"`
 }
 
 type JobExportKodoSpec struct {
@@ -1489,7 +1534,7 @@ type JobExportKodoSpec struct {
 	Retention   int      `json:"retention"`
 	PartitionBy []string `json:"partitionBy"`
 	FileCount   int      `json:"fileCount"`
-	Overwrite   bool     `json:"overwrite"`
+	SaveMode    string   `json:"saveMode"`
 }
 
 func (e *JobExportKodoSpec) Validate() (err error) {
@@ -1502,8 +1547,20 @@ func (e *JobExportKodoSpec) Validate() (err error) {
 	if e.FileCount <= 0 {
 		return reqerr.NewInvalidArgs("FileCount", fmt.Sprintf("fileCount should be larger than 0"))
 	}
-
 	return
+}
+
+type JobExportHdfsSpec struct {
+	Path        string   `json:"path"`
+	Format      string   `json:"format"`
+	Compression string   `json:"compression,omitempty"`
+	PartitionBy []string `json:"partitionBy"`
+	FileCount   int      `json:"fileCount"`
+	SaveMode    string   `json:"saveMode"`
+}
+
+func (e *JobExportHdfsSpec) Validate() (err error) {
+	return nil
 }
 
 type CreateJobExportInput struct {
@@ -1525,6 +1582,8 @@ func (e *CreateJobExportInput) Validate() (err error) {
 	switch e.Spec.(type) {
 	case *JobExportKodoSpec, JobExportKodoSpec:
 		e.Type = "kodo"
+	case *JobExportHdfsSpec, JobExportHdfsSpec:
+		e.Type = "hdfs"
 	default:
 		return
 	}

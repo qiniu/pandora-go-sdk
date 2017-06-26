@@ -99,6 +99,10 @@ type PipelineAPI interface {
 
 	GetJobHistory(*GetJobHistoryInput) (*GetJobHistoryOutput, error)
 
+	StopJobBatch(*StopJobBatchInput) (*StopJobBatchOutput, error)
+
+	RerunJobBatch(*RerunJobBatchInput) (*RerunJobBatchOutput, error)
+
 	CreateJobExport(*CreateJobExportInput) error
 
 	GetJobExport(*GetJobExportInput) (*GetJobExportOutput, error)

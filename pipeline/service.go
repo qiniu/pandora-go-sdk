@@ -57,13 +57,14 @@ func (c *Pipeline) Close() (err error) {
 }
 
 func newClient(c *config.Config) (p *Pipeline, err error) {
-	if c.PipelineEndpoint != "" {
-		c.Endpoint = c.PipelineEndpoint
+	if c.PipelineEndpoint == "" {
+		c.PipelineEndpoint = c.Endpoint
 	}
-	if c.Endpoint == "" {
-		c.Endpoint = config.DefaultPipelineEndpoint
+	if c.PipelineEndpoint == "" {
+		c.PipelineEndpoint = config.DefaultPipelineEndpoint
 	}
-	if err = base.CheckEndPoint(c.Endpoint); err != nil {
+	c.ConfigType = config.TypePipeline
+	if err = base.CheckEndPoint(c.PipelineEndpoint); err != nil {
 		return
 	}
 	var t = &http.Transport{
@@ -199,4 +200,26 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		Method: method,
 		Path:   fmt.Sprintf(urlTmpl, args...),
 	}
+}
+
+func (c *Pipeline) GetLogDBAPI() (logdb.LogdbAPI, error) {
+	if c.LogDB == nil {
+		logdb, err := logdb.New(c.Config.Clone())
+		if err != nil {
+			return nil, err
+		}
+		c.LogDB = logdb
+	}
+	return c.LogDB, nil
+}
+
+func (c *Pipeline) GetTSDBAPI() (tsdb.TsdbAPI, error) {
+	if c.TSDB == nil {
+		tsdb, err := tsdb.New(c.Config.Clone())
+		if err != nil {
+			return nil, err
+		}
+		c.TSDB = tsdb
+	}
+	return c.TSDB, nil
 }

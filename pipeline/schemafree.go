@@ -64,7 +64,7 @@ func copyData(d Data) Data {
 	return md
 }
 
-func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool) (point Point, err error) {
+func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool, option *SchemaFreeOption) (point Point, err error) {
 	data := copyData(oldData)
 	point = Point{}
 	c.repoSchemaMux.Lock()
@@ -114,7 +114,7 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool)
 	if schemaFree && len(data) > 0 {
 		//defaultAll 为false时，过滤一批不要的
 		valueType := getPandoraKeyValueType(data)
-		if err = c.addRepoSchemas(repoName, valueType); err != nil {
+		if err = c.addRepoSchemas(repoName, valueType, option); err != nil {
 			err = fmt.Errorf("updatePandora Repo error %v", err)
 			return
 		}
@@ -197,7 +197,7 @@ func mergePandoraSchemas(a, b []RepoSchemaEntry) (ret []RepoSchemaEntry, err err
 	return
 }
 
-func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSchemaEntry) (err error) {
+func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSchemaEntry, option *SchemaFreeOption) (err error) {
 
 	var addScs, oldScs []RepoSchemaEntry
 	for _, v := range addSchemas {
@@ -223,10 +223,34 @@ func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSch
 			RepoName: repoName,
 			Schema:   schemas,
 		})
+		if option.ToLogDB {
+			err = c.AutoExportToLogDB(&AutoExportToLogDBInput{
+				RepoName:    repoName,
+				LogRepoName: option.LogDBRepoName,
+				Retention:   option.LogDBRetention,
+			})
+			if err != nil {
+				return
+			}
+		}
+		if option.ToTSDB {
+			err = c.AutoExportToTSDB(&AutoExportToTSDBInput{
+				RepoName:     repoName,
+				TSDBRepoName: option.TSDBRepoName,
+				SeriesName:   option.TSDBSeriesName,
+				Retention:    option.TSDBRetention,
+				Tags:         option.TSDBtags,
+			})
+			if err != nil {
+				return
+			}
+		}
+		return
 	} else {
 		err = c.UpdateRepo(&UpdateRepoInput{
 			RepoName: repoName,
 			Schema:   schemas,
+			Option:   option,
 		})
 	}
 	if err != nil {

@@ -5,11 +5,7 @@ import (
 )
 
 type PipelineAPI interface {
-	CreateForLogDB(*CreateRepoForLogDBInput) error
-
-	CreateForLogDBDSL(*CreateRepoForLogDBDSLInput) error
-
-	CreateForTSDB(*CreateRepoForTSDBInput) error
+	AutoExportToLogDB(*AutoExportToLogDBInput) error
 
 	CreateGroup(*CreateGroupInput) error
 

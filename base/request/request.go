@@ -51,7 +51,18 @@ type Operation struct {
 func New(cfg *config.Config, client *http.Client, op *Operation, token string, errBuilder reqerr.ErrBuilder, data interface{}) *Request {
 	httpReq, _ := http.NewRequest(op.Method, "", nil)
 	var err error
-	httpReq.URL, err = url.Parse(cfg.Endpoint + op.Path)
+	var endpoint string
+	switch cfg.ConfigType {
+	case config.TypePipeline:
+		endpoint = cfg.PipelineEndpoint
+	case config.TypeLOGDB:
+		endpoint = cfg.LogdbEndpoint
+	case config.TypeTSDB:
+		endpoint = cfg.TsdbEndpoint
+	default:
+		endpoint = cfg.Endpoint
+	}
+	httpReq.URL, err = url.Parse(endpoint + op.Path)
 	if err != nil {
 		cfg.Logger.Errorf("parse url failed, err: %v", err)
 		return nil

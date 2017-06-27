@@ -110,7 +110,7 @@ func (e *RepoSchemaEntry) Validate() (err error) {
 		return reqerr.NewInvalidArgs("Schema", fmt.Sprintf("invalid field key: %s", e.Key))
 	}
 	if !schemaTypes[e.ValueType] {
-		return reqerr.NewInvalidArgs("Schema", fmt.Sprintf("invalid field type: %s, invalid field type should be one of \"float\", \"string\", \"date\" and \"long\"", e.ValueType))
+		return reqerr.NewInvalidArgs("Schema", fmt.Sprintf("invalid field type: %s, invalid field type should be one of \"float\", \"string\", \"date\", \"object\" , \"boolean\", \"ip\", \"geo_point\"  and \"long\"", e.ValueType))
 	}
 	if e.Analyzer != "" {
 		if e.ValueType != "string" {

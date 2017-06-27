@@ -1,6 +1,8 @@
 package logdb
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -10,8 +12,6 @@ import (
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	"github.com/qiniu/pandora-go-sdk/logdb"
 	"github.com/stretchr/testify/assert"
-	"fmt"
-	"encoding/json"
 )
 
 var (
@@ -92,7 +92,6 @@ func TestRepo(t *testing.T) {
 	updateInput := &logdb.UpdateRepoInput{
 		RepoName:  repoName,
 		Schema:    defaultRepoSchema,
-		Region:    region,
 		Retention: "3d",
 	}
 
@@ -395,7 +394,7 @@ func TestQueryLogWithHighlight(t *testing.T) {
 	}
 }
 
-func TestPartialQuery(t *testing.T){
+func TestPartialQuery(t *testing.T) {
 	repoName := "repo_send_log"
 	createInput := &logdb.CreateRepoInput{
 		RepoName:  repoName,
@@ -452,32 +451,32 @@ func TestPartialQuery(t *testing.T){
 	time.Sleep(3 * time.Minute)
 
 	queryInput := &logdb.PartialQueryInput{
-		RepoName:repoName,
-		StartTime:startTime,
-		EndTime:endTime,
-		QueryString:"f1:v11",
-		Size:1,
-		Sort:"f3",
-		SearchType:logdb.PartialQuerySearchTypeA,
+		RepoName:    repoName,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		QueryString: "f1:v11",
+		Size:        1,
+		Sort:        "f3",
+		SearchType:  logdb.PartialQuerySearchTypeA,
 	}
-	queryInput.Highlight.PostTag="@test@"
+	queryInput.Highlight.PostTag = "@test@"
 	queryInput.Highlight.PreTag = "@test/@"
-	queryOut,err := client.PartialQuery(queryInput)
-	if err!=nil{
+	queryOut, err := client.PartialQuery(queryInput)
+	if err != nil {
 		t.Error(err)
 	}
-	bodystring,err := json.Marshal(queryOut)
-	if err!=nil{
+	bodystring, err := json.Marshal(queryOut)
+	if err != nil {
 		t.Error(err)
 	}
 	fmt.Println(string(bodystring))
-	for queryOut.PartialSuccess == true  {
-		queryOut,err = client.PartialQuery(queryInput)
-		if err!=nil{
+	for queryOut.PartialSuccess == true {
+		queryOut, err = client.PartialQuery(queryInput)
+		if err != nil {
 			t.Error(err)
 		}
-		bodystring,err = json.Marshal(queryOut)
-		if err!=nil{
+		bodystring, err = json.Marshal(queryOut)
+		if err != nil {
 			t.Error(err)
 		}
 		fmt.Println(string(bodystring))

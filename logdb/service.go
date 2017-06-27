@@ -27,13 +27,14 @@ func New(c *config.Config) (LogdbAPI, error) {
 }
 
 func newClient(c *config.Config) (p *Logdb, err error) {
-	if c.LogdbEndpoint != "" {
-		c.Endpoint = c.LogdbEndpoint
+	if c.LogdbEndpoint == "" {
+		c.LogdbEndpoint = c.Endpoint
 	}
-	if c.Endpoint == "" {
-		c.Endpoint = config.DefaultLogDBEndpoint
+	if c.LogdbEndpoint == "" {
+		c.LogdbEndpoint = config.DefaultLogDBEndpoint
 	}
-	if err = base.CheckEndPoint(c.Endpoint); err != nil {
+	c.ConfigType = config.TypeLOGDB
+	if err = base.CheckEndPoint(c.LogdbEndpoint); err != nil {
 		return
 	}
 

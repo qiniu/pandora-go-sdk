@@ -27,13 +27,14 @@ func New(c *config.Config) (TsdbAPI, error) {
 }
 
 func newClient(c *config.Config) (p *Tsdb, err error) {
-	if c.TsdbEndpoint != "" {
-		c.Endpoint = c.TsdbEndpoint
+	if c.TsdbEndpoint == "" {
+		c.TsdbEndpoint = c.Endpoint
 	}
-	if c.Endpoint == "" {
-		c.Endpoint = config.DefaultTSDBEndpoint
+	if c.TsdbEndpoint == "" {
+		c.TsdbEndpoint = config.DefaultTSDBEndpoint
 	}
-	if err = base.CheckEndPoint(c.Endpoint); err != nil {
+	c.ConfigType = config.TypeTSDB
+	if err = base.CheckEndPoint(c.TsdbEndpoint); err != nil {
 		return
 	}
 

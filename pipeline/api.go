@@ -154,7 +154,7 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 		return fmt.Errorf("export logdb spec doc assert error %v is not map[string]interface{}", ex.Spec["doc"])
 	}
 	for _, v := range input.Schema {
-		docs[v.Key] = v.Key
+		docs[v.Key] = "#" + v.Key
 	}
 	logdbAPI, err := c.GetLogDBAPI()
 	if err != nil {
@@ -170,7 +170,7 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 			if len(scs) > 0 {
 				repoInfo.Schema = append(repoInfo.Schema, scs[0])
 			}
-			docs[v.Key] = v.Key
+			docs[v.Key] = "#" + v.Key
 		}
 	}
 	if err = logdbAPI.UpdateRepo(&logdb.UpdateRepoInput{

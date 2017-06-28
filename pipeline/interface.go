@@ -123,7 +123,7 @@ type PipelineAPI interface {
 
 	UploadUdfFromFile(input *UploadUdfFromFileInput) (err error)
 
-	PutUdfInfoInput(input *PutUdfInfoInput) (err error)
+	PutUdfMeta(input *PutUdfMetaInput) (err error)
 
 	DeleteUdf(input *DeleteUdfInfoInput) (err error)
 

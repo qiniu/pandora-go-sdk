@@ -1668,17 +1668,17 @@ type UploadUdfFromFileInput struct {
 	FilePath string
 }
 
-type PutUdfInfoInput struct {
+type PutUdfMetaInput struct {
 	PipelineToken
 	UdfName     string `json:"-"`
 	Description string `json:"description"`
 }
 
-const MAX_DESCRIPTION_LEN = 1500
+const MaxDescriptionLen = 1500
 
-func (e *PutUdfInfoInput) Validate() error {
-	if (len(e.Description)) > MAX_DESCRIPTION_LEN {
-		return reqerr.NewInvalidArgs("PutUdfInfoInput", fmt.Sprintf("udf description must not be larger than %s", MAX_DESCRIPTION_LEN))
+func (e *PutUdfMetaInput) Validate() error {
+	if (len(e.Description)) > MaxDescriptionLen {
+		return reqerr.NewInvalidArgs("PutUdfMeta", fmt.Sprintf("udf description must not be larger than %s", MaxDescriptionLen))
 	}
 	return nil
 }
@@ -1689,9 +1689,9 @@ type DeleteUdfInfoInput struct {
 }
 
 type PageRequest struct {
-	Page   int
-	Size   int
-	SortBy string
+	From int
+	Size int
+	Sort string
 }
 
 type ListUdfsInput struct {
@@ -1719,11 +1719,11 @@ type RegisterUdfFunctionInput struct {
 }
 
 func (e *RegisterUdfFunctionInput) Validate() error {
-	if (len(e.Description)) > MAX_DESCRIPTION_LEN {
-		return reqerr.NewInvalidArgs("RegisterUdfFunctionInput", fmt.Sprintf("udf function description must not be larger than %s", MAX_DESCRIPTION_LEN))
+	if (len(e.Description)) > MaxDescriptionLen {
+		return reqerr.NewInvalidArgs("RegisterUdfFunctionInput", fmt.Sprintf("udf function description must not be larger than %s", MaxDescriptionLen))
 	}
-	if (len(e.FuncDeclaration)) > MAX_DESCRIPTION_LEN {
-		return reqerr.NewInvalidArgs("RegisterUdfFunctionInput", fmt.Sprintf("udf function declaration must not be larger than %s", MAX_DESCRIPTION_LEN))
+	if (len(e.FuncDeclaration)) > MaxDescriptionLen {
+		return reqerr.NewInvalidArgs("RegisterUdfFunctionInput", fmt.Sprintf("udf function declaration must not be larger than %s", MaxDescriptionLen))
 	}
 	return nil
 }

@@ -192,11 +192,11 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodPost, "/v2/schemas"
 	case base.OpUploadUdf:
 		method, urlTmpl = base.MethodPost, "/v2/udf/jars/%s"
-	case base.OpPutUdfInfo:
+	case base.OpPutUdfMeta:
 		method, urlTmpl = base.MethodPut, "/v2/udf/jars/%s"
 	case base.OpDeleteUdf:
 		method, urlTmpl = base.MethodDelete, "/v2/udf/jars/%s"
-	case base.OpListUdf:
+	case base.OpListUdfs:
 		method, urlTmpl = base.MethodGet, "/v2/udf/jars%s"
 	case base.OpRegUdfFunc:
 		method, urlTmpl = base.MethodPost, "/v2/udf/funcs/%s"

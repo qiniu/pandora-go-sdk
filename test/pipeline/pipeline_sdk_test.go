@@ -2,13 +2,13 @@ package pipeline
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
-	"errors"
 
 	"github.com/qiniu/log"
 	"github.com/qiniu/pandora-go-sdk/base"
@@ -105,8 +105,8 @@ func TestUploadUdf(t *testing.T) {
 
 	// 多次删除幂等
 	err = client.DeleteUdf(deleteUdf)
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Error(errors.New("多次删除应该返回404"))
 	}
 
 	err = client.UploadUdfFromFile(udfUpload)
@@ -114,7 +114,7 @@ func TestUploadUdf(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = client.PutUdfInfoInput(&pipeline.PutUdfInfoInput{
+	err = client.PutUdfMeta(&pipeline.PutUdfMetaInput{
 		UdfName:     "testudf",
 		Description: "这是一个完美的udf",
 	})
@@ -124,16 +124,16 @@ func TestUploadUdf(t *testing.T) {
 
 	ret, err := client.ListUdfs(&pipeline.ListUdfsInput{
 		PageRequest: pipeline.PageRequest{
-			Page:   1,
-			Size:   1,
-			SortBy: "+uploadTime",
+			From: 1,
+			Size: 1,
+			Sort: "uploadTime:asc",
 		},
 	})
 	if ret.Result[0].Description != "这是一个完美的udf" {
 		t.Error(errors.New("testudf's description should be 这是一个完美的udf, bug got " + ret.Result[0].Description))
 	}
 
-	err = client.PutUdfInfoInput(&pipeline.PutUdfInfoInput{
+	err = client.PutUdfMeta(&pipeline.PutUdfMetaInput{
 		UdfName:     "testudf1",
 		Description: "这是一个完美的udf",
 	})
@@ -156,9 +156,9 @@ func TestUploadUdf(t *testing.T) {
 	// 按照jarName 顺序排列，分页查询
 	ret, err = client.ListUdfs(&pipeline.ListUdfsInput{
 		PageRequest: pipeline.PageRequest{
-			Page:   1,
-			Size:   2,
-			SortBy: "+jarName",
+			From: 1,
+			Size: 2,
+			Sort: "jarName",
 		},
 	})
 	if len(ret.Result) != 2 {
@@ -171,7 +171,7 @@ func TestUploadUdf(t *testing.T) {
 	// 按照jarName 逆序排列，全部查询
 	ret, err = client.ListUdfs(&pipeline.ListUdfsInput{
 		PageRequest: pipeline.PageRequest{
-			SortBy: "-jarName",
+			Sort: "jarName:desc",
 		},
 	})
 	if len(ret.Result) != 3 {
@@ -257,9 +257,9 @@ func TestRegisterUdfFunction(t *testing.T) {
 	// 按照funcName 逆序排列，分页查询
 	ret, err := client.ListUdfFunctions(&pipeline.ListUdfFunctionsInput{
 		PageRequest: pipeline.PageRequest{
-			Page:   1,
-			Size:   1,
-			SortBy: "-funcName",
+			From: 1,
+			Size: 1,
+			Sort: "funcName:desc",
 		},
 	})
 	if len(ret.Result) != 1 {
@@ -272,7 +272,7 @@ func TestRegisterUdfFunction(t *testing.T) {
 	// 按照funcName 逆序排列，全部查询
 	ret, err = client.ListUdfFunctions(&pipeline.ListUdfFunctionsInput{
 		PageRequest: pipeline.PageRequest{
-			SortBy: "-funcName",
+			Sort: "funcName:desc",
 		},
 	})
 	if len(ret.Result) != 2 {

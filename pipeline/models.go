@@ -1751,3 +1751,20 @@ type UdfFunctionInfoOutput struct {
 type ListUdfFunctionsOutput struct {
 	Result []UdfFunctionInfoOutput `json:"result"`
 }
+
+type ListBuiltinUdfFunctionsInput struct {
+	PipelineToken
+	PageRequest
+	Categories []string
+}
+
+type ListUdfBuiltinFunctionsOutput struct {
+	Result []UdfBuiltinFunctionInfoOutput `json:"result"`
+}
+
+type UdfBuiltinFunctionInfoOutput struct {
+	FuncName        string `json:"funcName"`
+	Category        string `json:"category"`
+	FuncDeclaration string `json:"funcDeclaration"`
+	Description     string `json:"description"`
+}

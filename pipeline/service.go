@@ -204,7 +204,8 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodDelete, "/v2/udf/funcs/%s"
 	case base.OpListUdfFuncs:
 		method, urlTmpl = base.MethodGet, "/v2/udf/funcs%s"
-
+	case base.OpListUdfBuiltinFuncs:
+		method, urlTmpl = base.MethodGet, "/v2/udf/builtins%s"
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

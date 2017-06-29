@@ -131,5 +131,7 @@ type PipelineAPI interface {
 
 	ListUdfFunctions(input *ListUdfFunctionsInput) (output *ListUdfFunctionsOutput, err error)
 
+	ListBuiltinUdfFunctions(input *ListBuiltinUdfFunctionsInput) (output *ListUdfBuiltinFunctionsOutput, err error)
+
 	Close() error
 }

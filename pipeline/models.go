@@ -162,8 +162,8 @@ type Container struct {
 }
 
 func (c *Container) Validate() (err error) {
-	if c.Type != "M16C4" && c.Type != "M32C8" {
-		err = reqerr.NewInvalidArgs("ContainerType", fmt.Sprintf("invalid container type: %s, should be one of \"M16C4\" and \"M32C8\"", c.Type))
+	if c.Type == "" {
+		err = reqerr.NewInvalidArgs("ContainerType", "container type should not be empty")
 		return
 	}
 	if c.Count < 1 || c.Count > 128 {

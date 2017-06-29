@@ -187,6 +187,19 @@ func TestUploadUdf(t *testing.T) {
 	client.DeleteUdf(deleteUdf)
 	deleteUdf.UdfName = "testudf2"
 	client.DeleteUdf(deleteUdf)
+
+	_, err = client.ListBuiltinUdfFunctions(&pipeline.ListBuiltinUdfFunctionsInput{
+		PageRequest: pipeline.PageRequest{
+			From: 1,
+			Size: 1,
+		},
+		Categories: []string{
+			"date",
+		},
+	})
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestRegisterUdfFunction(t *testing.T) {

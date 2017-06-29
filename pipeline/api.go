@@ -978,3 +978,26 @@ func (c *Pipeline) ListUdfFunctions(input *ListUdfFunctionsInput) (output *ListU
 	req := c.newRequest(op, input.Token, output)
 	return output, req.Send()
 }
+
+func (c *Pipeline) ListBuiltinUdfFunctions(input *ListBuiltinUdfFunctionsInput) (output *ListUdfBuiltinFunctionsOutput, err error) {
+	query := ""
+	values := url.Values{}
+	if input.From > 0 && input.Size > 0 {
+		values.Set(PageFrom, fmt.Sprintf("%v", input.From))
+		values.Set(PageSize, fmt.Sprintf("%v", input.Size))
+	}
+	if len(strings.TrimSpace(input.Sort)) > 0 {
+		values.Set(PageSort, fmt.Sprintf("%v", input.Sort))
+	}
+	if len(input.Categories) > 0 {
+		values.Set("category", fmt.Sprintf("%v", strings.Join(input.Categories, ",")))
+	}
+	if len(values) != 0 {
+		query = "?" + values.Encode()
+	}
+	op := c.newOperation(base.OpListUdfBuiltinFuncs, query)
+
+	output = &ListUdfBuiltinFunctionsOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}

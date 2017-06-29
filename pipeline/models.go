@@ -1655,3 +1655,99 @@ type DeleteJobExportInput struct {
 	JobName    string
 	ExportName string
 }
+
+type UploadUdfInput struct {
+	PipelineToken
+	UdfName string
+	Buffer  *bytes.Buffer
+}
+
+type UploadUdfFromFileInput struct {
+	PipelineToken
+	UdfName  string
+	FilePath string
+}
+
+type PutUdfMetaInput struct {
+	PipelineToken
+	UdfName     string `json:"-"`
+	Description string `json:"description"`
+}
+
+const MaxDescriptionLen = 1500
+
+func (e *PutUdfMetaInput) Validate() error {
+	if (len(e.Description)) > MaxDescriptionLen {
+		return reqerr.NewInvalidArgs("PutUdfMeta", fmt.Sprintf("udf description must not be larger than %s", MaxDescriptionLen))
+	}
+	return nil
+}
+
+type DeleteUdfInfoInput struct {
+	PipelineToken
+	UdfName string
+}
+
+type PageRequest struct {
+	From int
+	Size int
+	Sort string
+}
+
+type ListUdfsInput struct {
+	PipelineToken
+	PageRequest
+}
+
+type UdfInfoOutput struct {
+	JarName     string `json:"jarName"`
+	Description string `json:"description"`
+	UploadTime  string `json:"uploadTime"`
+}
+
+type ListUdfsOutput struct {
+	Result []UdfInfoOutput `json:"result"`
+}
+
+type RegisterUdfFunctionInput struct {
+	PipelineToken
+	FuncName        string `json:"-"`
+	JarName         string `json:"jarName"`
+	ClassName       string `json:"className"`
+	FuncDeclaration string `json:"funcDeclaration"`
+	Description     string `json:"description"`
+}
+
+func (e *RegisterUdfFunctionInput) Validate() error {
+	if (len(e.Description)) > MaxDescriptionLen {
+		return reqerr.NewInvalidArgs("RegisterUdfFunctionInput", fmt.Sprintf("udf function description must not be larger than %s", MaxDescriptionLen))
+	}
+	if (len(e.FuncDeclaration)) > MaxDescriptionLen {
+		return reqerr.NewInvalidArgs("RegisterUdfFunctionInput", fmt.Sprintf("udf function declaration must not be larger than %s", MaxDescriptionLen))
+	}
+	return nil
+}
+
+type DeregisterUdfFunctionInput struct {
+	PipelineToken
+	FuncName string
+}
+
+type ListUdfFunctionsInput struct {
+	PipelineToken
+	PageRequest
+	JarNamesIn  []string
+	FuncNamesIn []string
+}
+
+type UdfFunctionInfoOutput struct {
+	JarName         string `json:"jarName"`
+	FuncName        string `json:"funcName"`
+	ClassName       string `json:"className"`
+	FuncDeclaration string `json:"funcDeclaration"`
+	Description     string `json:"description"`
+}
+
+type ListUdfFunctionsOutput struct {
+	Result []UdfFunctionInfoOutput `json:"result"`
+}

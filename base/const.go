@@ -61,6 +61,13 @@ const (
 	OpListJobExports   string = "ListJobExports"
 	OpDeleteJobExport  string = "DeleteJobExport"
 	OpRetrieveSchema   string = "RetrieveSchema"
+	OpUploadUdf        string = "UploadUdf"
+	OpPutUdfMeta       string = "PutUdfMeta"
+	OpDeleteUdf        string = "DeleteUdf"
+	OpListUdfs         string = "ListUdfs"
+	OpRegUdfFunc       string = "RegisterUdfFunction"
+	OpDeregUdfFunc     string = "DeregisterUdfFunction"
+	OpListUdfFuncs     string = "ListUdfFuncs"
 
 	OpUpdateRepo        string = "UpdateRepo"
 	OpSendLog           string = "SendLog"

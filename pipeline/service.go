@@ -190,6 +190,21 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodDelete, "/v2/jobs/%s/exports/%s"
 	case base.OpRetrieveSchema:
 		method, urlTmpl = base.MethodPost, "/v2/schemas"
+	case base.OpUploadUdf:
+		method, urlTmpl = base.MethodPost, "/v2/udf/jars/%s"
+	case base.OpPutUdfMeta:
+		method, urlTmpl = base.MethodPut, "/v2/udf/jars/%s"
+	case base.OpDeleteUdf:
+		method, urlTmpl = base.MethodDelete, "/v2/udf/jars/%s"
+	case base.OpListUdfs:
+		method, urlTmpl = base.MethodGet, "/v2/udf/jars%s"
+	case base.OpRegUdfFunc:
+		method, urlTmpl = base.MethodPost, "/v2/udf/funcs/%s"
+	case base.OpDeregUdfFunc:
+		method, urlTmpl = base.MethodDelete, "/v2/udf/funcs/%s"
+	case base.OpListUdfFuncs:
+		method, urlTmpl = base.MethodGet, "/v2/udf/funcs%s"
+
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

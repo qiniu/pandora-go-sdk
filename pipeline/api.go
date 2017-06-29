@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
@@ -863,4 +864,117 @@ func (c *Pipeline) CreateForTSDB(input *CreateRepoForTSDBInput) error {
 		return err
 	}
 	return c.CreateExport(c.FormExportInput(input.RepoName, ExportTypeTSDB, c.FormTSDBSpec(input.TSDBRepoName, input.SeriesName, input.Tags, input.Schema)))
+}
+
+func (c *Pipeline) UploadUdf(input *UploadUdfInput) (err error) {
+	op := c.newOperation(base.OpUploadUdf, input.UdfName)
+
+	req := c.newRequest(op, input.Token, nil)
+	req.EnableContentMD5d()
+	req.SetBufferBody(input.Buffer.Bytes())
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJar)
+	return req.Send()
+}
+
+func (c *Pipeline) UploadUdfFromFile(input *UploadUdfFromFileInput) (err error) {
+	op := c.newOperation(base.OpUploadUdf, input.UdfName)
+
+	req := c.newRequest(op, input.Token, nil)
+	req.EnableContentMD5d()
+
+	file, err := os.Open(input.FilePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	req.SetReaderBody(file)
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJar)
+	return req.Send()
+}
+
+func (c *Pipeline) PutUdfMeta(input *PutUdfMetaInput) (err error) {
+	op := c.newOperation(base.OpPutUdfMeta, input.UdfName)
+
+	req := c.newRequest(op, input.Token, nil)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	return req.Send()
+}
+
+func (c *Pipeline) DeleteUdf(input *DeleteUdfInfoInput) (err error) {
+	op := c.newOperation(base.OpDeleteUdf, input.UdfName)
+
+	req := c.newRequest(op, input.Token, nil)
+	return req.Send()
+}
+
+const PageFrom = "from"
+const PageSize = "size"
+const PageSort = "sort"
+
+func (c *Pipeline) ListUdfs(input *ListUdfsInput) (output *ListUdfsOutput, err error) {
+	query := ""
+	values := url.Values{}
+	if input.From > 0 && input.Size > 0 {
+		values.Set(PageFrom, fmt.Sprintf("%v", input.From))
+		values.Set(PageSize, fmt.Sprintf("%v", input.Size))
+	}
+	if len(strings.TrimSpace(input.Sort)) > 0 {
+		values.Set(PageSort, fmt.Sprintf("%v", input.Sort))
+	}
+	if len(values) != 0 {
+		query = "?" + values.Encode()
+	}
+	op := c.newOperation(base.OpListUdfs, query)
+
+	output = &ListUdfsOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
+func (c *Pipeline) RegisterUdfFunction(input *RegisterUdfFunctionInput) (err error) {
+	op := c.newOperation(base.OpRegUdfFunc, input.FuncName)
+
+	req := c.newRequest(op, input.Token, nil)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	return req.Send()
+}
+
+func (c *Pipeline) DeRegisterUdfFunction(input *DeregisterUdfFunctionInput) (err error) {
+	op := c.newOperation(base.OpDeregUdfFunc, input.FuncName)
+
+	req := c.newRequest(op, input.Token, nil)
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	return req.Send()
+}
+
+func (c *Pipeline) ListUdfFunctions(input *ListUdfFunctionsInput) (output *ListUdfFunctionsOutput, err error) {
+	query := ""
+	values := url.Values{}
+	if input.From > 0 && input.Size > 0 {
+		values.Set(PageFrom, fmt.Sprintf("%v", input.From))
+		values.Set(PageSize, fmt.Sprintf("%v", input.Size))
+	}
+	if len(strings.TrimSpace(input.Sort)) > 0 {
+		values.Set(PageSort, fmt.Sprintf("%v", input.Sort))
+	}
+	if len(input.JarNamesIn) > 0 {
+		values.Set("jarName", fmt.Sprintf("%v", strings.Join(input.JarNamesIn, ",")))
+	}
+	if len(input.FuncNamesIn) > 0 {
+		values.Set("funcName", fmt.Sprintf("%v", strings.Join(input.FuncNamesIn, ",")))
+	}
+	if len(values) != 0 {
+		query = "?" + values.Encode()
+	}
+	op := c.newOperation(base.OpListUdfFuncs, query)
+
+	output = &ListUdfFunctionsOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
 }

@@ -64,7 +64,17 @@ func copyData(d Data) Data {
 	return md
 }
 
+func haveNewData(data Data) bool {
+	for _, v := range data {
+		if v != nil {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool, option *SchemaFreeOption) (point Point, err error) {
+
 	data := copyData(oldData)
 	point = Point{}
 	c.repoSchemaMux.Lock()
@@ -111,7 +121,7 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 	/*
 		data中剩余的值，但是在schema中不存在的，根据schemaFree增加。
 	*/
-	if schemaFree && len(data) > 0 {
+	if schemaFree && haveNewData(data) {
 		//defaultAll 为false时，过滤一批不要的
 		valueType := getPandoraKeyValueType(data)
 		if err = c.addRepoSchemas(repoName, valueType, option); err != nil {

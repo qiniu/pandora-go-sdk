@@ -1042,39 +1042,6 @@ type CreateExportInput struct {
 	Whence     string      `json:"whence,omitempty"`
 }
 
-type UpdateExportInput struct {
-	PipelineToken
-	RepoName   string      `json:"-"`
-	ExportName string      `json:"-"`
-	Spec       interface{} `json:"spec"`
-}
-
-func (e *UpdateExportInput) Validate() (err error) {
-	if err = validateRepoName(e.RepoName); err != nil {
-		return
-	}
-	if err = validateExportName(e.ExportName); err != nil {
-		return
-	}
-	if e.Spec == nil {
-		err = reqerr.NewInvalidArgs("ExportSpec", "spec should not be nil")
-		return
-	}
-	switch e.Spec.(type) {
-	case *ExportTsdbSpec, ExportTsdbSpec, *ExportMongoSpec, ExportMongoSpec,
-		*ExportLogDBSpec, ExportLogDBSpec, *ExportKodoSpec, ExportKodoSpec,
-		*ExportHttpSpec, ExportHttpSpec:
-	default:
-		return reqerr.NewInvalidArgs("ExportSpec", "spec Type not support "+reflect.TypeOf(e.Spec).Name())
-	}
-	vv, ok := e.Spec.(base.Validator)
-	if !ok {
-		err = reqerr.NewInvalidArgs("ExportSpec", "export spec cannot cast to validator")
-		return
-	}
-	return vv.Validate()
-}
-
 func (e *CreateExportInput) Validate() (err error) {
 	if err = validateRepoName(e.RepoName); err != nil {
 		return
@@ -1106,6 +1073,39 @@ func (e *CreateExportInput) Validate() (err error) {
 		return
 	}
 
+	vv, ok := e.Spec.(base.Validator)
+	if !ok {
+		err = reqerr.NewInvalidArgs("ExportSpec", "export spec cannot cast to validator")
+		return
+	}
+	return vv.Validate()
+}
+
+type UpdateExportInput struct {
+	PipelineToken
+	RepoName   string      `json:"-"`
+	ExportName string      `json:"-"`
+	Spec       interface{} `json:"spec"`
+}
+
+func (e *UpdateExportInput) Validate() (err error) {
+	if err = validateRepoName(e.RepoName); err != nil {
+		return
+	}
+	if err = validateExportName(e.ExportName); err != nil {
+		return
+	}
+	if e.Spec == nil {
+		err = reqerr.NewInvalidArgs("ExportSpec", "spec should not be nil")
+		return
+	}
+	switch e.Spec.(type) {
+	case *ExportTsdbSpec, ExportTsdbSpec, *ExportMongoSpec, ExportMongoSpec,
+		*ExportLogDBSpec, ExportLogDBSpec, *ExportKodoSpec, ExportKodoSpec,
+		*ExportHttpSpec, ExportHttpSpec:
+	default:
+		return
+	}
 	vv, ok := e.Spec.(base.Validator)
 	if !ok {
 		err = reqerr.NewInvalidArgs("ExportSpec", "export spec cannot cast to validator")

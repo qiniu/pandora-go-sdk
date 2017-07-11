@@ -341,10 +341,11 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 
 type CreateRepoInput struct {
 	LogdbToken
-	RepoName  string
-	Region    string            `json:"region"`
-	Retention string            `json:"retention"`
-	Schema    []RepoSchemaEntry `json:"schema"`
+	RepoName     string
+	Region       string            `json:"region"`
+	Retention    string            `json:"retention"`
+	Schema       []RepoSchemaEntry `json:"schema"`
+	PrimaryField string            `json:"primaryField"`
 }
 
 func (r *CreateRepoInput) Validate() (err error) {
@@ -415,19 +416,21 @@ type GetRepoInput struct {
 }
 
 type GetRepoOutput struct {
-	Region     string            `json:"region"`
-	Retention  string            `json:"retention"`
-	Schema     []RepoSchemaEntry `json:"schema"`
-	CreateTime string            `json:"createTime"`
-	UpdateTime string            `json:"updateTime"`
+	Region       string            `json:"region"`
+	Retention    string            `json:"retention"`
+	Schema       []RepoSchemaEntry `json:"schema"`
+	PrimaryField string            `json:"primaryField"`
+	CreateTime   string            `json:"createTime"`
+	UpdateTime   string            `json:"updateTime"`
 }
 
 type RepoDesc struct {
-	RepoName   string `json:"name"`
-	Region     string `json:"region"`
-	Retention  string `json:"retention"`
-	CreateTime string `json:"createTime"`
-	UpdateTime string `json:"updateTime"`
+	RepoName     string `json:"name"`
+	Region       string `json:"region"`
+	PrimaryField string `json:"primaryField"`
+	Retention    string `json:"retention"`
+	CreateTime   string `json:"createTime"`
+	UpdateTime   string `json:"updateTime"`
 }
 
 type ListReposInput struct {

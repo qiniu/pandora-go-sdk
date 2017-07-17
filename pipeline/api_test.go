@@ -3,6 +3,9 @@ package pipeline
 import (
 	"testing"
 
+	"bytes"
+	"fmt"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -78,4 +81,21 @@ func TestUnpack(t *testing.T) {
 	assert.Equal(t, len(contexts[0].inputs.Buffer), 2*1024*1024/10*10)
 	// 第二个包是总bytes 减去第一个包的数量
 	assert.Equal(t, len(contexts[1].inputs.Buffer), 2*1024*103*10-2*1024*1024/10*10)
+}
+
+func TestBuff(t *testing.T) {
+	var buff bytes.Buffer
+	buff.Write([]byte("12345678"))
+	bt0 := buff.Bytes()
+	bt1 := make([]byte, buff.Len())
+	copy(bt1, buff.Bytes())
+	buff.Truncate(0)
+	fmt.Println(string(bt0), string(bt1))
+	buff.Write([]byte("xxxxx"))
+	fmt.Println(string(bt0), string(bt1))
+
+	/* 输出
+	12345678 12345678
+	xxxxx678 12345678
+	*/
 }

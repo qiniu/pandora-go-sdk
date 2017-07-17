@@ -350,11 +350,13 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 		pointString := point.ToString()
 		// 当buf中有数据，并且加入该条数据后就超过了最大的限制，则提交这个input
 		if start < i && buf.Len() > 0 && buf.Len()+len(pointString) >= PandoraMaxBatchSize {
+			tmpBuff := make([]byte, buf.Len())
+			copy(tmpBuff, buf.Bytes())
 			packages = append(packages, pointContext{
 				datas: input.Datas[start:i],
 				inputs: &PostDataFromBytesInput{
 					RepoName: input.RepoName,
-					Buffer:   buf.Bytes(),
+					Buffer:   tmpBuff,
 				},
 			})
 			buf.Reset()
@@ -362,11 +364,13 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 		}
 		buf.WriteString(pointString)
 	}
+	tmpBuff := make([]byte, buf.Len())
+	copy(tmpBuff, buf.Bytes())
 	packages = append(packages, pointContext{
 		datas: input.Datas[start:],
 		inputs: &PostDataFromBytesInput{
 			RepoName: input.RepoName,
-			Buffer:   buf.Bytes(),
+			Buffer:   tmpBuff,
 		},
 	})
 	return

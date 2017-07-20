@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"strings"
+
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	"github.com/qiniu/pandora-go-sdk/logdb"
@@ -147,6 +149,7 @@ func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 	if input.LogRepoName == "" {
 		input.LogRepoName = input.RepoName
 	}
+	input.LogRepoName = strings.ToLower(input.LogRepoName)
 	if input.Retention == "" {
 		input.Retention = "3d"
 	}

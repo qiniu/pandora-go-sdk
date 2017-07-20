@@ -816,6 +816,7 @@ type TransformSpec struct {
 	Code      string           `json:"code,omitempty"`
 	Interval  string           `json:"interval,omitempty"`
 	Container *Container       `json:"container,omitempty"`
+	Whence    string           `json:"whence,omitempty"`
 }
 
 func (t *TransformSpec) Validate() (err error) {

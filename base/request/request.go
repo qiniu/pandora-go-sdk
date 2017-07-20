@@ -280,6 +280,10 @@ func (r *Request) Send() error {
 	buf := r.readResponse()
 	if r.Error != nil {
 		r.Logger.Error(logFormatter(r, "read response"))
+		r.Error = r.errBuilder.Build(r.Error.Error(),
+			r.Error.Error(),
+			r.HTTPResponse.Header.Get(base.HTTPHeaderRequestId),
+			r.HTTPResponse.StatusCode)
 		return r.Error
 	}
 	if r.HTTPResponse.StatusCode == 200 {

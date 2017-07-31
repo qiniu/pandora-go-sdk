@@ -1592,6 +1592,29 @@ func (e *JobExportHdfsSpec) Validate() (err error) {
 	return nil
 }
 
+type JobExportLogdbSpec struct {
+	DestRepoName string            `json:"destRepoName"`
+	OmitInvalid  bool              `json:"omitInvalid,omitempty"`
+	Doc          map[string]string `json:"doc"`
+}
+
+func (e *JobExportLogdbSpec) Validate() (err error) {
+	return nil
+}
+
+type JobExportTsdbSpec struct {
+	DestRepoName string            `json:"destRepoName"`
+	OmitInvalid  bool              `json:"omitInvalid,omitempty"`
+	SeriesName   string            `json:"series"`
+	Tags         map[string]string `json:"tags"`
+	Fields       map[string]string `json:"fields"`
+	Timestamp    string            `json:"timestamp,omitempty"`
+}
+
+func (e *JobExportTsdbSpec) Validate() (err error) {
+	return nil
+}
+
 type CreateJobExportInput struct {
 	PipelineToken
 	JobName    string      `json:"-"`
@@ -1613,6 +1636,10 @@ func (e *CreateJobExportInput) Validate() (err error) {
 		e.Type = "kodo"
 	case *JobExportHdfsSpec, JobExportHdfsSpec:
 		e.Type = "hdfs"
+	case *JobExportLogdbSpec, JobExportLogdbSpec:
+		e.Type = "logdb"
+	case *JobExportTsdbSpec, JobExportTsdbSpec:
+		e.Type = "tsdb"
 	default:
 		return
 	}

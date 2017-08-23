@@ -1022,7 +1022,7 @@ func (s *ExportKodoSpec) Validate() (err error) {
 type ExportHttpSpec struct {
 	Host   string `json:"host"`
 	Uri    string `json:"uri"`
-	Format string `json:"format"`
+	Format string `json:"format,omitempty"`
 }
 
 func (s *ExportHttpSpec) Validate() (err error) {

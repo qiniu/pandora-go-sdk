@@ -37,13 +37,14 @@ const (
 
 //Pandora Types
 const (
-	PandoraTypeLong   = "long"
-	PandoraTypeFloat  = "float"
-	PandoraTypeString = "string"
-	PandoraTypeDate   = "date"
-	PandoraTypeBool   = "boolean"
-	PandoraTypeArray  = "array"
-	PandoraTypeMap    = "map"
+	PandoraTypeLong       = "long"
+	PandoraTypeFloat      = "float"
+	PandoraTypeString     = "string"
+	PandoraTypeDate       = "date"
+	PandoraTypeBool       = "boolean"
+	PandoraTypeArray      = "array"
+	PandoraTypeMap        = "map"
+	PandoraTypeJsonString = "jsonstring"
 )
 
 const (
@@ -58,13 +59,14 @@ type Data map[string]interface{}
 type Datas []Data
 
 var schemaTypes = map[string]bool{
-	PandoraTypeFloat:  true,
-	PandoraTypeString: true,
-	PandoraTypeLong:   true,
-	PandoraTypeDate:   true,
-	PandoraTypeArray:  true,
-	PandoraTypeMap:    true,
-	PandoraTypeBool:   true,
+	PandoraTypeFloat:      true,
+	PandoraTypeString:     true,
+	PandoraTypeLong:       true,
+	PandoraTypeDate:       true,
+	PandoraTypeArray:      true,
+	PandoraTypeMap:        true,
+	PandoraTypeBool:       true,
+	PandoraTypeJsonString: true,
 }
 
 func validateGroupName(g string) error {
@@ -285,7 +287,7 @@ func (e *RepoSchemaEntry) Validate() (err error) {
 
 	}
 	if !schemaTypes[e.ValueType] {
-		err = reqerr.NewInvalidArgs("Schema", fmt.Sprintf("invalid field type: %s, field type should be one of \"float\", \"string\", \"date\", \"long\", \"boolean\", \"array\" and \"map\"", e.ValueType))
+		err = reqerr.NewInvalidArgs("Schema", fmt.Sprintf("invalid field type: %s, field type should be one of \"float\", \"string\", \"date\", \"long\", \"boolean\", \"array\", \"map\" and \"jsonstring\"", e.ValueType))
 		return
 	}
 	if e.ValueType == "array" {
@@ -1018,8 +1020,9 @@ func (s *ExportKodoSpec) Validate() (err error) {
 }
 
 type ExportHttpSpec struct {
-	Host string `json:"host"`
-	Uri  string `json:"uri"`
+	Host   string `json:"host"`
+	Uri    string `json:"uri"`
+	Format string `json:"format,omitempty"`
 }
 
 func (s *ExportHttpSpec) Validate() (err error) {

@@ -79,6 +79,10 @@ func (c *Logdb) newOperation(opName string, args ...interface{}) *request.Operat
 		method, urlTmpl = base.MethodGet, "/v5/repos/%s/search?q=%s&sort=%s&from=%d&size=%d&highlight=%t"
 	case base.OpQueryHistogramLog:
 		method, urlTmpl = base.MethodGet, "/v5/repos/%s/histogram?q=%s&from=%d&to=%d&field=%s"
+	case base.OpPutRepoConfig:
+		method, urlTmpl = base.MethodPut, "/v5/repos/%s/config"
+	case base.OpGetRepoConfig:
+		method, urlTmpl = base.MethodGet, "/v5/repos/%s/config"
 	case base.OpPartialQuery:
 		method, urlTmpl = base.MethodPost, "/v5/repos/%s/s"
 	default:

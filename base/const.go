@@ -74,6 +74,8 @@ const (
 	OpSendLog           string = "SendLog"
 	OpQueryLog          string = "QueryLog"
 	OpQueryHistogramLog string = "QueryHistogramLog"
+	OpPutRepoConfig     string = "PutRepoConfig"
+	OpGetRepoConfig     string = "GetRepoConfig"
 	OpPartialQuery      string = "PartialQuery"
 
 	OpUpdateRepoMetadata string = "UpdataRepoMetadata"

@@ -105,19 +105,38 @@ func (c *Logdb) QueryHistogramLog(input *QueryHistogramLogInput) (output *QueryH
 	return output, req.Send()
 }
 
+func (c *Logdb) PutRepoConfig(input *PutRepoConfigInput) (err error) {
+	op := c.newOperation(base.OpPutRepoConfig, input.RepoName)
+
+	req := c.newRequest(op, input.Token, nil)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	return req.Send()
+}
+
+func (c *Logdb) GetRepoConfig(input *GetRepoConfigInput) (output *GetRepoConfigOutput, err error) {
+	op := c.newOperation(base.OpGetRepoConfig, input.RepoName)
+
+	output = &GetRepoConfigOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
 func (c *Logdb) MakeToken(desc *base.TokenDesc) (string, error) {
 	return base.MakeTokenInternal(c.Config.Ak, c.Config.Sk, desc)
 }
 
-func (c *Logdb) PartialQuery(input *PartialQueryInput)(output *PartialQueryOutput,err error){
-	op := c.newOperation(base.OpPartialQuery,input.RepoName)
+func (c *Logdb) PartialQuery(input *PartialQueryInput) (output *PartialQueryOutput, err error) {
+	op := c.newOperation(base.OpPartialQuery, input.RepoName)
 	output = &PartialQueryOutput{}
-	req := c.newRequest(op,input.Token,output)
+	req := c.newRequest(op, input.Token, output)
 	buf, err := input.Buf()
 	if err != nil {
 		return
 	}
 	req.SetBufferBody(buf)
-	req.SetHeader(base.HTTPHeaderContentType,base.ContentTypeJson)
-	return output,req.Send()
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	return output, req.Send()
 }

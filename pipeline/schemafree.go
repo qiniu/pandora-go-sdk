@@ -359,6 +359,9 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 			} else {
 				valueType[k] = formValueType(k, PandoraTypeString)
 			}
+		case time.Time, *time.Time:
+			valueType[k] = formValueType(k, PandoraTypeDate)
+
 		default:
 			valueType[k] = formValueType(k, PandoraTypeString)
 			log.Debugf("find undetected key(%v)-type(%v)", k, reflect.TypeOf(v))

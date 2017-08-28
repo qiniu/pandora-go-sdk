@@ -21,8 +21,11 @@ type LogdbAPI interface {
 
 	QueryHistogramLog(*QueryHistogramLogInput) (*QueryHistogramLogOutput, error)
 
+	PutRepoConfig(*PutRepoConfigInput) error
+
+	GetRepoConfig(*GetRepoConfigInput) (*GetRepoConfigOutput, error)
+
 	MakeToken(*base.TokenDesc) (string, error)
 
-	PartialQuery(input *PartialQueryInput)(output *PartialQueryOutput,err error)
-
+	PartialQuery(input *PartialQueryInput) (output *PartialQueryOutput, err error)
 }

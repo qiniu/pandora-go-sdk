@@ -80,6 +80,9 @@ func convertSchema2LogDB(scs []RepoSchemaEntry) (ret []logdb.RepoSchemaEntry) {
 			rp.Schemas = convertSchema2LogDB(v.Schema)
 			rp.ValueType = logdb.TypeObject
 		}
+		if v.ValueType == PandoraTypeJsonString {
+			rp.ValueType = logdb.TypeObject
+		}
 		if v.ValueType == PandoraTypeArray {
 			rp.ValueType = v.ElemType
 		}

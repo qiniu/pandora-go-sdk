@@ -73,6 +73,27 @@ func haveNewData(data Data) bool {
 	return false
 }
 
+func checkIgnore(value interface{}, schemeType string) bool {
+	if value == nil {
+		return true
+	}
+	rv := reflect.ValueOf(value)
+	if (rv.Kind() == reflect.Map || rv.Kind() == reflect.Ptr || rv.Kind() == reflect.Interface || rv.Kind() == reflect.Slice) && rv.IsNil() {
+		return true
+	}
+	str, ok := value.(string)
+	if !ok || str != "" {
+		return false
+	}
+	switch schemeType {
+	case PandoraTypeJsonString, PandoraTypeArray, PandoraTypeMap, PandoraTypeLong, PandoraTypeFloat:
+		if str == "" {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool, option *SchemaFreeOption) (point Point, err error) {
 
 	data := copyData(oldData)
@@ -112,6 +133,12 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 				continue
 			}
 		}
+
+		//忽略一些不合法的空值
+		if !v.Required && checkIgnore(value, v.ValueType) {
+			continue
+		}
+
 		//加入point，要么已经delete，要么不schemaFree直接加入
 		point.Fields = append(point.Fields, PointField{
 			Key:   name,

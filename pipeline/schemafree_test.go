@@ -591,3 +591,49 @@ func TestMergePandoraSchemas(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckIgnore(t *testing.T) {
+	tests := []struct {
+		v   interface{}
+		tp  string
+		exp bool
+	}{
+		{
+			exp: true,
+		},
+		{
+			v:   "",
+			tp:  PandoraTypeJsonString,
+			exp: true,
+		},
+		{
+			v:   "",
+			tp:  PandoraTypeString,
+			exp: false,
+		},
+		{
+			v:   nil,
+			tp:  PandoraTypeJsonString,
+			exp: true,
+		},
+		{
+			v:   "xs",
+			tp:  PandoraTypeJsonString,
+			exp: false,
+		},
+		{
+			v:   "xs",
+			tp:  PandoraTypeString,
+			exp: false,
+		},
+		{
+			v:   123,
+			tp:  PandoraTypeFloat,
+			exp: false,
+		},
+	}
+	for _, ti := range tests {
+		got := checkIgnore(ti.v, ti.tp)
+		assert.Equal(t, ti.exp, got)
+	}
+}

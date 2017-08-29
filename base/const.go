@@ -95,6 +95,15 @@ const (
 	OpDeleteView  string = "DeleteView"
 	OpQueryPoints string = "QueryPoints"
 	OpWritePoints string = "WritePoints"
+
+	OpActivateUser   string = "ActivateUser"
+	OpCreateDatabase string = "CreateDatabase"
+	OpListDatabases  string = "ListDatabases"
+	OpDeleteDatabase string = "DeleteDatabase"
+	OpCreateTable    string = "CreateTable"
+	OpUpdateTable    string = "UpdateTable"
+	OpListTables     string = "ListTables"
+	OpDeleteTable    string = "DeleteTable"
 )
 
 const (

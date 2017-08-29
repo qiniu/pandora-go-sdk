@@ -322,6 +322,7 @@ DSL创建的规则为`<字段名称> <类型>`,字段名称和类型用空格符
     * pandora float类型: `float`,`FLOAT`,`F`,`f`
     * pandora string类型: `string`,`STRING`,`S`,`s`
     * pandora bool类型:  `bool`,`BOOL`,`B`,`b`,`boolean`
+    * pandora jsonstring类型： `json`,"JSON","jsonstring","JSONSTRING","j","J"
     * pandora array类型: `array`,`ARRAY`,`A`,`a`;括号中跟具体array元素的类型，如a(l)，表示array里面都是long。
     * pandora map类型: `map`,`MAP`,`M`,`m`;使用花括号表示具体类型，表达map里面的元素，如map{a l,b map{c b,x s}}, 表示map结构体里包含a字段，类型是long，b字段又是一个map，里面包含c字段，类型是bool，还包含x字段，类型是string。
 */
@@ -344,6 +345,8 @@ func getRawType(tp string) (schemaType string, err error) {
 		schemaType = PandoraTypeMap
 	case "b", "bool", "boolean":
 		schemaType = PandoraTypeBool
+	case "j", "json", "jsonstring":
+		schemaType = PandoraTypeJsonString
 	case "": //这个是一种缺省
 	default:
 		err = fmt.Errorf("schema type %v not supperted", schemaType)

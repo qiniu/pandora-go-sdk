@@ -552,7 +552,7 @@ type PartialQueryInput struct {
 		PostTag string `json:"post_tag,omitempty"`
 		PreTag  string `json:"pre_tag,omitempty"`
 	} `json:"highlight"`
-	QueryString string `json:"query_String"`
+	QueryString string `json:"query_string"`
 	SearchType  int    `json:"searchType"`
 	Size        int    `json:"size"`
 	Sort        string `json:"sort"`

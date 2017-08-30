@@ -41,6 +41,13 @@ const (
 	ExecuteSqlError
 	EntityTooLargeError
 	InvalidDataSchemaError
+	ErrHeaderAppIdError
+	ErrDBNameInvalidError
+	ErrInvalidSqlError
+	ErrInternalServerError
+	ErrInvalidAppIdError
+	ErrInvalidParameterError
+	ErrDBNotFoundError
 )
 
 type ErrBuilder interface {

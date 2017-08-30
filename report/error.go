@@ -19,14 +19,10 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 	errId := msg[:errCodePrefixLen]
 
 	switch errId {
-	case "E8001":
-		err.ErrorType = reqerr.ErrHeaderAppIdError
 	case "E8002":
 		err.ErrorType = reqerr.ErrDBNameInvalidError
 	case "E8003":
 		err.ErrorType = reqerr.ErrInvalidSqlError
-	case "E8004":
-		err.ErrorType = reqerr.ErrInvalidAppIdError
 	case "E8005":
 		err.ErrorType = reqerr.ErrInvalidParameterError
 	case "E8006":

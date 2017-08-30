@@ -112,14 +112,19 @@ func (e *RepoSchemaEntry) Validate() (err error) {
 	if !schemaTypes[e.ValueType] {
 		return reqerr.NewInvalidArgs("Schema", fmt.Sprintf("invalid field type: %s, invalid field type should be one of \"float\", \"string\", \"date\", \"object\" , \"boolean\", \"ip\", \"geo_point\"  and \"long\"", e.ValueType))
 	}
-	if e.Analyzer != "" {
-		if e.ValueType != "string" {
-			return reqerr.NewInvalidArgs("Schema", fmt.Sprintf("only string valueType support searchWay, but now is %v", e.ValueType))
+
+	//remove check first by @wonderflow
+	/*
+		if e.Analyzer != "" {
+			if e.ValueType != "string" {
+				return reqerr.NewInvalidArgs("Schema", fmt.Sprintf("only string valueType support searchWay, but now is %v", e.ValueType))
+			}
+			if !analyzers[e.Analyzer] {
+				return reqerr.NewInvalidArgs("Schema", fmt.Sprintf("invalid Analyzer type: %s", e.SearchWay))
+			}
 		}
-		if !analyzers[e.Analyzer] {
-			return reqerr.NewInvalidArgs("Schema", fmt.Sprintf("invalid Analyzer type: %s", e.SearchWay))
-		}
-	}
+	*/
+
 	return
 }
 

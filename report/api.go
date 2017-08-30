@@ -2,16 +2,17 @@ package report
 
 import . "github.com/qiniu/pandora-go-sdk/base"
 
-func (c *Report) ActivateUser(input *UserActivateInput) (err error) {
+func (c *Report) ActivateUser(input *UserActivateInput) (output *UserActivateOutput, err error) {
 	op := c.newOperation(OpActivateUser)
 
-	req := c.newRequest(op, input.Token, nil)
+	output = &UserActivateOutput{}
+	req := c.newRequest(op, input.Token, output)
 	if err = req.SetVariantBody(input); err != nil {
 		return
 	}
 	req.SetHeader(HTTPHeaderContentType, ContentTypeJson)
 
-	return req.Send()
+	return output, req.Send()
 }
 
 func (c *Report) CreateDatabase(input *CreateDatabaseInput) (err error) {
@@ -34,7 +35,7 @@ func (c *Report) ListDatabases(input *ListDatabasesInput) (output *ListDatabases
 }
 
 func (c *Report) DeleteDatabase(input *DeleteDatabaseInput) (err error) {
-	op := c.newOperation(OpDeleteDatabase)
+	op := c.newOperation(OpDeleteDatabase, input.DatabaseName)
 
 	req := c.newRequest(op, input.Token, nil)
 	return req.Send()

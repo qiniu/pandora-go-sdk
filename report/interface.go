@@ -5,7 +5,7 @@ import (
 )
 
 type ReportAPI interface {
-	ActivateUser(*UserActivateInput) error
+	ActivateUser(*UserActivateInput) (*UserActivateOutput, error)
 
 	CreateDatabase(*CreateDatabaseInput) error
 

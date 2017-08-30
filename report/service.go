@@ -66,7 +66,7 @@ func (c *Report) newOperation(opName string, args ...interface{}) *request.Opera
 	case base.OpActivateUser:
 		method, urlTmpl = base.MethodPost, "/v1/activate"
 	case base.OpCreateDatabase:
-		method, urlTmpl = base.MethodGet, "/v1/dbs/%s"
+		method, urlTmpl = base.MethodPost, "/v1/dbs/%s"
 	case base.OpListDatabases:
 		method, urlTmpl = base.MethodGet, "/v1/dbs"
 	case base.OpDeleteDatabase:
@@ -74,11 +74,11 @@ func (c *Report) newOperation(opName string, args ...interface{}) *request.Opera
 	case base.OpCreateTable:
 		method, urlTmpl = base.MethodPost, "/v1/dbs/%s/tables/%s"
 	case base.OpUpdateTable:
-		method, urlTmpl = base.MethodDelete, "/v1/dbs/%s/tables/%s"
+		method, urlTmpl = base.MethodPut, "/v1/dbs/%s/tables/%s"
 	case base.OpListTables:
-		method, urlTmpl = base.MethodPost, "/v1/dbs/%s/tables"
+		method, urlTmpl = base.MethodGet, "/v1/dbs/%s/tables"
 	case base.OpDeleteTable:
-		method, urlTmpl = base.MethodPost, "/v1/dbs/%s/tables/%s"
+		method, urlTmpl = base.MethodDelete, "/v1/dbs/%s/tables/%s"
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

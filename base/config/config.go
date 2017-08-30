@@ -21,6 +21,7 @@ type Config struct {
 	LogdbEndpoint    string
 	TsdbEndpoint     string
 	PipelineEndpoint string
+	ReportEndpoint   string
 	ConfigType       string
 }
 
@@ -28,6 +29,7 @@ const (
 	TypeLOGDB    = "logdb"
 	TypePipeline = "pipeline"
 	TypeTSDB     = "tsdb"
+	TypeReport   = "report"
 )
 
 const (
@@ -37,6 +39,7 @@ const (
 	DefaultTSDBEndpoint     = "https://tsdb.qiniu.com"
 	DefaultLogDBEndpoint    = "https://logdb.qiniu.com"
 	DefaultPipelineEndpoint = "https://pipeline.qiniu.com"
+	DefaultReportEndpoint   = "https://report.qiniu.com"
 )
 
 func NewConfig() *Config {
@@ -62,6 +65,7 @@ func (c *Config) Clone() *Config {
 		LogdbEndpoint:    c.LogdbEndpoint,
 		TsdbEndpoint:     c.TsdbEndpoint,
 		PipelineEndpoint: c.PipelineEndpoint,
+		ReportEndpoint:   c.ReportEndpoint,
 		ConfigType:       c.ConfigType,
 	}
 }
@@ -83,6 +87,11 @@ func (c *Config) WithPipelineEndpoint(endpoint string) *Config {
 
 func (c *Config) WithTSDBEndpoint(endpoint string) *Config {
 	c.TsdbEndpoint = endpoint
+	return c
+}
+
+func (c *Config) WithReportEndpoint(endpoint string) *Config {
+	c.ReportEndpoint = endpoint
 	return c
 }
 

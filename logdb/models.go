@@ -549,8 +549,8 @@ type PartialQueryInput struct {
 	StartTime int64  `json:"startTime"`
 	EndTime   int64  `json:"endTime"`
 	Highlight struct {
-		PostTag string `json:"post_tag,omitempty"`
-		PreTag  string `json:"pre_tag,omitempty"`
+		PostTag string `json:"post_tag"`
+		PreTag  string `json:"pre_tag"`
 	} `json:"highlight"`
 	QueryString string `json:"query_string"`
 	SearchType  int    `json:"searchType"`
@@ -576,10 +576,10 @@ type PartialQueryOutput struct {
 	Buckets []struct {
 		Count int `json:"count"`
 		Key   int `json:"key"`
-	} `json:"buckets,omitempty"`
-	Hits           []map[string]interface{} `json:"hits,omitempty"`
+	} `json:"buckets"`
+	Hits           []map[string]interface{} `json:"hits"`
 	PartialSuccess bool                     `json:"partialSuccess"`
-	Process        int                      `json:"process"`
+	Process        float64                  `json:"process"`
 	Took           int                      `json:"took"`
 	Total          int                      `json:"total"`
 }

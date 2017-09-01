@@ -79,6 +79,14 @@ func (c *Report) DeleteTable(input *DeleteTableInput) (err error) {
 	return req.Send()
 }
 
+func (c *Report) GetTable(input *GetTableInput) (output *GetTableOutput, err error) {
+	op := c.newOperation(OpGetTable, input.DatabaseName, input.TableName)
+
+	output = &GetTableOutput{}
+	req := c.newRequest(op, input.Token, &output)
+	return output, req.Send()
+}
+
 func (c *Report) MakeToken(desc *TokenDesc) (string, error) {
 	return MakeTokenInternal(c.Config.Ak, c.Config.Sk, desc)
 }

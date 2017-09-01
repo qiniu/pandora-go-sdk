@@ -19,6 +19,8 @@ type ReportAPI interface {
 
 	ListTables(*ListTablesInput) (*ListTablesOutput, error)
 
+	GetTable(*GetTableInput) (*GetTableOutput, error)
+
 	DeleteTable(*DeleteTableInput) error
 
 	MakeToken(*base.TokenDesc) (string, error)

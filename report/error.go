@@ -27,6 +27,8 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrInvalidParameterError
 	case "E8006":
 		err.ErrorType = reqerr.ErrDBNotFoundError
+	case "E8007":
+		err.ErrorType = reqerr.ErrTableNotFoundError
 	case "E9001":
 		err.ErrorType = reqerr.InternalServerError
 	default:

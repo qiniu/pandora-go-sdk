@@ -46,6 +46,7 @@ const (
 	ErrInternalServerError
 	ErrInvalidParameterError
 	ErrDBNotFoundError
+	ErrTableNotFoundError
 )
 
 type ErrBuilder interface {

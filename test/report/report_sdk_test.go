@@ -22,7 +22,7 @@ var (
 	logger   Logger
 )
 
-func init() {
+func prepare() {
 	var err error
 
 	if region == "" {
@@ -53,7 +53,7 @@ func init() {
 }
 
 func TestRepo(t *testing.T) {
-
+	prepare()
 	// test activate
 	userInfo, err := client.ActivateUser(&UserActivateInput{})
 	if err != nil {
@@ -108,6 +108,24 @@ func TestRepo(t *testing.T) {
 	}
 	if tables[0] != tableName {
 		t.Errorf("table name not match")
+	}
+
+	tableInfo, err := client.GetTable(&GetTableInput{
+		DatabaseName: DatabaseName,
+		TableName:    tableName,
+	})
+	if err != nil {
+		t.Errorf("get table fail")
+	}
+	tableInfoExpected := &GetTableOutput{
+		Field:   "id",
+		Type:    "text",
+		Null:    "YES",
+		Key:     nil,
+		Default: nil,
+	}
+	if tableInfo.Field != tableInfoExpected.Field || tableInfo.Type != tableInfoExpected.Type {
+		t.Errorf("get table detail not match\nexpect: %v\n got:%v\n", tableInfoExpected, tableInfo)
 	}
 
 	// test delete table

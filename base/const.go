@@ -104,6 +104,7 @@ const (
 	OpUpdateTable    string = "UpdateTable"
 	OpListTables     string = "ListTables"
 	OpDeleteTable    string = "DeleteTable"
+	OpGetTable       string = "GetTable"
 )
 
 const (

@@ -79,6 +79,8 @@ func (c *Report) newOperation(opName string, args ...interface{}) *request.Opera
 		method, urlTmpl = base.MethodGet, "/v1/dbs/%s/tables"
 	case base.OpDeleteTable:
 		method, urlTmpl = base.MethodDelete, "/v1/dbs/%s/tables/%s"
+	case base.OpGetTable:
+		method, urlTmpl = base.MethodGet, "/v1/dbs/%s/tables/%s"
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

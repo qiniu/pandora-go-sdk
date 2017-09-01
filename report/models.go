@@ -111,6 +111,32 @@ func (c *ListTablesInput) Validate() error {
 	return nil
 }
 
+type GetTableInput struct {
+	ReportToken
+	DatabaseName string
+	TableName    string
+}
+
+func (c *GetTableInput) Validate() error {
+	if c.DatabaseName == "" {
+		return reqerr.NewInvalidArgs("Get Table", "database name should not be empty")
+	}
+	if c.TableName == "" {
+		return reqerr.NewInvalidArgs("Get Database", "table name should not be empty")
+	}
+
+	return nil
+}
+
+type GetTableOutput struct {
+	Field   string      `json:"field"`
+	Type    string      `json:"type"`
+	Null    string      `json:"null"`
+	Key     interface{} `json:"key"`
+	Default interface{} `json:"default"`
+	Extra   string      `json:"extra"`
+}
+
 type ListTablesOutput []string
 
 type DeleteTableInput struct {

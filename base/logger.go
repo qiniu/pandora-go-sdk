@@ -21,8 +21,7 @@ func (l *LogLevelType) Value() LogLevelType {
 }
 
 func (l *LogLevelType) AtMost(v LogLevelType) bool {
-	c := l.Value()
-	return c <= v
+	return l.Value() <= v
 }
 
 const (

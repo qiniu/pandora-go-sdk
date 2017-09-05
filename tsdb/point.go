@@ -59,9 +59,9 @@ func (t Tags) HashKey() []byte {
 
 func (p *Point) String() string {
 	if p.Time == 0 {
-		return fmt.Sprintf("%s %s", string(p.Key()), string(p.GetFields()))
+		return string(p.Key()) + " " + string(p.GetFields())
 	}
-	return fmt.Sprintf("%s %s %s", string(p.Key()), string(p.GetFields()), strconv.FormatInt(int64(p.Time), 10))
+	return string(p.Key()) + " " + string(p.GetFields()) + " " + strconv.FormatInt(int64(p.Time), 10)
 
 }
 

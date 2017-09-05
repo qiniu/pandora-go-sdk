@@ -3,6 +3,8 @@ package pipeline
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_convertDSL(t *testing.T) {
@@ -213,4 +215,37 @@ func Test_convertDSL(t *testing.T) {
 			t.Error("should be equal")
 		}
 	}
+}
+
+func Test_PointField(t *testing.T) {
+	p := &PointField{Key: "a", Value: "123"}
+	assert.Equal(t, "a=123\t", p.String())
+	p = &PointField{Key: "b", Value: ""}
+	assert.Equal(t, "b=\t", p.String())
+	type xs string
+	p = &PointField{Key: "c", Value: xs("456")}
+	assert.Equal(t, "c=456\t", p.String())
+}
+
+func BenchmarkPointField1(b *testing.B) {
+	p := &PointField{Key: "a", Value: "123"}
+	for i := 0; i < b.N; i++ {
+		p.String()
+	}
+	/*
+		10000000	       157 ns/op
+		PASS
+	*/
+}
+
+func BenchmarkPointField2(b *testing.B) {
+	type xs string
+	p := &PointField{Key: "c", Value: xs("456")}
+	for i := 0; i < b.N; i++ {
+		p.String()
+	}
+	/*
+		10000000	       146 ns/op
+		PASS
+	*/
 }

@@ -661,10 +661,12 @@ func (p *PointField) String() string {
 	if typ == reflect.Map || typ == reflect.Slice {
 		v, _ := json.Marshal(p.Value)
 		value = escapeStringField(string(v))
+	} else if typ == reflect.String {
+		value = escapeStringField(reflect.ValueOf(p.Value).String())
 	} else {
 		value = escapeStringField(fmt.Sprintf("%v", p.Value))
 	}
-	return fmt.Sprintf("%s=%s\t", p.Key, value)
+	return p.Key + "=" + value + "\t"
 }
 
 type Point struct {

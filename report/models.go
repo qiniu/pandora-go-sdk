@@ -128,7 +128,9 @@ func (c *GetTableInput) Validate() error {
 	return nil
 }
 
-type GetTableOutput struct {
+type GetTableOutput []GetTableInput
+
+type GetTableItem struct {
 	Field   string      `json:"field"`
 	Type    string      `json:"type"`
 	Null    string      `json:"null"`

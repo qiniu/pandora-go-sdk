@@ -57,7 +57,7 @@ func deepDeleteCheck(data interface{}, schema RepoSchemaEntry) bool {
 }
 
 func copyData(d Data) Data {
-	md := make(Data)
+	md := make(Data, len(d))
 	for k, v := range d {
 		md[k] = v
 	}

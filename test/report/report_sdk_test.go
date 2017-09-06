@@ -117,15 +117,11 @@ func TestRepo(t *testing.T) {
 	if err != nil {
 		t.Errorf("get table fail")
 	}
-	tableInfoExpected := &GetTableOutput{
-		Field:   "id",
-		Type:    "text",
-		Null:    "YES",
-		Key:     nil,
-		Default: nil,
-	}
-	if tableInfo.Field != tableInfoExpected.Field || tableInfo.Type != tableInfoExpected.Type {
-		t.Errorf("get table detail not match\nexpect: %v\n got:%v\n", tableInfoExpected, tableInfo)
+
+	tabless := []GetTableInput(*tableInfo)
+
+	if len(tabless) != 1 {
+		t.Fatal("get table fail")
 	}
 
 	// test delete table

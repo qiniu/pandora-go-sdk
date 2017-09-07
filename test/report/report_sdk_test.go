@@ -118,7 +118,7 @@ func TestRepo(t *testing.T) {
 		t.Errorf("get table fail")
 	}
 
-	tabless := []GetTableInput(*tableInfo)
+	tabless := []GetTableItem(*tableInfo)
 
 	if len(tabless) != 1 {
 		t.Fatal("get table fail")

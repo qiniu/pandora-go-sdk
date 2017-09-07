@@ -9,19 +9,12 @@ import (
 
 type LogLevelType uint
 
-func LogLevel(l LogLevelType) *LogLevelType {
-	return &l
+func LogLevel(l LogLevelType) LogLevelType {
+	return l
 }
 
-func (l *LogLevelType) Value() LogLevelType {
-	if l != nil {
-		return *l
-	}
-	return LogOff
-}
-
-func (l *LogLevelType) AtMost(v LogLevelType) bool {
-	return l.Value() <= v
+func (l LogLevelType) AtMost(v LogLevelType) bool {
+	return l <= v
 }
 
 const (

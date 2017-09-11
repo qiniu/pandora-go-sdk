@@ -818,12 +818,13 @@ type TransformPlugin struct {
 }
 
 type TransformSpec struct {
-	Plugin    *TransformPlugin `json:"plugin,omitempty"`
-	Mode      string           `json:"mode,omitempty"`
-	Code      string           `json:"code,omitempty"`
-	Interval  string           `json:"interval,omitempty"`
-	Container *Container       `json:"container,omitempty"`
-	Whence    string           `json:"whence,omitempty"`
+	Plugin    *TransformPlugin  `json:"plugin,omitempty"`
+	Mode      string            `json:"mode,omitempty"`
+	Code      string            `json:"code,omitempty"`
+	Interval  string            `json:"interval,omitempty"`
+	Container *Container        `json:"container,omitempty"`
+	Whence    string            `json:"whence,omitempty"`
+	Schema    []RepoSchemaEntry `json:"destrepo,omitempty"`
 }
 
 func (t *TransformSpec) Validate() (err error) {

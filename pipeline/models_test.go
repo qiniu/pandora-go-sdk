@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -54,7 +53,9 @@ func Test_convertDSL(t *testing.T) {
 			},
 		},
 		{
-			dsl: "x1 l, x2 *f, x3 *s, x9 d,x4 a(s),x5 *m{x7 string},x6 b,x8,x10 m{x11 d,x12 a(f),x13 m{x14},x15 m{x16 l}}",
+			dsl: `x1 l, x2 *f, x3 *s, x9 d,x4 a(s),x5 *m{x7 string},x6 b,
+			x8,x10 m{x11 d,x12 a(f),
+			x13 m{x14},x15 m{x16 l}}`,
 			exp: []RepoSchemaEntry{
 				RepoSchemaEntry{
 					Key:       "x1",
@@ -208,12 +209,13 @@ func Test_convertDSL(t *testing.T) {
 	}
 	for _, ti := range tests {
 		got, err := toSchema(ti.dsl, 0)
-		if err != nil {
-			t.Error(err)
-		}
-		if !reflect.DeepEqual(ti.exp, got) {
-			t.Error("should be equal")
-		}
+		assert.NoError(t, err)
+		assert.Equal(t, ti.exp, got)
+		dslstr := getFormatDSL(ti.exp, 0, "\t")
+		//fmt.Println(dslstr)
+		got2, err := toSchema(dslstr, 0)
+		assert.NoError(t, err)
+		assert.Equal(t, ti.exp, got2)
 	}
 }
 

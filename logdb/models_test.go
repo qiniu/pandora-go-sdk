@@ -1,8 +1,9 @@
 package logdb
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_convertDSL(t *testing.T) {
@@ -198,12 +199,13 @@ func Test_convertDSL(t *testing.T) {
 	}
 	for _, ti := range tests {
 		got, err := toSchema(ti.dsl, 0)
-		if err != nil {
-			t.Error(err)
-		}
-		if !reflect.DeepEqual(ti.exp, got) {
-			t.Error("should be equal")
-		}
+		assert.NoError(t, err)
+		assert.Equal(t, ti.exp, got)
+
+		newdsl := SchemaToDSL(ti.exp, "\t")
+		got2, err := toSchema(newdsl, 0)
+		assert.NoError(t, err)
+		assert.Equal(t, ti.exp, got2)
 	}
 }
 

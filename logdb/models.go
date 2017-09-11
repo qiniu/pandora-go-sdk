@@ -252,8 +252,14 @@ func checkPrimary(hasPrimary, key, valueType string, depth int) error {
 	return nil
 }
 
+// DSLtoSchema 是将DSL字符串转化为schema
 func DSLtoSchema(dsl string) (schemas []RepoSchemaEntry, err error) {
 	return toSchema(dsl, 0)
+}
+
+// SchemaToDSL 会把schema信息转换为格式化的dsl字符串，其中indent是格式化的占位符，一般是"\t"或者2个空格。
+func SchemaToDSL(schemas []RepoSchemaEntry, indent string) (dsl string) {
+	return getFormatDSL(schemas, 0, indent)
 }
 
 func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
@@ -340,6 +346,35 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 	if nestbalance != 0 {
 		err = errors.New("parse dsl error: { and } not match")
 		return
+	}
+	return
+}
+
+func getDepthIndent(depth int, indent string) (ds string) {
+	for i := 0; i < depth; i++ {
+		ds += indent
+	}
+	return
+}
+
+func getFormatDSL(schemas []RepoSchemaEntry, depth int, indent string) (dsl string) {
+	for _, v := range schemas {
+		dsl += getDepthIndent(depth, indent)
+		dsl += v.Key + " "
+		if v.Primary {
+			dsl += "*"
+		}
+		dsl += v.ValueType
+		switch v.ValueType {
+		case TypeObject:
+			dsl += "{\n"
+			dsl += getFormatDSL(v.Schemas, depth+1, indent)
+			dsl += getDepthIndent(depth, indent) + "}"
+		case TypeString:
+			dsl += " " + v.Analyzer
+		default:
+		}
+		dsl += ",\n"
 	}
 	return
 }

@@ -5,4 +5,5 @@ go:
 before_script:
 script:
   - go get ./...
-  - cd pipeline && go test ./...
+  - cd pipeline && go test ./... && cd -
+  - cd logdb && go test ./... && cd -

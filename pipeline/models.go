@@ -405,6 +405,10 @@ func DSLtoSchema(dsl string) (schemas []RepoSchemaEntry, err error) {
 	return toSchema(dsl, 0)
 }
 
+func SchemaToDSL(schemas []RepoSchemaEntry, indent string) (dsl string) {
+	return getFormatDSL(schemas, 0, indent)
+}
+
 func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 	if depth > base.NestLimit {
 		err = reqerr.NewInvalidArgs("Schema", fmt.Sprintf("RepoSchemaEntry are nested out of limit %v", base.NestLimit))
@@ -485,6 +489,35 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 	if nestbalance != 0 {
 		err = errors.New("parse dsl error: { and } not match")
 		return
+	}
+	return
+}
+
+func getDepthIndent(depth int, indent string) (ds string) {
+	for i := 0; i < depth; i++ {
+		ds += indent
+	}
+	return
+}
+
+func getFormatDSL(schemas []RepoSchemaEntry, depth int, indent string) (dsl string) {
+	for _, v := range schemas {
+		dsl += getDepthIndent(depth, indent)
+		dsl += v.Key + " "
+		if v.Required {
+			dsl += "*"
+		}
+		dsl += v.ValueType
+		switch v.ValueType {
+		case PandoraTypeMap:
+			dsl += "{\n"
+			dsl += getFormatDSL(v.Schema, depth+1, indent)
+			dsl += getDepthIndent(depth, indent) + "}"
+		case PandoraTypeArray:
+			dsl += "(" + v.ElemType + ")"
+		default:
+		}
+		dsl += ",\n"
 	}
 	return
 }

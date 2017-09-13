@@ -47,6 +47,11 @@ const (
 	ErrInvalidParameterError
 	ErrDBNotFoundError
 	ErrTableNotFoundError
+	ErrInvalidWorkflowName
+	ErrWorkflowAlreadyExists
+	ErrNoSuchWorkflow
+	ErrWorkflowSpecContent
+	ErrWorkflowStatusCannotUpdate
 )
 
 type ErrBuilder interface {

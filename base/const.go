@@ -69,6 +69,11 @@ const (
 	OpDeregUdfFunc        string = "DeregisterUdfFunction"
 	OpListUdfFuncs        string = "ListUdfFuncs"
 	OpListUdfBuiltinFuncs string = "ListUdfBuiltinFuncs"
+	OpCreateWorkflow      string = "CreateWorkflow"
+	OpUpdateWorkflow      string = "UpdateWorkflow"
+	OpDeleteWorkflow      string = "DeleteWorkflow"
+	OpListWorkflows       string = "ListWorkflow"
+	OpGetWorkflow         string = "GetWorkflow"
 
 	OpUpdateRepo        string = "UpdateRepo"
 	OpSendLog           string = "SendLog"

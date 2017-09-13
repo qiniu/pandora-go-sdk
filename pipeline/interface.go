@@ -133,5 +133,15 @@ type PipelineAPI interface {
 
 	ListBuiltinUdfFunctions(input *ListBuiltinUdfFunctionsInput) (output *ListUdfBuiltinFunctionsOutput, err error)
 
+	CreateWorkflow(input *CreateWorkflowInput) (err error)
+
+	UpdateWorkflow(input *UpdateWorkflowInput) (err error)
+
+	GetWorkflow(input *GetWorkflowInput) (output *GetWorkflowOutput, err error)
+
+	DeleteWorkflow(input *DeleteWorkflowInput) (err error)
+
+	ListWorkflows(input *ListWorkflowInput) (output *ListWorkflowOutput, err error)
+
 	Close() error
 }

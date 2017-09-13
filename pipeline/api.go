@@ -1005,3 +1005,51 @@ func (c *Pipeline) ListBuiltinUdfFunctions(input *ListBuiltinUdfFunctionsInput) 
 	req := c.newRequest(op, input.Token, output)
 	return output, req.Send()
 }
+
+func (c *Pipeline) CreateWorkflow(input *CreateWorkflowInput) (err error) {
+	op := c.newOperation(base.OpCreateWorkflow, input.WorkflowName)
+
+	req := c.newRequest(op, input.Token, nil)
+	if input.Region == "" {
+		input.Region = c.defaultRegion
+	}
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	return req.Send()
+}
+
+func (c *Pipeline) UpdateWorkflow(input *UpdateWorkflowInput) (err error) {
+	op := c.newOperation(base.OpUpdateWorkflow, input.WorkflowName)
+
+	req := c.newRequest(op, input.Token, nil)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	return req.Send()
+}
+
+func (c *Pipeline) GetWorkflow(input *GetWorkflowInput) (output *GetWorkflowOutput, err error) {
+	op := c.newOperation(base.OpGetWorkflow, input.WorkflowName)
+
+	output = &GetWorkflowOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
+func (c *Pipeline) DeleteWorkflow(input *DeleteWorkflowInput) (err error) {
+	op := c.newOperation(base.OpDeleteWorkflow, input.WorkflowName)
+
+	req := c.newRequest(op, input.Token, nil)
+	return req.Send()
+}
+
+func (c *Pipeline) ListWorkflows(input *ListWorkflowInput) (output *ListWorkflowOutput, err error) {
+	op := c.newOperation(base.OpListWorkflows)
+
+	output = &ListWorkflowOutput{}
+	req := c.newRequest(op, input.Token, &output)
+	return output, req.Send()
+}

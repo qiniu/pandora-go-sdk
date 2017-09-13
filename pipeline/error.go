@@ -53,6 +53,16 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.InvalidDataSchemaError
 	case "E18305":
 		err.ErrorType = reqerr.ExportSpecRemainUnchanged
+	case "E18639":
+		err.ErrorType = reqerr.ErrInvalidWorkflowName
+	case "E18640":
+		err.ErrorType = reqerr.ErrWorkflowAlreadyExists
+	case "E18641":
+		err.ErrorType = reqerr.ErrNoSuchWorkflow
+	case "E18642":
+		err.ErrorType = reqerr.ErrWorkflowSpecContent
+	case "E18643":
+		err.ErrorType = reqerr.ErrWorkflowStatusCannotUpdate
 	case "E9000":
 		err.ErrorType = reqerr.InternalServerError
 	default:

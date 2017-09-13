@@ -32,6 +32,8 @@ const (
 	datasourceNamePattern = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
 	jobNamePattern        = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
 	jobExportNamePattern  = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
+	workflowNamePattern   = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
+	nodeNamePattern       = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
 	pluginNamePattern     = "^[a-zA-Z][a-zA-Z0-9_\\.]{0,127}[a-zA-Z0-9_]$"
 )
 
@@ -153,6 +155,28 @@ func validateJobexportName(e string) error {
 	}
 	if !matched {
 		return reqerr.NewInvalidArgs("JobexportName", fmt.Sprintf("invalid job export name: %s", e))
+	}
+	return nil
+}
+
+func validateWorkflowName(r string) error {
+	matched, err := regexp.MatchString(workflowNamePattern, r)
+	if err != nil {
+		return reqerr.NewInvalidArgs("WorkflowName", err.Error())
+	}
+	if !matched {
+		return reqerr.NewInvalidArgs("WorkflowName", fmt.Sprintf("invalid workflow name: %s", r))
+	}
+	return nil
+}
+
+func validateNodeName(r string) error {
+	matched, err := regexp.MatchString(nodeNamePattern, r)
+	if err != nil {
+		return reqerr.NewInvalidArgs("Workflow NodeName", err.Error())
+	}
+	if !matched {
+		return reqerr.NewInvalidArgs("Workflow NodeName", fmt.Sprintf("invalid workflow node name: %s", r))
 	}
 	return nil
 }
@@ -1837,4 +1861,103 @@ type UdfBuiltinFunctionInfoOutput struct {
 	Category        string `json:"category"`
 	FuncDeclaration string `json:"funcDeclaration"`
 	Description     string `json:"description"`
+}
+
+type NodeMetadata struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+type Node struct {
+	Name     string         `json:"name"`
+	Type     string         `json:"type"`
+	Parents  []NodeMetadata `json:"parents,omitempty"`
+	Children []NodeMetadata `json:"children,omitempty"`
+	Data     interface{}    `json:"data"`
+}
+
+type CreateWorkflowInput struct {
+	PipelineToken
+	WorkflowName string           `json:"name"`
+	Region       string           `json:"region"`
+	Nodes        map[string]*Node `json:"nodes"`
+	Comment      string           `json:"comment,omitempty"`
+}
+
+type UpdateWorkflowInput CreateWorkflowInput
+
+type DeleteWorkflowInput struct {
+	PipelineToken
+	WorkflowName string `json:"name"`
+}
+
+func (r *DeleteWorkflowInput) Validate() (err error) {
+	if err = validateWorkflowName(r.WorkflowName); err != nil {
+		return
+	}
+	return
+}
+
+type GetWorkflowInput struct {
+	PipelineToken
+	WorkflowName string `json:"name"`
+}
+
+func (r *GetWorkflowInput) Validate() (err error) {
+	if err = validateWorkflowName(r.WorkflowName); err != nil {
+		return
+	}
+	return
+}
+
+type GetWorkflowOutput struct {
+	Name       string           `json:"name,omitempty"`
+	Region     string           `json:"region"`
+	Nodes      map[string]*Node `json:"nodes"`
+	Comment    string           `json:"comment"`
+	CreateTime string           `json:"createTime"`
+	UpdateTime string           `json:"updateTime"`
+	State      string           `json:"state"`
+}
+
+type ListWorkflowInput struct {
+	PipelineToken
+}
+
+func (c *ListWorkflowInput) Validate() error {
+	return nil
+}
+
+type ListWorkflowOutput []GetWorkflowOutput
+
+func validateWorkflow(name, region string, nodes map[string]*Node) (err error) {
+	if err = validateWorkflowName(name); err != nil {
+		return
+	}
+	if nodes != nil {
+		for _, node := range nodes {
+			if err = validateNodeName(node.Name); err != nil {
+				return err
+			}
+		}
+	}
+	if region == "" {
+		err = reqerr.NewInvalidArgs("Region", "region should not be empty")
+		return
+	}
+	return
+}
+
+func (r *CreateWorkflowInput) Validate() (err error) {
+	if err = validateWorkflow(r.WorkflowName, r.Region, r.Nodes); err != nil {
+		return
+	}
+	return
+}
+
+func (r *UpdateWorkflowInput) Validate() (err error) {
+	if err = validateWorkflow(r.WorkflowName, r.Region, r.Nodes); err != nil {
+		return
+	}
+	return
 }

@@ -206,6 +206,16 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodGet, "/v2/udf/funcs%s"
 	case base.OpListUdfBuiltinFuncs:
 		method, urlTmpl = base.MethodGet, "/v2/udf/builtins%s"
+	case base.OpCreateWorkflow:
+		method, urlTmpl = base.MethodPost, "/v2/workflows/%s"
+	case base.OpUpdateWorkflow:
+		method, urlTmpl = base.MethodPut, "/v2/workflows/%s"
+	case base.OpDeleteWorkflow:
+		method, urlTmpl = base.MethodDelete, "/v2/workflows/%s"
+	case base.OpGetWorkflow:
+		method, urlTmpl = base.MethodGet, "/v2/workflows/%s"
+	case base.OpListWorkflows:
+		method, urlTmpl = base.MethodGet, "/v2/workflows"
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

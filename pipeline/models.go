@@ -487,7 +487,7 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 				}
 				start = end + 1
 			}
-		case ',':
+		case ',', '\n':
 			if nestbalance == 0 {
 				if start < end {
 					key, valueType, elemtype, required, err := getField(strings.TrimSpace(dsl[start:end]))
@@ -541,7 +541,7 @@ func getFormatDSL(schemas []RepoSchemaEntry, depth int, indent string) (dsl stri
 			dsl += "(" + v.ElemType + ")"
 		default:
 		}
-		dsl += ",\n"
+		dsl += "\n"
 	}
 	return
 }

@@ -8,8 +8,9 @@ import (
 
 func Test_convertDSL(t *testing.T) {
 	tests := []struct {
-		dsl string
-		exp []RepoSchemaEntry
+		dsl    string
+		exp    []RepoSchemaEntry
+		experr bool
 	}{
 		{
 			dsl: "x1 l,x2, ,x3 s,x4 float,x5 long,x6 map{x7 *boolean,x8 array(l)},,",
@@ -206,13 +207,30 @@ func Test_convertDSL(t *testing.T) {
 				},
 			},
 		},
+		{
+			dsl: "baoge l,baoge,",
+			exp: []RepoSchemaEntry{
+				RepoSchemaEntry{
+					Key:       "baoge",
+					ValueType: "long",
+				},
+				RepoSchemaEntry{
+					Key:       "baoge",
+					ValueType: "string",
+				},
+			},
+			experr: true,
+		},
 	}
 	for _, ti := range tests {
 		got, err := toSchema(ti.dsl, 0)
+		if ti.experr {
+			assert.Error(t, err)
+			continue
+		}
 		assert.NoError(t, err)
 		assert.Equal(t, ti.exp, got)
 		dslstr := getFormatDSL(ti.exp, 0, "\t")
-		//fmt.Println(dslstr)
 		got2, err := toSchema(dslstr, 0)
 		assert.NoError(t, err)
 		assert.Equal(t, ti.exp, got2)

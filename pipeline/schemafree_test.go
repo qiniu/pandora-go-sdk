@@ -2,11 +2,10 @@ package pipeline
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
-
-	"fmt"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -634,6 +633,198 @@ func TestCheckIgnore(t *testing.T) {
 	}
 	for _, ti := range tests {
 		got := checkIgnore(ti.v, ti.tp)
+		assert.Equal(t, ti.exp, got)
+	}
+}
+
+func TestConvertData(t *testing.T) {
+	type helloint int
+	tests := []struct {
+		v      interface{}
+		schema RepoSchemaEntry
+		exp    interface{}
+	}{
+		{
+			v: helloint(1),
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeLong,
+			},
+			exp: helloint(1),
+		},
+		{
+			v: helloint(1),
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeString,
+			},
+			exp: "1",
+		},
+		{
+			v: json.Number("1"),
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeLong,
+			},
+			exp: int64(1),
+		},
+		{
+			v: "1",
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeLong,
+			},
+			exp: int64(1),
+		},
+		{
+			v: []int{1, 2, 3},
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeArray,
+				ElemType:  PandoraTypeLong,
+			},
+			exp: []interface{}{1, 2, 3},
+		},
+		{
+			v: []int{1, 2, 3},
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeArray,
+				ElemType:  PandoraTypeString,
+			},
+			exp: []interface{}{"1", "2", "3"},
+		},
+		{
+			v: []interface{}{1, 2, 3},
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeArray,
+				ElemType:  PandoraTypeString,
+			},
+			exp: []interface{}{"1", "2", "3"},
+		},
+		{
+			v: `[1, 2, 3]`,
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeArray,
+				ElemType:  PandoraTypeString,
+			},
+			exp: []interface{}{"1", "2", "3"},
+		},
+		{
+			v: `["1", "2", "3"]`,
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeArray,
+				ElemType:  PandoraTypeFloat,
+			},
+			exp: []interface{}{float64(1), float64(2), float64(3)},
+		},
+		{
+			v: "1.1",
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeFloat,
+			},
+			exp: float64(1.1),
+		},
+		{
+			v: map[string]interface{}{
+				"a": 123,
+			},
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeMap,
+				Schema: []RepoSchemaEntry{
+					{ValueType: PandoraTypeString, Key: "a"},
+				},
+			},
+			exp: map[string]interface{}{
+				"a": "123",
+			},
+		},
+		{
+			v: map[string]interface{}{
+				"a": 123,
+			},
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeMap,
+				Schema: []RepoSchemaEntry{
+					{ValueType: PandoraTypeFloat, Key: "a"},
+				},
+			},
+			exp: map[string]interface{}{
+				"a": 123,
+			},
+		},
+		{
+			v: map[string]interface{}{
+				"a": "123",
+				"b": "hello",
+			},
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeMap,
+				Schema: []RepoSchemaEntry{
+					{ValueType: PandoraTypeFloat, Key: "a"},
+					{ValueType: PandoraTypeString, Key: "b"},
+				},
+			},
+			exp: map[string]interface{}{
+				"a": float64(123),
+				"b": "hello",
+			},
+		},
+		{
+			v: `{
+				"a": "123",
+				"b": "hello"
+			}`,
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeMap,
+				Schema: []RepoSchemaEntry{
+					{ValueType: PandoraTypeFloat, Key: "a"},
+					{ValueType: PandoraTypeString, Key: "b"},
+				},
+			},
+			exp: map[string]interface{}{
+				"a": float64(123),
+				"b": "hello",
+			},
+		},
+		{
+			v: `{
+				"a": "123.23",
+				"b": "hello"
+			}`,
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeMap,
+				Schema: []RepoSchemaEntry{
+					{ValueType: PandoraTypeLong, Key: "a"},
+					{ValueType: PandoraTypeString, Key: "b"},
+				},
+			},
+			exp: map[string]interface{}{
+				"a": int64(123),
+				"b": "hello",
+			},
+		},
+		{
+			v: `{
+				"a": "123.23",
+				"b": {
+					"c":123
+				}
+			}`,
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeMap,
+				Schema: []RepoSchemaEntry{
+					{ValueType: PandoraTypeLong, Key: "a"},
+					{ValueType: PandoraTypeMap, Key: "b", Schema: []RepoSchemaEntry{
+						{ValueType: PandoraTypeLong, Key: "c"}},
+					},
+				},
+			},
+			exp: map[string]interface{}{
+				"a": int64(123),
+				"b": map[string]interface{}{
+					"c": int64(123),
+				},
+			},
+		},
+	}
+	for _, ti := range tests {
+		got, err := dataConvert(ti.v, ti.schema)
+		assert.NoError(t, err)
 		assert.Equal(t, ti.exp, got)
 	}
 }

@@ -274,6 +274,7 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 	neststart, nestend := -1, -1
 	dsl += "," //增加一个','保证一定是以","为终结
 	var hasPrimary string
+	dupcheck := make(map[string]struct{})
 	for end, c := range dsl {
 		if start > end {
 			err = errors.New("parse dsl inner error: start index is larger than end")
@@ -305,6 +306,10 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 					return nil, err
 				}
 				if key != "" {
+					if _, ok := dupcheck[key]; ok {
+						return nil, errors.New("parse dsl error: " + key + " is duplicated key")
+					}
+					dupcheck[key] = struct{}{}
 					if valueType == "" {
 						valueType = TypeObject
 					}
@@ -327,6 +332,10 @@ func toSchema(dsl string, depth int) (schemas []RepoSchemaEntry, err error) {
 					}
 
 					if key != "" {
+						if _, ok := dupcheck[key]; ok {
+							return nil, errors.New("parse dsl error: " + key + " is duplicated key")
+						}
+						dupcheck[key] = struct{}{}
 						if valueType == "" {
 							valueType = TypeString
 						}

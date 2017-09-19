@@ -2,12 +2,11 @@ package pipeline
 
 import (
 	"encoding/json"
-	"reflect"
-	"time"
-
-	"sort"
-
 	"fmt"
+	"reflect"
+	"sort"
+	"strconv"
+	"time"
 
 	"github.com/qiniu/log"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
@@ -56,9 +55,255 @@ func deepDeleteCheck(data interface{}, schema RepoSchemaEntry) bool {
 	return true
 }
 
+func dataConvert(data interface{}, schema RepoSchemaEntry) (converted interface{}, err error) {
+	switch schema.ValueType {
+	case PandoraTypeLong:
+		value := reflect.ValueOf(data)
+		switch value.Kind() {
+		case reflect.Int64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			return data, nil
+		case reflect.Float32, reflect.Float64:
+			return int64(value.Float()), nil
+		case reflect.String:
+			if converted, err = strconv.ParseInt(value.String(), 10, 64); err == nil {
+				return
+			}
+			var floatc float64
+			if floatc, err = strconv.ParseFloat(value.String(), 10); err == nil {
+				converted = int64(floatc)
+				return
+			}
+		}
+	case PandoraTypeFloat:
+		value := reflect.ValueOf(data)
+		switch value.Kind() {
+		case reflect.Int64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			return data, nil
+		case reflect.Float32, reflect.Float64:
+			return data, nil
+		case reflect.String:
+			if converted, err = strconv.ParseFloat(value.String(), 10); err == nil {
+				return
+			}
+		}
+	case PandoraTypeString:
+		value := reflect.ValueOf(data)
+		switch value.Kind() {
+		case reflect.Int64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+			return strconv.FormatInt(value.Int(), 10), nil
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			return strconv.FormatUint(value.Uint(), 10), nil
+		case reflect.Float32, reflect.Float64:
+			return strconv.FormatFloat(value.Float(), 'f', -1, 64), nil
+		default:
+			return data, nil
+		}
+	case PandoraTypeJsonString:
+		return data, nil
+	case PandoraTypeDate:
+		return data, nil
+	case PandoraTypeBool:
+		return data, nil
+	case PandoraTypeArray:
+		ret := make([]interface{}, 0)
+		switch value := data.(type) {
+		case []interface{}:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []string:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []int:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []int64:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []json.Number:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []float64:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []bool:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []float32:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []int8:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []int16:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []int32:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []uint:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []uint8:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []uint16:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []uint32:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case []uint64:
+			for _, j := range value {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		case string:
+			newdata := make([]interface{}, 0)
+			err = json.Unmarshal([]byte(value), &newdata)
+			if err != nil {
+				return
+			}
+			for _, j := range newdata {
+				vi, err := dataConvert(j, RepoSchemaEntry{ValueType: schema.ElemType})
+				if err != nil {
+					log.Error(err)
+					continue
+				}
+				ret = append(ret, vi)
+			}
+		}
+		return ret, nil
+	case PandoraTypeMap:
+		switch value := data.(type) {
+		case map[string]interface{}:
+			return mapDataConvert(value, schema.Schema), nil
+		case string:
+			newdata := make(map[string]interface{})
+			err = json.Unmarshal([]byte(value), &newdata)
+			if err == nil {
+				return mapDataConvert(newdata, schema.Schema), nil
+			}
+		}
+	}
+	return data, fmt.Errorf("can not convert data[%v] to type(%v), err %v", data, reflect.TypeOf(data), err)
+}
+
+func mapDataConvert(mpvalue map[string]interface{}, schemas []RepoSchemaEntry) (converted interface{}) {
+	for _, v := range schemas {
+		if subv, ok := mpvalue[v.Key]; ok {
+			subconverted, err := dataConvert(subv, v)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+			mpvalue[v.Key] = subconverted
+		}
+	}
+	return mpvalue
+}
+
 func copyData(d Data) Data {
 	md := make(Data, len(d))
 	for k, v := range d {
+		if v == nil {
+			continue
+		}
 		md[k] = v
 	}
 	return md
@@ -122,6 +367,15 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 			} else {
 				continue
 			}
+		}
+
+		if option != nil && option.ForceDataConvert {
+			nvalue, err := dataConvert(value, v)
+			if err != nil {
+				log.Errorf("convert value %v to schema %v error %v, ignore this value...", value, v, err)
+				continue
+			}
+			value = nvalue
 		}
 
 		//对于没有autoupdate的情况就不delete了，节省CPU
@@ -260,7 +514,7 @@ func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSch
 			RepoName: repoName,
 			Schema:   schemas,
 		})
-		if option.ToLogDB {
+		if option != nil && option.ToLogDB {
 			err = c.AutoExportToLogDB(&AutoExportToLogDBInput{
 				RepoName:    repoName,
 				LogRepoName: option.LogDBRepoName,
@@ -270,7 +524,7 @@ func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSch
 				return
 			}
 		}
-		if option.ToTSDB {
+		if option != nil && option.ToTSDB {
 			err = c.AutoExportToTSDB(&AutoExportToTSDBInput{
 				RepoName:     repoName,
 				TSDBRepoName: option.TSDBRepoName,
@@ -362,7 +616,7 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 				valueType[k] = sc
 			}
 			//对于里面没有元素的interface，不添加进去，因为无法判断类型
-		case []int, []int8, []int16, []int32, []int64:
+		case []int, []int8, []int16, []int32, []int64, []uint, []uint8, []uint16, []uint32, []uint64:
 			sc := formValueType(k, PandoraTypeArray)
 			sc.ElemType = PandoraTypeLong
 			valueType[k] = sc
@@ -378,6 +632,10 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 			sc := formValueType(k, PandoraTypeArray)
 			sc.ElemType = PandoraTypeBool
 			valueType[k] = sc
+		case []json.Number:
+			sc := formValueType(k, PandoraTypeArray)
+			sc.ElemType = PandoraTypeFloat
+			valueType[k] = sc
 		case nil: // 不处理，不加入
 		case string:
 			_, err := time.Parse(time.RFC3339, nv)
@@ -388,7 +646,6 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 			}
 		case time.Time, *time.Time:
 			valueType[k] = formValueType(k, PandoraTypeDate)
-
 		default:
 			valueType[k] = formValueType(k, PandoraTypeString)
 			log.Debugf("find undetected key(%v)-type(%v)", k, reflect.TypeOf(v))

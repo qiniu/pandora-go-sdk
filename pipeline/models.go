@@ -802,17 +802,18 @@ type SchemaFreeInput struct {
 }
 
 type SchemaFreeOption struct {
-	ToLogDB        bool
-	LogDBRepoName  string
-	LogDBRetention string
-	ToTSDB         bool
-	TSDBRepoName   string
-	TSDBtags       []string
-	TSDBSeriesName string
-	TSDBRetention  string
-	ToKODO         bool
-	KodoBucketName string
-	KODORetention  string
+	ToLogDB          bool
+	LogDBRepoName    string
+	LogDBRetention   string
+	ToTSDB           bool
+	TSDBRepoName     string
+	TSDBtags         []string
+	TSDBSeriesName   string
+	TSDBRetention    string
+	ToKODO           bool
+	KodoBucketName   string
+	KODORetention    string
+	ForceDataConvert bool
 }
 
 type PostDataFromFileInput struct {

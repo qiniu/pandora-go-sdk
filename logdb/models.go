@@ -89,9 +89,8 @@ func validateRepoName(r string) error {
 type RepoSchemaEntry struct {
 	Key       string                 `json:"key"`
 	ValueType string                 `json:"valtype"`
-	SearchWay string                 `json:"searchway,omitempty"` // deprecated
-	Analyzer  string                 `json:"analyzer,omitempty"`  //替代SearchWay
-	Primary   bool                   `json:"primary,omitempty"`   //默认值是false
+	Analyzer  string                 `json:"analyzer,omitempty"` //替代SearchWay
+	Primary   bool                   `json:"primary,omitempty"`  //默认值是false
 	Schemas   []RepoSchemaEntry      `json:"nested,omitempty"`
 	Options   map[string]interface{} `json:"options,omitempty"` // 对于一些特殊的类型，比如IP或者geo_point会有一些特殊的属性。
 }

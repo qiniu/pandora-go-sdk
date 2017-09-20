@@ -692,11 +692,21 @@ type GetRepoInput struct {
 	RepoName string
 }
 
+type GetSampleDataInput struct {
+	PipelineToken
+	RepoName string
+	Count    int //最多10条
+}
+
 type GetRepoOutput struct {
 	Region      string            `json:"region"`
 	Schema      []RepoSchemaEntry `json:"schema"`
 	GroupName   string            `json:"group"`
 	DerivedFrom string            `json:"derivedFrom"`
+}
+
+type SampleDataOutput struct {
+	Values []map[string]interface{} `json:"records"`
 }
 
 type RepoDesc struct {

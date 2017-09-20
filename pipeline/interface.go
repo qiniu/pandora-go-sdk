@@ -29,6 +29,8 @@ type PipelineAPI interface {
 
 	GetRepo(*GetRepoInput) (*GetRepoOutput, error)
 
+	GetSampleData(*GetSampleDataInput) (*SampleDataOutput, error)
+
 	ListRepos(*ListReposInput) (*ListReposOutput, error)
 
 	DeleteRepo(*DeleteRepoInput) error

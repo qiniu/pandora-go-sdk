@@ -62,7 +62,17 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 	case "E18642":
 		err.ErrorType = reqerr.ErrWorkflowSpecContent
 	case "E18643":
-		err.ErrorType = reqerr.ErrWorkflowStatusCannotUpdate
+		err.ErrorType = reqerr.ErrUpdateWorkflow
+	case "E18644":
+		err.ErrorType = reqerr.ErrStartWorkflow
+	case "E18645":
+		err.ErrorType = reqerr.ErrStopWorkflow
+	case "E18646":
+		err.ErrorType = reqerr.ErrWorkflowStructure
+	case "E18647":
+		err.ErrorType = reqerr.ErrStartTransform
+	case "E18648":
+		err.ErrorType = reqerr.ErrStopTransform
 	case "E9000":
 		err.ErrorType = reqerr.InternalServerError
 	default:

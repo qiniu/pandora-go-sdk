@@ -51,7 +51,12 @@ const (
 	ErrWorkflowAlreadyExists
 	ErrNoSuchWorkflow
 	ErrWorkflowSpecContent
-	ErrWorkflowStatusCannotUpdate
+	ErrUpdateWorkflow
+	ErrStartWorkflow
+	ErrStopWorkflow
+	ErrWorkflowStructure
+	ErrStartTransform
+	ErrStopTransform
 )
 
 type ErrBuilder interface {

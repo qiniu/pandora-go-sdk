@@ -307,6 +307,14 @@ func (c *Pipeline) GetRepo(input *GetRepoInput) (output *GetRepoOutput, err erro
 	return output, req.Send()
 }
 
+func (c *Pipeline) GetSampleData(input *GetSampleDataInput) (output *SampleDataOutput, err error) {
+	op := c.newOperation(base.OpGetSampleData, input.RepoName, input.Count)
+
+	output = &SampleDataOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
 func (c *Pipeline) ListRepos(input *ListReposInput) (output *ListReposOutput, err error) {
 	op := c.newOperation(base.OpListRepos)
 

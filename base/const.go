@@ -26,6 +26,7 @@ const (
 	OpDeleteGroup         string = "DeleteGroup"
 	OpCreateRepo          string = "CreateRepo"
 	OpGetRepo             string = "GetRepo"
+	OpGetSampleData       string = "GetSampleData"
 	OpListRepos           string = "ListRepo"
 	OpDeleteRepo          string = "DeleteRepo"
 	OpPostData            string = "PostData"

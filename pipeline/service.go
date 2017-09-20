@@ -122,6 +122,8 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodGet, "/v2/repos"
 	case base.OpGetRepo:
 		method, urlTmpl = base.MethodGet, "/v2/repos/%s"
+	case base.OpGetSampleData:
+		method, urlTmpl = base.MethodGet, "/v2/repos/%s/data?count=%v"
 	case base.OpDeleteRepo:
 		method, urlTmpl = base.MethodDelete, "/v2/repos/%s"
 	case base.OpPostData:

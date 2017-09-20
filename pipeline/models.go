@@ -334,9 +334,10 @@ func (e *RepoSchemaEntry) Validate() (err error) {
 type CreateRepoDSLInput struct {
 	PipelineToken
 	RepoName  string
-	Region    string `json:"region"`
-	DSL       string `json:"dsl"`
-	GroupName string `json:"group"`
+	Region    string       `json:"region"`
+	DSL       string       `json:"dsl"`
+	Options   *RepoOptions `json:"options"`
+	GroupName string       `json:"group"`
 }
 
 /*
@@ -607,11 +608,16 @@ func IsTag(key string, tags []string) bool {
 	return false
 }
 
+type RepoOptions struct {
+	WithIP string `json:"withIP"`
+}
+
 type CreateRepoInput struct {
 	PipelineToken
 	RepoName  string
 	Region    string            `json:"region"`
 	Schema    []RepoSchemaEntry `json:"schema"`
+	Options   *RepoOptions      `json:"options"`
 	GroupName string            `json:"group"`
 }
 

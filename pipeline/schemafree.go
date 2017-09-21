@@ -339,7 +339,7 @@ func checkIgnore(value interface{}, schemeType string) bool {
 	return false
 }
 
-func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool, option *SchemaFreeOption) (point Point, err error) {
+func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool, option *SchemaFreeOption, repooptions *RepoOptions) (point Point, err error) {
 
 	data := copyData(oldData)
 	point = Point{}
@@ -405,7 +405,7 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 	if schemaFree && haveNewData(data) {
 		//defaultAll 为false时，过滤一批不要的
 		valueType := getPandoraKeyValueType(data)
-		if err = c.addRepoSchemas(repoName, valueType, option); err != nil {
+		if err = c.addRepoSchemas(repoName, valueType, option, repooptions); err != nil {
 			err = fmt.Errorf("updatePandora Repo error %v", err)
 			return
 		}
@@ -488,7 +488,7 @@ func mergePandoraSchemas(a, b []RepoSchemaEntry) (ret []RepoSchemaEntry, err err
 	return
 }
 
-func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSchemaEntry, option *SchemaFreeOption) (err error) {
+func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSchemaEntry, option *SchemaFreeOption, repooptions *RepoOptions) (err error) {
 
 	var addScs, oldScs []RepoSchemaEntry
 	for _, v := range addSchemas {
@@ -513,6 +513,7 @@ func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSch
 		err = c.CreateRepo(&CreateRepoInput{
 			RepoName: repoName,
 			Schema:   schemas,
+			Options:  repooptions,
 		})
 		if option != nil && option.ToLogDB {
 			err = c.AutoExportToLogDB(&AutoExportToLogDBInput{
@@ -539,9 +540,10 @@ func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSch
 		return
 	} else {
 		err = c.UpdateRepo(&UpdateRepoInput{
-			RepoName: repoName,
-			Schema:   schemas,
-			Option:   option,
+			RepoName:    repoName,
+			Schema:      schemas,
+			Option:      option,
+			RepoOptions: repooptions,
 		})
 	}
 	if err != nil {
@@ -611,7 +613,7 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 				case string:
 					sc.ElemType = PandoraTypeString
 				default:
-					sc.ValueType = PandoraTypeString
+					sc.ElemType = PandoraTypeString
 				}
 				valueType[k] = sc
 			}
@@ -648,7 +650,7 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 			valueType[k] = formValueType(k, PandoraTypeDate)
 		default:
 			valueType[k] = formValueType(k, PandoraTypeString)
-			log.Debugf("find undetected key(%v)-type(%v)", k, reflect.TypeOf(v))
+			log.Warnf("find undetected key(%v)-type(%v), read it as string", k, reflect.TypeOf(v))
 		}
 	}
 	return

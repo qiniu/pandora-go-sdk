@@ -7,10 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"sort"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetPandoraKeyValueType(t *testing.T) {
+func TestGetPandoraKeyValueTypeBase(t *testing.T) {
 	var data map[string]interface{}
 	dc := json.NewDecoder(strings.NewReader("{\"a\":123,\"b\":123.1,\"c\":\"123\",\"d\":true,\"e\":[1,2,3],\"f\":[1.2,2.1,3.1],\"g\":{\"g1\":\"1\"}}"))
 	dc.UseNumber()
@@ -129,6 +131,76 @@ func TestGetPandoraKeyValueType(t *testing.T) {
 	assert.EqualValues(t, exp, vt)
 }
 
+func TestGetPandoraKeyValueTypeJsonString(t *testing.T) {
+	jsontest := `{
+   "client_uuid":"hongyaa_test_local",
+   "created_at":"2017-07-24 15:55:13",
+   "done_at":"2017-07-24 15:55:16",
+   "expire":"14400",
+   "id":"2",
+   "imagename":"cirros",
+   "job_id":"vNjOJlRgcQiCM5EuBZNF4AyMNzutcEeP",
+   "lesson_id":"0",
+   "msg":"",
+   "process":"100",
+   "resource":{
+      "instance":[
+         {
+            "id":"daf6357b-471a-4b34-b571-569269787722",
+            "name":"cirros_clone_504014877",
+            "network":[
+               {
+                  "name":"match_public",
+                  "id":"221f7dcb-dadd-4650-b4bf-5c111852a03b"
+               }
+            ],
+            "adminPass":"hJo2VizqY7fD"
+         }
+      ]
+   },
+   "scene_id":"0",
+   "status":"4",
+   "type":"image",
+   "updated_at":"2017-07-24 15:56:37",
+   "user_id":"1"
+}`
+	var jsonobj map[string]interface{}
+	err := json.Unmarshal([]byte(jsontest), &jsonobj)
+	assert.NoError(t, err)
+	gotschemas := getPandoraKeyValueType(Data(jsonobj))
+
+	var schemas []RepoSchemaEntry
+	var keys sort.StringSlice
+	for k := range gotschemas {
+		keys = append(keys, k)
+	}
+	keys.Sort()
+	for _, v := range keys {
+		schemas = append(schemas, gotschemas[v])
+	}
+
+	expdsl := `client_uuid string
+created_at string
+done_at string
+expire string
+id string
+imagename string
+job_id string
+lesson_id string
+msg string
+process string
+resource map{
+  instance array(string)
+}
+scene_id string
+status string
+type string
+updated_at string
+user_id string
+`
+	gotdsl := getFormatDSL(schemas, 0, "  ")
+	assert.Equal(t, expdsl, gotdsl)
+}
 func TestDeepDeleteCheck(t *testing.T) {
 	tests := []struct {
 		value  interface{}

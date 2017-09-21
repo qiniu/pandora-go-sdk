@@ -74,7 +74,6 @@ func (c *Pipeline) DeleteGroup(input *DeleteGroupInput) (err error) {
 
 func (c *Pipeline) CreateRepo(input *CreateRepoInput) (err error) {
 	op := c.newOperation(base.OpCreateRepo, input.RepoName)
-
 	req := c.newRequest(op, input.Token, nil)
 	if input.Region == "" {
 		input.Region = c.defaultRegion
@@ -97,6 +96,7 @@ func (c *Pipeline) CreateRepoFromDSL(input *CreateRepoDSLInput) (err error) {
 		Region:        input.Region,
 		GroupName:     input.GroupName,
 		Schema:        schemas,
+		Options:       input.Options,
 	})
 }
 
@@ -351,7 +351,7 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 	var buf bytes.Buffer
 	var start = 0
 	for i, d := range input.Datas {
-		point, err := c.generatePoint(input.RepoName, d, !input.NoUpdate, input.Option)
+		point, err := c.generatePoint(input.RepoName, d, !input.NoUpdate, input.Option, input.RepoOptions)
 		if err != nil {
 			return nil, err
 		}
@@ -414,6 +414,11 @@ func (c *Pipeline) PostDataSchemaFree(input *SchemaFreeInput) (newSchemas map[st
 				switch reqErr.ErrorType {
 				case reqerr.InvalidDataSchemaError, reqerr.EntityTooLargeError:
 					errType = reqerr.TypeBinaryUnpack
+				case reqerr.NoSuchRepoError:
+					c.repoSchemaMux.Lock()
+					c.repoSchemas[input.RepoName] = make(RepoSchema)
+					c.repoSchemaMux.Unlock()
+					newSchemas = make(RepoSchema)
 				}
 			}
 			failDatas = append(failDatas, pContext.datas...)

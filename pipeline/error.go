@@ -53,6 +53,86 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.InvalidDataSchemaError
 	case "E18305":
 		err.ErrorType = reqerr.ExportSpecRemainUnchanged
+	case "E18600":
+		err.ErrorType = reqerr.ErrInvalidDataSourceName
+	case "E18601":
+		err.ErrorType = reqerr.ErrDataSourceExist
+	case "E18602":
+		err.ErrorType = reqerr.ErrDataSourceNotExist
+	case "E18603":
+		err.ErrorType = reqerr.ErrDataSourceCascading
+	case "E18604":
+		err.ErrorType = reqerr.ErrInvalidJobName
+	case "E18605":
+		err.ErrorType = reqerr.ErrJobExist
+	case "E18606":
+		err.ErrorType = reqerr.ErrJobNotExist
+	case "E18607":
+		err.ErrorType = reqerr.ErrJobArgumentCount
+	case "E18608":
+		err.ErrorType = reqerr.ErrJobCascading
+	case "E18609":
+		err.ErrorType = reqerr.ErrInvalidJobExportName
+	case "E18610":
+		err.ErrorType = reqerr.ErrJobExportExist
+	case "E18611":
+		err.ErrorType = reqerr.ErrJobExportNotExist
+	case "E18612":
+		err.ErrorType = reqerr.ErrJobSrcNotExist
+	case "E18613":
+		err.ErrorType = reqerr.ErrDuplicateTableName
+	case "E18614":
+		err.ErrorType = reqerr.ErrInvalidBatchSpec
+	case "E18615":
+		err.ErrorType = reqerr.ErrIncompatibleSourceSchema
+	case "E18617":
+		err.ErrorType = reqerr.ErrInvalidTransformPlugin
+	case "E18618":
+		err.ErrorType = reqerr.ErrInvalidJobSQL
+	case "E18619":
+		err.ErrorType = reqerr.ErrBucketNotExist
+	case "E18620":
+		err.ErrorType = reqerr.ErrDatasourceNoFiles
+	case "E18621":
+		err.ErrorType = reqerr.ErrStartJob
+	case "E18622":
+		err.ErrorType = reqerr.ErrStopJob
+	case "E18623":
+		err.ErrorType = reqerr.ErrFileFormatMismatch
+	case "E18624":
+		err.ErrorType = reqerr.ErrJobRunIdNotExist
+	case "E18625":
+		err.ErrorType = reqerr.ErrBatchCannotRerun
+	case "E18626":
+		err.ErrorType = reqerr.ErrBatchStatusCannotStop
+	case "E18627":
+		err.ErrorType = reqerr.ErrUdfJarNotExist
+	case "E18628":
+		err.ErrorType = reqerr.ErrInvalidUdfJarName
+	case "E18629":
+		err.ErrorType = reqerr.ErrInvalidUdfFuncName
+	case "E18630":
+		err.ErrorType = reqerr.ErrInvalidJavaClassName
+	case "E18631":
+		err.ErrorType = reqerr.ErrUdfClassTypeError
+	case "E18632":
+		err.ErrorType = reqerr.ErrUdfClassNotFound
+	case "E18633":
+		err.ErrorType = reqerr.ErrUdfFunctionNotImplement
+	case "E18634":
+		err.ErrorType = reqerr.ErrUdfFunctionNotFound
+	case "E18635":
+		err.ErrorType = reqerr.ErrUdfFuncExisted
+	case "E18636":
+		err.ErrorType = reqerr.ErrUdfJarExisted
+	case "E18637":
+		err.ErrorType = reqerr.ErrDuplicationWithSystemFunc
+	case "E18638":
+		err.ErrorType = reqerr.ErrIllegalCharacterInPath
+	case "E18229":
+		err.ErrorType = reqerr.ErrInvalidDstRepoSchema
+	case "E18230":
+		err.ErrorType = reqerr.ErrInvalidDstRepoSchemaLength
 	case "E18639":
 		err.ErrorType = reqerr.ErrInvalidWorkflowName
 	case "E18640":
@@ -73,6 +153,8 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrStartTransform
 	case "E18648":
 		err.ErrorType = reqerr.ErrStopTransform
+	case "E18649":
+		err.ErrorType = reqerr.	ErrBatchStatusCannotRerun
 	case "E9000":
 		err.ErrorType = reqerr.InternalServerError
 	default:

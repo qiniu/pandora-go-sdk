@@ -613,7 +613,7 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 				case string:
 					sc.ElemType = PandoraTypeString
 				default:
-					sc.ValueType = PandoraTypeString
+					sc.ElemType = PandoraTypeString
 				}
 				valueType[k] = sc
 			}
@@ -650,7 +650,7 @@ func getPandoraKeyValueType(data Data) (valueType map[string]RepoSchemaEntry) {
 			valueType[k] = formValueType(k, PandoraTypeDate)
 		default:
 			valueType[k] = formValueType(k, PandoraTypeString)
-			log.Debugf("find undetected key(%v)-type(%v)", k, reflect.TypeOf(v))
+			log.Warnf("find undetected key(%v)-type(%v), read it as string", k, reflect.TypeOf(v))
 		}
 	}
 	return

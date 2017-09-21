@@ -47,6 +47,47 @@ const (
 	ErrInvalidParameterError
 	ErrDBNotFoundError
 	ErrTableNotFoundError
+	ErrInvalidDataSourceName
+	ErrDataSourceExist
+	ErrDataSourceNotExist
+	ErrDataSourceCascading
+	ErrInvalidJobName
+	ErrJobExist
+	ErrJobNotExist
+	ErrJobArgumentCount
+	ErrJobCascading
+	ErrInvalidJobExportName
+	ErrJobExportExist
+	ErrJobExportNotExist
+	ErrJobSrcNotExist
+	ErrDuplicateTableName
+	ErrInvalidBatchSpec
+	ErrIncompatibleSourceSchema
+	ErrInvalidTransformPlugin
+	ErrInvalidJobSQL
+	ErrBucketNotExist
+	ErrDatasourceNoFiles
+	ErrStartJob
+	ErrStopJob
+	ErrFileFormatMismatch
+	ErrJobRunIdNotExist
+	ErrBatchCannotRerun
+	ErrUdfJarNotExist
+	ErrInvalidUdfJarName
+	ErrInvalidUdfFuncName
+	ErrInvalidJavaClassName
+	ErrUdfClassTypeError
+	ErrUdfClassNotFound
+	ErrUdfFunctionNotImplement
+	ErrUdfFunctionNotFound
+	ErrUdfJarExisted
+	ErrUdfFuncExisted
+	ErrDuplicationWithSystemFunc
+	ErrIllegalCharacterInPath
+	ErrInvalidDstRepoSchema
+	ErrInvalidDstRepoSchemaLength
+	ErrBatchStatusCannotStop
+
 	ErrInvalidWorkflowName
 	ErrWorkflowAlreadyExists
 	ErrNoSuchWorkflow
@@ -57,6 +98,7 @@ const (
 	ErrWorkflowStructure
 	ErrStartTransform
 	ErrStopTransform
+	ErrBatchStatusCannotRerun
 )
 
 type ErrBuilder interface {

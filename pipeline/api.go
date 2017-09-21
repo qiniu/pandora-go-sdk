@@ -351,7 +351,7 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 	var buf bytes.Buffer
 	var start = 0
 	for i, d := range input.Datas {
-		point, err := c.generatePoint(input.RepoName, d, !input.NoUpdate, input.Option)
+		point, err := c.generatePoint(input.RepoName, d, !input.NoUpdate, input.Option, input.RepoOptions)
 		if err != nil {
 			return nil, err
 		}

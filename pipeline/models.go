@@ -813,10 +813,11 @@ type PostDataInput struct {
 
 type SchemaFreeInput struct {
 	PipelineToken
-	RepoName string
-	Datas    Datas
-	NoUpdate bool
-	Option   *SchemaFreeOption
+	RepoName    string
+	Datas       Datas
+	NoUpdate    bool
+	Option      *SchemaFreeOption
+	RepoOptions *RepoOptions
 }
 
 type SchemaFreeOption struct {

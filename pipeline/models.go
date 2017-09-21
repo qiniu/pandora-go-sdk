@@ -653,9 +653,10 @@ func (r *CreateRepoInput) Validate() (err error) {
 // 目前支持 tsdb、logdb、kodo、all
 type UpdateRepoInput struct {
 	PipelineToken
-	RepoName string
-	Schema   []RepoSchemaEntry `json:"schema"`
-	Option   *SchemaFreeOption
+	RepoName    string
+	Schema      []RepoSchemaEntry `json:"schema"`
+	Option      *SchemaFreeOption
+	RepoOptions *RepoOptions `json:"options"`
 }
 
 func (r *UpdateRepoInput) IsTag(key string) bool {
@@ -702,6 +703,7 @@ type GetRepoOutput struct {
 	Region      string            `json:"region"`
 	Schema      []RepoSchemaEntry `json:"schema"`
 	GroupName   string            `json:"group"`
+	Options     *RepoOptions      `json:"options"`
 	DerivedFrom string            `json:"derivedFrom"`
 }
 

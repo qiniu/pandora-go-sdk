@@ -69,6 +69,10 @@ func New(cfg *config.Config, client *http.Client, op *Operation, token string, e
 	}
 	httpReq.Host = httpReq.URL.Host
 
+	if cfg.HeaderUserAgent != "" {
+		httpReq.Header.Set("User-Agent", cfg.HeaderUserAgent)
+	}
+
 	logger := cfg.Logger
 	if logger == nil {
 		logger = base.NewDefaultLogger()

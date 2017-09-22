@@ -43,7 +43,7 @@ func init() {
 		WithLogger(logger).
 		WithLoggerLevel(base.LogDebug).
 		WithLogDBEndpoint("https://logdb.qiniu.com").
-		WithTSDBEndpoint("https://tsdb.qiniu.com")
+		WithTSDBEndpoint("https://tsdb.qiniu.com").WithHeaderUserAgent("SDK_TEST")
 
 	tsdbapi, err = tsdb.New(cfg.Clone())
 	if err != nil {

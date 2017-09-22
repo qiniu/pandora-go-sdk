@@ -17,6 +17,8 @@ type Config struct {
 	FlowRateLimit    int64 //每秒流量限制(kb),若FlowRateLimit为100，则表示限速100KB/s
 	Gzip             bool
 
+	HeaderUserAgent string
+
 	//以下是新版本，上面的Endpoint是老版本，都兼容，默认使用新版，新版为空则用老的Endpoint
 	LogdbEndpoint    string
 	TsdbEndpoint     string
@@ -60,6 +62,7 @@ func (c *Config) Clone() *Config {
 		RequestRateLimit: c.RequestRateLimit,
 		FlowRateLimit:    c.FlowRateLimit,
 		Gzip:             c.Gzip,
+		HeaderUserAgent:  c.HeaderUserAgent,
 
 		//以下是新版本，上面的Endpoint是老版本，都兼容，默认使用新版，新版为空则用老的Endpoint
 		LogdbEndpoint:    c.LogdbEndpoint,
@@ -132,5 +135,10 @@ func (c *Config) WithFlowRateLimit(limit int64) *Config {
 
 func (c *Config) WithGzipData(enable bool) *Config {
 	c.Gzip = enable
+	return c
+}
+
+func (c *Config) WithHeaderUserAgent(userAgent string) *Config {
+	c.HeaderUserAgent = userAgent
 	return c
 }

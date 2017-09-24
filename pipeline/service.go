@@ -218,6 +218,10 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodGet, "/v2/workflows/%s"
 	case base.OpListWorkflows:
 		method, urlTmpl = base.MethodGet, "/v2/workflows"
+	case base.OpStartWorkflow:
+		method, urlTmpl = base.MethodPost, "/v2/workflows/%s/start"
+	case base.OpStopWorkflow:
+		method, urlTmpl = base.MethodPost, "/v2/workflows/%s/stop"
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

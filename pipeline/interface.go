@@ -143,6 +143,10 @@ type PipelineAPI interface {
 
 	DeleteWorkflow(input *DeleteWorkflowInput) (err error)
 
+	StartWorkflow(input *StartWorkflowInput) error
+
+	StopWorkflow(input *StopWorkflowInput) error
+
 	ListWorkflows(input *ListWorkflowInput) (output *ListWorkflowOutput, err error)
 
 	Close() error

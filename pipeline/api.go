@@ -1066,3 +1066,24 @@ func (c *Pipeline) ListWorkflows(input *ListWorkflowInput) (output *ListWorkflow
 	req := c.newRequest(op, input.Token, &output)
 	return output, req.Send()
 }
+
+func (c *Pipeline) StopWorkflow(input *StopWorkflowInput) (err error) {
+	op := c.newOperation(base.OpStopWorkflow, input.WorkflowName)
+
+	req := c.newRequest(op, input.Token, nil)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	return req.Send()
+}
+
+
+func (c *Pipeline) StartWorkflow(input *StartWorkflowInput) (err error) {
+	op := c.newOperation(base.OpStartWorkflow, input.WorkflowName)
+
+	req := c.newRequest(op, input.Token, nil)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	return req.Send()
+}

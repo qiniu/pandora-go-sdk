@@ -1990,3 +1990,23 @@ func (r *UpdateWorkflowInput) Validate() (err error) {
 	}
 	return
 }
+
+type StartWorkflowInput struct {
+	PipelineToken
+	WorkflowName string `json:"name"`
+}
+
+func (r *StartWorkflowInput) Validate() (err error) {
+	if err = validateWorkflowName(r.WorkflowName); err != nil {
+		return
+	}
+	return
+}
+type StopWorkflowInput StartWorkflowInput
+
+func (r *StopWorkflowInput) Validate() (err error) {
+	if err = validateWorkflowName(r.WorkflowName); err != nil {
+		return
+	}
+	return
+}

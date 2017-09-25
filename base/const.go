@@ -75,6 +75,8 @@ const (
 	OpDeleteWorkflow      string = "DeleteWorkflow"
 	OpListWorkflows       string = "ListWorkflow"
 	OpGetWorkflow         string = "GetWorkflow"
+	OpStartWorkflow       string = "StartWorkflow"
+	OpStopWorkflow        string = "StopWorkflow"
 
 	OpUpdateRepo        string = "UpdateRepo"
 	OpSendLog           string = "SendLog"

@@ -122,6 +122,8 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodGet, "/v2/repos"
 	case base.OpGetRepo:
 		method, urlTmpl = base.MethodGet, "/v2/repos/%s"
+	case base.OpRepoExists:
+		method, urlTmpl = base.MethodGet, "/v2/repos/%s/exists"
 	case base.OpGetSampleData:
 		method, urlTmpl = base.MethodGet, "/v2/repos/%s/data?count=%v"
 	case base.OpDeleteRepo:
@@ -138,6 +140,8 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodGet, "/v2/repos/%s/transforms/%s"
 	case base.OpDeleteTransform:
 		method, urlTmpl = base.MethodDelete, "/v2/repos/%s/transforms/%s"
+	case base.OpTransformExists:
+		method, urlTmpl = base.MethodGet, "/v2/repos/%s/transforms/%s/exists"
 	case base.OpCreateExport:
 		method, urlTmpl = base.MethodPost, "/v2/repos/%s/exports/%s"
 	case base.OpUpdateExport:
@@ -146,6 +150,8 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodGet, "/v2/repos/%s/exports"
 	case base.OpGetExport:
 		method, urlTmpl = base.MethodGet, "/v2/repos/%s/exports/%s"
+	case base.OpExportExists:
+		method, urlTmpl = base.MethodGet, "/v2/repos/%s/exports/%s/exists"
 	case base.OpDeleteExport:
 		method, urlTmpl = base.MethodDelete, "/v2/repos/%s/exports/%s"
 	case base.OpUploadPlugin:
@@ -160,6 +166,8 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodPost, "/v2/datasources/%s"
 	case base.OpGetDatasource:
 		method, urlTmpl = base.MethodGet, "/v2/datasources/%s"
+	case base.OpDatasourceExists:
+		method, urlTmpl = base.MethodGet, "/v2/datasources/%s/exists"
 	case base.OpListDatasources:
 		method, urlTmpl = base.MethodGet, "/v2/datasources"
 	case base.OpDeleteDatasource:
@@ -168,6 +176,8 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodPost, "/v2/jobs/%s"
 	case base.OpGetJob:
 		method, urlTmpl = base.MethodGet, "/v2/jobs/%s"
+	case base.OpJobExists:
+		method, urlTmpl = base.MethodGet, "/v2/jobs/%s/exists"
 	case base.OpListJobs:
 		method, urlTmpl = base.MethodGet, "/v2/jobs%s"
 	case base.OpDeleteJob:
@@ -186,6 +196,8 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodPost, "/v2/jobs/%s/exports/%s"
 	case base.OpGetJobExport:
 		method, urlTmpl = base.MethodGet, "/v2/jobs/%s/exports/%s"
+	case base.OpJobExportExists:
+		method, urlTmpl = base.MethodGet, "/v2/jobs/%s/exports/%s/exists"
 	case base.OpListJobExports:
 		method, urlTmpl = base.MethodGet, "/v2/jobs/%s/exports"
 	case base.OpDeleteJobExport:

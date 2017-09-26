@@ -149,5 +149,17 @@ type PipelineAPI interface {
 
 	ListWorkflows(input *ListWorkflowInput) (output *ListWorkflowOutput, err error)
 
+	RepoExist(input *RepoExistInput) (output *RepoExistOutput, err error)
+
+	TransformExist(input *TransformExistInput) (output *TransformExistOutput, err error)
+
+	ExportExist(input *ExportExistInput) (output *ExportExistOutput, err error)
+
+	DatasourceExist(input *DatasourceExistInput) (output *DatasourceExistOutput, err error)
+
+	JobExist(input *JobExistInput) (output *JobExistOutput, err error)
+
+	JobExportExist(input *JobExportExistInput) (output *JobExportExistOutput, err error)
+
 	Close() error
 }

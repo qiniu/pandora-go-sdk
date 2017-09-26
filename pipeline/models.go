@@ -693,6 +693,19 @@ type GetRepoInput struct {
 	RepoName string
 }
 
+type RepoExistInput GetRepoInput
+
+func (r *RepoExistInput) Validate() (err error) {
+	if err = validateRepoName(r.RepoName); err != nil {
+		return
+	}
+	return
+}
+
+type RepoExistOutput struct {
+	Exist bool `json:"exist"`
+}
+
 type GetSampleDataInput struct {
 	PipelineToken
 	RepoName string
@@ -980,6 +993,22 @@ type GetTransformInput struct {
 	TransformName string
 }
 
+type TransformExistInput GetTransformInput
+
+func (r *TransformExistInput) Validate() (err error) {
+	if err = validateRepoName(r.RepoName); err != nil {
+		return
+	}
+	if err = validateTransformName(r.TransformName); err != nil {
+		return
+	}
+	return
+}
+
+type TransformExistOutput struct {
+	Exist bool `json:"exist"`
+}
+
 type GetTransformOutput struct {
 	TransformDesc
 }
@@ -1227,6 +1256,22 @@ type GetExportOutput struct {
 	ExportDesc
 }
 
+type ExportExistInput GetExportInput
+
+func (r *ExportExistInput) Validate() (err error) {
+	if err = validateRepoName(r.RepoName); err != nil {
+		return
+	}
+	if err = validateExportName(r.ExportName); err != nil {
+		return
+	}
+	return
+}
+
+type ExportExistOutput struct {
+	Exist bool `json:"exist"`
+}
+
 type ListExportsInput struct {
 	PipelineToken
 	RepoName string
@@ -1438,6 +1483,19 @@ type GetDatasourceOutput struct {
 	Schema []RepoSchemaEntry `json:"schema"`
 }
 
+type DatasourceExistInput GetDatasourceInput
+
+func (r *DatasourceExistInput) Validate() (err error) {
+	if err = validateDatasouceName(r.DatasourceName); err != nil {
+		return
+	}
+	return
+}
+
+type DatasourceExistOutput struct {
+	Exist bool `json:"exist"`
+}
+
 type DatasourceDesc struct {
 	Name   string            `json:"name"`
 	Region string            `json:"region"`
@@ -1540,6 +1598,19 @@ func (c *CreateJobInput) Validate() (err error) {
 type GetJobInput struct {
 	PipelineToken
 	JobName string
+}
+
+type JobExistInput GetJobInput
+
+func (r *JobExistInput) Validate() (err error) {
+	if err = validateJobName(r.JobName); err != nil {
+		return
+	}
+	return
+}
+
+type JobExistOutput struct {
+	Exist bool `json:"exist"`
 }
 
 type GetJobOutput struct {
@@ -1751,6 +1822,22 @@ type GetJobExportInput struct {
 	PipelineToken
 	JobName    string
 	ExportName string
+}
+
+type JobExportExistInput GetJobExportInput
+
+func (r *JobExportExistInput) Validate() (err error) {
+	if err = validateJobName(r.JobName); err != nil {
+		return
+	}
+	if err = validateJobexportName(r.ExportName); err != nil {
+		return
+	}
+	return
+}
+
+type JobExportExistOutput struct {
+	Exist bool `json:"exist"`
 }
 
 type GetJobExportOutput struct {
@@ -2002,6 +2089,7 @@ func (r *StartWorkflowInput) Validate() (err error) {
 	}
 	return
 }
+
 type StopWorkflowInput StartWorkflowInput
 
 func (r *StopWorkflowInput) Validate() (err error) {

@@ -1077,7 +1077,6 @@ func (c *Pipeline) StopWorkflow(input *StopWorkflowInput) (err error) {
 	return req.Send()
 }
 
-
 func (c *Pipeline) StartWorkflow(input *StartWorkflowInput) (err error) {
 	op := c.newOperation(base.OpStartWorkflow, input.WorkflowName)
 
@@ -1086,4 +1085,69 @@ func (c *Pipeline) StartWorkflow(input *StartWorkflowInput) (err error) {
 		return
 	}
 	return req.Send()
+}
+
+func (c *Pipeline) RepoExist(input *RepoExistInput) (output *RepoExistOutput, err error) {
+	if err = input.Validate(); err != nil {
+		return
+	}
+	op := c.newOperation(base.OpRepoExists, input.RepoName)
+
+	output = &RepoExistOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
+func (c *Pipeline) TransformExist(input *TransformExistInput) (output *TransformExistOutput, err error) {
+	if err = input.Validate(); err != nil {
+		return
+	}
+	op := c.newOperation(base.OpTransformExists, input.RepoName, input.TransformName)
+
+	output = &TransformExistOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+func (c *Pipeline) ExportExist(input *ExportExistInput) (output *ExportExistOutput, err error) {
+	if err = input.Validate(); err != nil {
+		return
+	}
+	op := c.newOperation(base.OpExportExists, input.RepoName, input.ExportName)
+
+	output = &ExportExistOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
+func (c *Pipeline) DatasourceExist(input *DatasourceExistInput) (output *DatasourceExistOutput, err error) {
+	if err = input.Validate(); err != nil {
+		return
+	}
+	op := c.newOperation(base.OpDatasourceExists, input.DatasourceName)
+
+	output = &DatasourceExistOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
+func (c *Pipeline) JobExist(input *JobExistInput) (output *JobExistOutput, err error) {
+	if err = input.Validate(); err != nil {
+		return
+	}
+	op := c.newOperation(base.OpJobExists, input.JobName)
+
+	output = &JobExistOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
+func (c *Pipeline) JobExportExist(input *JobExportExistInput) (output *JobExportExistOutput, err error) {
+	if err = input.Validate(); err != nil {
+		return
+	}
+	op := c.newOperation(base.OpJobExportExists, input.JobName, input.ExportName)
+
+	output = &JobExportExistOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
 }

@@ -406,7 +406,7 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 		//defaultAll 为false时，过滤一批不要的
 		valueType := getPandoraKeyValueType(data)
 		if err = c.addRepoSchemas(repoName, valueType, option, repooptions); err != nil {
-			err = fmt.Errorf("updatePandora Repo error %v", err)
+			err = fmt.Errorf("schemafree add Repo schema error %v", err)
 			return
 		}
 		for name, v := range data {
@@ -510,11 +510,13 @@ func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSch
 		return
 	}
 	if oldScs == nil {
-		err = c.CreateRepo(&CreateRepoInput{
+		if err = c.CreateRepo(&CreateRepoInput{
 			RepoName: repoName,
 			Schema:   schemas,
 			Options:  repooptions,
-		})
+		}); err != nil {
+			return
+		}
 		if option != nil && option.ToLogDB {
 			err = c.AutoExportToLogDB(&AutoExportToLogDBInput{
 				RepoName:    repoName,

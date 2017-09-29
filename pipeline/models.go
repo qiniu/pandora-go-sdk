@@ -2033,7 +2033,7 @@ type GetWorkflowOutput struct {
 	Comment    string           `json:"comment"`
 	CreateTime string           `json:"createTime"`
 	UpdateTime string           `json:"updateTime"`
-	State      string           `json:"state"`
+	Status     string           `json:"status"`
 }
 
 type ListWorkflowInput struct {

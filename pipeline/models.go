@@ -2034,6 +2034,7 @@ type GetWorkflowOutput struct {
 	CreateTime string           `json:"createTime"`
 	UpdateTime string           `json:"updateTime"`
 	Status     string           `json:"status"`
+	CanStart   bool             `json:"canStart"`
 }
 
 type ListWorkflowInput struct {

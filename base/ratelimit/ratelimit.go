@@ -15,6 +15,7 @@ type Limiter struct {
 	cond          *sync.Cond
 	done          chan struct{}
 	ratePerSecond int64
+	closeOnce     *sync.Once
 }
 
 // NewLimiter 限速的最小粒度是20
@@ -26,6 +27,7 @@ func NewLimiter(ratePerSecond int64) *Limiter {
 		capacity:      ratePerSecond,
 		cond:          sync.NewCond(new(sync.Mutex)),
 		done:          make(chan struct{}, 1),
+		closeOnce:     &sync.Once{},
 	}
 	go self.run(quantity)
 	return self
@@ -79,7 +81,9 @@ func (self *Limiter) run(quantity int64) {
 }
 
 func (self *Limiter) Close() error {
-	self.done <- struct{}{}
+	self.closeOnce.Do(func() {
+		self.done <- struct{}{}
+	})
 	return nil
 }
 

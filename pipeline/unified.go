@@ -162,12 +162,13 @@ func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 	if err != nil {
 		return err
 	}
+
 	logdbapi, err := c.GetLogDBAPI()
 	if err != nil {
 		return err
 	}
 	logdbschemas := convertSchema2LogDB(repoInfo.Schema)
-	_, err = logdbapi.GetRepo(&logdb.GetRepoInput{
+	logdbrepoinfo, err := logdbapi.GetRepo(&logdb.GetRepoInput{
 		RepoName: input.LogRepoName,
 	})
 	if reqerr.IsNoSuchResourceError(err) {
@@ -182,7 +183,27 @@ func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 		}
 	} else if err != nil {
 		return err
+	} else {
+		//repo 存在，检查是否需要更新
+		needupdate := false
+		for _, v := range logdbschemas {
+			//暂不考虑嵌套类型里面的不同
+			if schemaNotIn(v.Key, logdbrepoinfo.Schema) {
+				logdbrepoinfo.Schema = append(logdbrepoinfo.Schema, v)
+				needupdate = true
+			}
+		}
+		if needupdate {
+			if err = logdbapi.UpdateRepo(&logdb.UpdateRepoInput{
+				RepoName:  input.LogRepoName,
+				Retention: logdbrepoinfo.Retention,
+				Schema:    logdbrepoinfo.Schema,
+			}); err != nil {
+				return err
+			}
+		}
 	}
+
 	_, err = c.GetExport(&GetExportInput{
 		RepoName:   input.RepoName,
 		ExportName: base.FormExportName(input.RepoName, ExportTypeLogDB),

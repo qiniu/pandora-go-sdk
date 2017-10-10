@@ -55,6 +55,10 @@ func deepDeleteCheck(data interface{}, schema RepoSchemaEntry) bool {
 	return true
 }
 
+func DataConvert(data interface{}, schema RepoSchemaEntry) (converted interface{}, err error) {
+	return dataConvert(data, schema)
+}
+
 func dataConvert(data interface{}, schema RepoSchemaEntry) (converted interface{}, err error) {
 	switch schema.ValueType {
 	case PandoraTypeLong:

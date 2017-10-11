@@ -1087,6 +1087,17 @@ func (c *Pipeline) StartWorkflow(input *StartWorkflowInput) (err error) {
 	return req.Send()
 }
 
+func (c *Pipeline) SearchWorkflow(input *DagLogSearchInput) (ret *WorkflowSearchRet, err error) {
+	op := c.newOperation(base.OpSearchDAGlog, input.WorkflowName)
+
+	ret = &WorkflowSearchRet{}
+	req := c.newRequest(op, input.Token, ret)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	return ret, req.Send()
+}
+
 func (c *Pipeline) RepoExist(input *RepoExistInput) (output *RepoExistOutput, err error) {
 	if err = input.Validate(); err != nil {
 		return

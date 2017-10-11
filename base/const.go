@@ -83,6 +83,7 @@ const (
 	OpGetWorkflow         string = "GetWorkflow"
 	OpStartWorkflow       string = "StartWorkflow"
 	OpStopWorkflow        string = "StopWorkflow"
+	OpSearchDAGlog        string = "SearchDAGLog"
 
 	OpUpdateRepo        string = "UpdateRepo"
 	OpSendLog           string = "SendLog"

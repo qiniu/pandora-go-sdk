@@ -149,6 +149,8 @@ type PipelineAPI interface {
 
 	ListWorkflows(input *ListWorkflowInput) (output *ListWorkflowOutput, err error)
 
+	SearchWorkflow(input *DagLogSearchInput) (ret *WorkflowSearchRet, err error)
+
 	RepoExist(input *RepoExistInput) (output *RepoExistOutput, err error)
 
 	TransformExist(input *TransformExistInput) (output *TransformExistOutput, err error)

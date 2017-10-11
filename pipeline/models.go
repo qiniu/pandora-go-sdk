@@ -2099,3 +2099,46 @@ func (r *StopWorkflowInput) Validate() (err error) {
 	}
 	return
 }
+
+type DagLogSearchInput struct {
+	PipelineToken
+	WorkflowName string `json:"-"`
+	Type         string `json:"type"`
+	Name         string `json:"name"`
+	Repo         string `json:"reponame"`
+	Query        string `json:"query"`
+	Size         int    `json:"size"`
+	Region       string `json:"region"`
+	StartTime    int64  `json:"startTime"`
+	EndTime      int64  `json:"endTime"`
+}
+
+func (r *DagLogSearchInput) Validate() (err error) {
+	return
+}
+
+type LogMessage struct {
+	Timestamp string `json:"timestamp"`
+	RawLog    string `json:"log"`
+}
+
+type StatusMessage struct {
+	Timestamp string `json:"timestamp"`
+	Status    string `json:"status"`
+	Reason    string `json:"reason"`
+}
+
+type MetricMessage struct {
+	Timestamp string `json:"timestamp"`
+	Total     int64  `json:"total"`
+	Success   int64  `json:"success"`
+	Failed    int64  `json:"failed"`
+	Lag       int64  `json:"lag"`
+}
+
+type WorkflowSearchRet struct {
+	Status    []StatusMessage `json:"status"`
+	Log       []LogMessage    `json:"log"`
+	Recommend string          `json:"recommend"`
+	Metric    []MetricMessage `json:"metric"`
+}

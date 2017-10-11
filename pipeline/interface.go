@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"time"
+
 	"github.com/qiniu/pandora-go-sdk/base"
 )
 
@@ -36,6 +38,8 @@ type PipelineAPI interface {
 	DeleteRepo(*DeleteRepoInput) error
 
 	PostData(*PostDataInput) error
+
+	PostLargeData(*PostDataInput, time.Duration) (Points, error)
 
 	PostDataSchemaFree(input *SchemaFreeInput) (map[string]RepoSchemaEntry, error)
 

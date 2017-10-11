@@ -2,10 +2,12 @@ package pipeline
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
@@ -341,6 +343,60 @@ func (c *Pipeline) PostData(input *PostDataInput) (err error) {
 	return req.Send()
 }
 
+func (c *Pipeline) PostLargeData(input *PostDataInput, timeout time.Duration) (datafailed Points, err error) {
+	deadline := time.Now().Add(timeout)
+	packages := unpackPoints(input)
+	for i, pContext := range packages {
+		err = c.PostDataFromBytesWithDeadline(pContext.inputs, deadline)
+		if err != nil {
+			for j := i; j < len(packages); j++ {
+				datafailed = append(datafailed, packages[j].datas...)
+			}
+			return
+		}
+	}
+	return
+}
+
+type standardPointContext struct {
+	datas  Points
+	inputs *PostDataFromBytesInput
+}
+
+func unpackPoints(input *PostDataInput) (packages []standardPointContext) {
+	packages = []standardPointContext{}
+	var buf bytes.Buffer
+	var start = 0
+	for i, point := range input.Points {
+		pointString := point.ToString()
+		// 当buf中有数据，并且加入该条数据后就超过了最大的限制，则提交这个input
+		if start < i && buf.Len() > 0 && buf.Len()+len(pointString) >= PandoraMaxBatchSize {
+			tmpBuff := make([]byte, buf.Len())
+			copy(tmpBuff, buf.Bytes())
+			packages = append(packages, standardPointContext{
+				datas: input.Points[start:i],
+				inputs: &PostDataFromBytesInput{
+					RepoName: input.RepoName,
+					Buffer:   tmpBuff,
+				},
+			})
+			buf.Reset()
+			start = i
+		}
+		buf.WriteString(pointString)
+	}
+	tmpBuff := make([]byte, buf.Len())
+	copy(tmpBuff, buf.Bytes())
+	packages = append(packages, standardPointContext{
+		datas: input.Points[start:],
+		inputs: &PostDataFromBytesInput{
+			RepoName: input.RepoName,
+			Buffer:   tmpBuff,
+		},
+	})
+	return
+}
+
 type pointContext struct {
 	datas  []Data
 	inputs *PostDataFromBytesInput
@@ -472,6 +528,21 @@ func (c *Pipeline) PostDataFromBytes(input *PostDataFromBytesInput) (err error) 
 	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeText)
 	req.SetFlowLimiter(c.flowLimit)
 	req.SetReqLimiter(c.reqLimit)
+	return req.Send()
+}
+
+func (c *Pipeline) PostDataFromBytesWithDeadline(input *PostDataFromBytesInput, deadline time.Time) (err error) {
+	op := c.newOperation(base.OpPostData, input.RepoName)
+
+	req := c.newRequest(op, input.Token, nil)
+	req.SetBufferBody(input.Buffer)
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeText)
+	req.SetFlowLimiter(c.flowLimit)
+	req.SetReqLimiter(c.reqLimit)
+
+	ctx := req.HTTPRequest.Context()
+	ctx, _ = context.WithDeadline(ctx, deadline)
+	req.HTTPRequest = req.HTTPRequest.WithContext(ctx)
 	return req.Send()
 }
 
@@ -1085,6 +1156,17 @@ func (c *Pipeline) StartWorkflow(input *StartWorkflowInput) (err error) {
 		return
 	}
 	return req.Send()
+}
+
+func (c *Pipeline) SearchWorkflow(input *DagLogSearchInput) (ret *WorkflowSearchRet, err error) {
+	op := c.newOperation(base.OpSearchDAGlog, input.WorkflowName)
+
+	ret = &WorkflowSearchRet{}
+	req := c.newRequest(op, input.Token, ret)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	return ret, req.Send()
 }
 
 func (c *Pipeline) RepoExist(input *RepoExistInput) (output *RepoExistOutput, err error) {

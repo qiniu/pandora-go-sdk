@@ -145,6 +145,8 @@ type PipelineAPI interface {
 
 	GetWorkflow(input *GetWorkflowInput) (output *GetWorkflowOutput, err error)
 
+	GetWorkflowStatus(input *GetWorkflowStatusInput) (output *GetWorkflowStatusOutput, err error)
+
 	DeleteWorkflow(input *DeleteWorkflowInput) (err error)
 
 	StartWorkflow(input *StartWorkflowInput) error

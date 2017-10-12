@@ -26,12 +26,12 @@ var (
 	logdbapi logdb.LogdbAPI
 	tsdbapi  tsdb.TsdbAPI
 	region   = os.Getenv("REGION")
-	endpoint = "http://10.200.20.40:9999"
-	//endpoint          = os.Getenv("PIPELINE_HOST")
-	//ak                = os.Getenv("ACCESS_KEY")
-	ak = "KrFN3iq_iwjjbDPAZN4SE7C0IFfvIjvkVvFfh75t"
-	sk = "Vz993hSC9d1zNcidjCJab02Umseg5den-BpIFByx"
-	//sk                = os.Getenv("SECRET_KEY")
+	endpoint = os.Getenv("PIPELINE_HOST")
+	ak       = os.Getenv("ACCESS_KEY")
+	sk       = os.Getenv("SECRET_KEY")
+	//	endpoint          = os.Getenv("DEV_PIPELINE_HOST")
+	//	ak                = os.Getenv("DEV_ACCESS_KEY")
+	//	sk                = os.Getenv("DEV_SECRET_KEY")
 	logger            base.Logger
 	defaultRepoSchema []pipeline.RepoSchemaEntry
 	defaultContainer  *pipeline.Container
@@ -1453,9 +1453,13 @@ func TestQuerySearch(t *testing.T) {
 	}
 
 	ret, err := client.SearchWorkflow(&pipeline.DagLogSearchInput{
-		WorkflowName: "hello",
+		WorkflowName: "zhp3",
 		Region:       "nb",
-		Type:         "streaming",
+		Type:         "export",
+		Name:         "zhp3_logdbExport1",
+		Repo:         "zhp3_flowDataSource1",
+		Query:        "*",
+		Size:         10,
 	})
 	assert.NoError(t, err)
 	fmt.Println(ret)

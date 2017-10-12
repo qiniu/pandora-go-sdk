@@ -2037,6 +2037,28 @@ type GetWorkflowOutput struct {
 	CanStart   bool             `json:"canStart"`
 }
 
+type GetWorkflowStatusInput GetWorkflowInput
+
+func (r *GetWorkflowStatusInput) Validate() (err error) {
+	if err = validateWorkflowName(r.WorkflowName); err != nil {
+		return
+	}
+	return
+}
+
+type GetWorkflowStatusOutput struct {
+	Name        string       `json:"name"`
+	Region      string       `json:"region"`
+	NodesStatus []NodeStatus `json:"nodes"`
+	Status      string       `json:"status"`
+}
+
+type NodeStatus struct {
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	Status string `json:"status"`
+}
+
 type ListWorkflowInput struct {
 	PipelineToken
 }

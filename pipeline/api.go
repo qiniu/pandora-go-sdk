@@ -1116,9 +1116,21 @@ func (c *Pipeline) UpdateWorkflow(input *UpdateWorkflowInput) (err error) {
 }
 
 func (c *Pipeline) GetWorkflow(input *GetWorkflowInput) (output *GetWorkflowOutput, err error) {
+	if err = input.Validate(); err != nil {
+		return
+	}
 	op := c.newOperation(base.OpGetWorkflow, input.WorkflowName)
-
 	output = &GetWorkflowOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
+func (c *Pipeline) GetWorkflowStatus(input *GetWorkflowStatusInput) (output *GetWorkflowStatusOutput, err error) {
+	if err = input.Validate(); err != nil {
+		return
+	}
+	op := c.newOperation(base.OpGetWorkflowStatus, input.WorkflowName)
+	output = &GetWorkflowStatusOutput{}
 	req := c.newRequest(op, input.Token, output)
 	return output, req.Send()
 }

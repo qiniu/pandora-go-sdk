@@ -81,6 +81,7 @@ const (
 	OpDeleteWorkflow      string = "DeleteWorkflow"
 	OpListWorkflows       string = "ListWorkflow"
 	OpGetWorkflow         string = "GetWorkflow"
+	OpGetWorkflowStatus   string = "GetWorkflowStatus"
 	OpStartWorkflow       string = "StartWorkflow"
 	OpStopWorkflow        string = "StopWorkflow"
 	OpSearchDAGlog        string = "SearchDAGLog"

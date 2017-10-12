@@ -228,6 +228,8 @@ func (c *Pipeline) newOperation(opName string, args ...interface{}) *request.Ope
 		method, urlTmpl = base.MethodDelete, "/v2/workflows/%s"
 	case base.OpGetWorkflow:
 		method, urlTmpl = base.MethodGet, "/v2/workflows/%s"
+	case base.OpGetWorkflowStatus:
+		method, urlTmpl = base.MethodGet, "/v2/workflows/%s/status"
 	case base.OpSearchDAGlog:
 		method, urlTmpl = base.MethodPost, "/v2/workflows/%s/search"
 	case base.OpListWorkflows:

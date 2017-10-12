@@ -21,14 +21,17 @@ import (
 )
 
 var (
-	cfg               *config.Config
-	client            pipeline.PipelineAPI
-	logdbapi          logdb.LogdbAPI
-	tsdbapi           tsdb.TsdbAPI
-	region            = os.Getenv("REGION")
-	endpoint          = os.Getenv("PIPELINE_HOST")
-	ak                = os.Getenv("ACCESS_KEY")
-	sk                = os.Getenv("SECRET_KEY")
+	cfg      *config.Config
+	client   pipeline.PipelineAPI
+	logdbapi logdb.LogdbAPI
+	tsdbapi  tsdb.TsdbAPI
+	region   = os.Getenv("REGION")
+	endpoint = "http://10.200.20.40:9999"
+	//endpoint          = os.Getenv("PIPELINE_HOST")
+	//ak                = os.Getenv("ACCESS_KEY")
+	ak = "KrFN3iq_iwjjbDPAZN4SE7C0IFfvIjvkVvFfh75t"
+	sk = "Vz993hSC9d1zNcidjCJab02Umseg5den-BpIFByx"
+	//sk                = os.Getenv("SECRET_KEY")
 	logger            base.Logger
 	defaultRepoSchema []pipeline.RepoSchemaEntry
 	defaultContainer  *pipeline.Container
@@ -1428,4 +1431,33 @@ func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
 	if err = logdbapi.DeleteRepo(&logdb.DeleteRepoInput{RepoName: "tologdb"}); err != nil {
 		t.Error(err)
 	}
+}
+
+func TestQuerySearch(t *testing.T) {
+	repoName := "querydag"
+	createRepoInput := &pipeline.CreateRepoInput{
+		RepoName: repoName,
+		Schema:   defaultRepoSchema,
+		Region:   "nb",
+	}
+	defer func() {
+		err := client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
+	err := client.CreateRepo(createRepoInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	ret, err := client.SearchWorkflow(&pipeline.DagLogSearchInput{
+		WorkflowName: "hello",
+		Region:       "nb",
+		Type:         "streaming",
+	})
+	assert.NoError(t, err)
+	fmt.Println(ret)
+
 }

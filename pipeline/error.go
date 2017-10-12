@@ -3,6 +3,8 @@ package pipeline
 import (
 	"fmt"
 
+	"strings"
+
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 )
 
@@ -17,7 +19,12 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 		return err
 	}
 	errId := msg[:errCodePrefixLen]
-
+	if strings.Contains(errId, ":") {
+		spls := strings.Split(errId, ":")
+		if len(spls) > 0 {
+			errId = spls[0]
+		}
+	}
 	switch errId {
 	case "E18005":
 		err.ErrorType = reqerr.EntityTooLargeError
@@ -154,9 +161,12 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 	case "E18648":
 		err.ErrorType = reqerr.ErrStopTransform
 	case "E18649":
-		err.ErrorType = reqerr.	ErrBatchStatusCannotRerun
+		err.ErrorType = reqerr.ErrBatchStatusCannotRerun
 	case "E9000":
 		err.ErrorType = reqerr.InternalServerError
+	case "E9001":
+		err.ErrorType = reqerr.NotImplementedError
+		err.Message = fmt.Sprintf("this function is not implemented on server, ask server admin for explain: %s", msg)
 	default:
 		if code == 401 {
 			err.Message = fmt.Sprintf("unauthorized: %v. 1. Please check your qiniu access_key and secret_key are both correct and you're authorized qiniu pandora user. 2. Please check the local time to ensure the consistent with the server time. 3. If you are using the token, please make sure that token has not expired.", msg)

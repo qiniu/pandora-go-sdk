@@ -11,6 +11,7 @@ const (
 	UnmatchedSchemaError
 	UnauthorizedError
 	InternalServerError
+	NotImplementedError
 	NoSuchGroupError
 	GroupAlreadyExistsError
 	NoSuchTransformError

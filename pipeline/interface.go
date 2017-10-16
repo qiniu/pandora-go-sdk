@@ -9,6 +9,8 @@ import (
 type PipelineAPI interface {
 	AutoExportToLogDB(*AutoExportToLogDBInput) error
 
+	AutoExportToKODO(*AutoExportToKODOInput) error
+
 	CreateGroup(*CreateGroupInput) error
 
 	UpdateGroup(*UpdateGroupInput) error

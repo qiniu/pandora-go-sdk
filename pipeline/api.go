@@ -196,7 +196,28 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 }
 
 func (c *Pipeline) UpdateRepoWithKodo(input *UpdateRepoInput, ex ExportDesc) error {
-	return fmt.Errorf("not supported yet")
+	repoName, ok := ex.Spec["bucket"].(string)
+	if !ok {
+		return fmt.Errorf("export logdb spec destRepoName assert error %v is not string", ex.Spec["destRepoName"])
+	}
+	docs, ok := ex.Spec["fields"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("export logdb spec doc assert error %v is not map[string]interface{}", ex.Spec["doc"])
+	}
+	for _, v := range input.Schema {
+		docs[v.Key] = "#" + v.Key
+	}
+
+	spec := &ExportLogDBSpec{DestRepoName: repoName, Doc: docs}
+	err := c.UpdateExport(&UpdateExportInput{
+		RepoName:   input.RepoName,
+		ExportName: ex.Name,
+		Spec:       spec,
+	})
+	if reqerr.IsExportRemainUnchanged(err) {
+		err = nil
+	}
+	return err
 }
 
 func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
@@ -275,7 +296,7 @@ func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
 		ex, ok := exs[base.FormExportName(input.RepoName, ExportTypeKODO)]
 		if ok {
 			if ex.Type != ExportTypeKODO {
-				err = fmt.Errorf("export name %v is %v but type is %v not %v", ex.Name, ex.Type, ExportTypeKODO)
+				err = fmt.Errorf("export name is %v but type is %v not %v", ex.Name, ex.Type, ExportTypeKODO)
 				return
 			}
 			err = c.UpdateRepoWithKodo(input, ex)
@@ -283,8 +304,15 @@ func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
 				return
 			}
 		} else {
-			err = fmt.Errorf("auto export to KODO not supported yet")
-			return
+			err = c.AutoExportToKODO(&AutoExportToKODOInput{
+				RepoName:   input.RepoName,
+				BucketName: input.Option.KodoBucketName,
+				Email:      input.Option.KodoEmail,
+				Retention:  input.Option.KodoRetention,
+			})
+			if err != nil {
+				return
+			}
 		}
 	}
 	return nil

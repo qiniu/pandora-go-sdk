@@ -556,6 +556,13 @@ func getFormatDSL(schemas []RepoSchemaEntry, depth int, indent string) (dsl stri
 	return
 }
 
+type AutoExportToKODOInput struct {
+	RepoName   string
+	BucketName string
+	Email      string
+	Retention  int //数字，单位为天
+}
+
 type AutoExportToLogDBInput struct {
 	RepoName    string
 	LogRepoName string
@@ -844,7 +851,8 @@ type SchemaFreeOption struct {
 	TSDBRetention    string
 	ToKODO           bool
 	KodoBucketName   string
-	KODORetention    string
+	KodoRetention    int
+	KodoEmail        string
 	ForceDataConvert bool
 }
 

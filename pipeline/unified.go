@@ -31,6 +31,22 @@ func (c *Pipeline) FormLogDBSpec(RepoName string, Schema []RepoSchemaEntry) *Exp
 	}
 }
 
+func (c *Pipeline) FormKodoSpec(bucketName string, Schema []RepoSchemaEntry, email, ak string, retention int) *ExportKodoSpec {
+	doc := make(map[string]string)
+	for _, v := range Schema {
+		doc[v.Key] = "#" + v.Key
+	}
+	return &ExportKodoSpec{
+		Bucket:    bucketName,
+		KeyPrefix: "logkitauto/date=$(year)-$(mon)-$(day)/hour=$(hour)/min=$(min)/$(sec)",
+		Fields:    doc,
+		Email:     email,
+		AccessKey: ak,
+		Format:    "parquet",
+		Retention: retention,
+	}
+}
+
 func (c *Pipeline) FormTSDBSpec(TSDBRepoName, seriesName string, rtags []string, Schema []RepoSchemaEntry) *ExportTsdbSpec {
 	tags := make(map[string]string)
 	fields := make(map[string]string)
@@ -210,6 +226,30 @@ func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 	})
 	if reqerr.IsNoSuchResourceError(err) {
 		return c.CreateExport(c.FormExportInput(input.RepoName, ExportTypeLogDB, c.FormLogDBSpec(input.LogRepoName, repoInfo.Schema)))
+	}
+	return err
+}
+
+//自动导出到KODO需要提前创建bucket，不会自动创建
+func (c *Pipeline) AutoExportToKODO(input *AutoExportToKODOInput) error {
+	if input.BucketName == "" {
+		input.BucketName = input.RepoName
+	}
+	input.BucketName = strings.Replace(input.BucketName, "_", "-", -1)
+
+	repoInfo, err := c.GetRepo(&GetRepoInput{
+		RepoName: input.RepoName,
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = c.GetExport(&GetExportInput{
+		RepoName:   input.RepoName,
+		ExportName: base.FormExportName(input.RepoName, ExportTypeKODO),
+	})
+	if reqerr.IsNoSuchResourceError(err) {
+		return c.CreateExport(c.FormExportInput(input.RepoName, ExportTypeKODO, c.FormKodoSpec(input.BucketName, repoInfo.Schema, input.Email, c.Config.Ak, input.Retention)))
 	}
 	return err
 }

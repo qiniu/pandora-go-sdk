@@ -26,6 +26,7 @@ type Pipeline struct {
 	repoSchemaMux sync.Mutex
 	defaultRegion string
 
+	//如果不使用schemafree 和 autoexport接口，以下可以不创建
 	LogDB logdb.LogdbAPI
 	TSDB  tsdb.TsdbAPI
 }

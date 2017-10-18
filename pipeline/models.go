@@ -2148,22 +2148,29 @@ func (r *DagLogSearchInput) Validate() (err error) {
 }
 
 type LogMessage struct {
+	Type      string `json:"type"`
+	Name      string `json:"name"`
 	Timestamp string `json:"timestamp"`
 	RawLog    string `json:"log"`
 }
 
 type StatusMessage struct {
+	Type      string `json:"type"`
+	Name      string `json:"name"`
 	Timestamp string `json:"timestamp"`
 	Status    string `json:"status"`
 	Reason    string `json:"reason"`
 }
 
 type MetricMessage struct {
-	Timestamp string `json:"timestamp"`
-	Total     int64  `json:"total"`
-	Success   int64  `json:"success"`
-	Failed    int64  `json:"failed"`
-	Lag       int64  `json:"lag"`
+	Type       string `json:"type"`
+	Name       string `json:"name"`
+	Timestamp  string `json:"timestamp"`
+	ExportType string `json:"exporttype"`
+	Total      int64  `json:"total"`
+	Success    int64  `json:"success"`
+	Failed     int64  `json:"failed"`
+	Lag        int64  `json:"lag"`
 }
 
 type RecommendMessage struct {

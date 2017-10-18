@@ -2166,9 +2166,14 @@ type MetricMessage struct {
 	Lag       int64  `json:"lag"`
 }
 
+type RecommendMessage struct {
+	TimeStamp string `json:"timestamp"`
+	Detail    string `json:"detail"`
+}
+
 type WorkflowSearchRet struct {
-	Status    []StatusMessage `json:"status"`
-	Log       []LogMessage    `json:"log"`
-	Recommend string          `json:"recommend"`
-	Metric    []MetricMessage `json:"metric"`
+	Status    []StatusMessage    `json:"status"`
+	Log       []LogMessage       `json:"log"`
+	Recommend []RecommendMessage `json:"recommend"`
+	Metric    []MetricMessage    `json:"metric"`
 }

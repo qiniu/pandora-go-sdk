@@ -23,6 +23,11 @@ const (
 	RepoCascadingError
 	RepoInCreatingError
 	InvalidTransformSpecError
+	ErrInvalidTransformInterval
+	ErrInvalidTransformSql
+	ErrInvalidTransformPluginOutput
+	ErrDuplicateField
+	ErrUnsupportedFieldType
 	InvalidExportSpecError
 	ExportSpecRemainUnchanged
 	NoSuchRetentionError
@@ -100,6 +105,10 @@ const (
 	ErrStartTransform
 	ErrStopTransform
 	ErrBatchStatusCannotRerun
+	ErrNoExecutableJob
+	ErrJobExportSpec
+	ErrWorkflowCreatingTooManyRepos
+	ErrWorkflowJobsCoexist
 )
 
 type ErrBuilder interface {

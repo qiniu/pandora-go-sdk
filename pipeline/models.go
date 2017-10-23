@@ -1439,12 +1439,12 @@ type RetrieveSchemaOutput struct {
 
 type CreateDatasourceInput struct {
 	PipelineToken
-	DatasourceName     string            `json:"-"`
-	Region             string            `json:"region"`
-	Type               string            `json:"type"`
-	Spec               interface{}       `json:"spec"`
-	Schema             []RepoSchemaEntry `json:"schema"`
-	CancelVerifySchema bool              `json:"cancelVerifySchema"`
+	DatasourceName string            `json:"-"`
+	Region         string            `json:"region"`
+	Type           string            `json:"type"`
+	Spec           interface{}       `json:"spec"`
+	Schema         []RepoSchemaEntry `json:"schema"`
+	NoVerifySchema bool              `json:"noVerifySchema"`
 }
 
 func (c *CreateDatasourceInput) Validate() (err error) {

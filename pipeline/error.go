@@ -52,14 +52,22 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.RepoInCreatingError
 	case "E18112":
 		err.ErrorType = reqerr.RepoCascadingError
-	case "E18207", "E18208", "E18209", "E18210", "E18211":
+	case "E18207", "E18210":
 		err.ErrorType = reqerr.InvalidTransformSpecError
-	case "E18303":
-		err.ErrorType = reqerr.InvalidExportSpecError
-	case "E18125", "E18123", "E18111", "E18110", "E18107", "E18104":
+	case "E18208":
+		err.ErrorType = reqerr.ErrInvalidTransformInterval
+	case "E18209":
+		err.ErrorType = reqerr.ErrInvalidTransformSql
+	case "E18211":
+		err.ErrorType = reqerr.ErrInvalidTransformPluginOutput
+	case "E18104":
+		err.ErrorType = reqerr.ErrDuplicateField
+	case "E18107":
+		err.ErrorType = reqerr.ErrUnsupportedFieldType
+	case "E18125", "E18123", "E18111", "E18110":
 		err.ErrorType = reqerr.InvalidDataSchemaError
 	case "E18305":
-		err.ErrorType = reqerr.ExportSpecRemainUnchanged
+		err.ErrorType = reqerr.InvalidExportSpecError
 	case "E18600":
 		err.ErrorType = reqerr.ErrInvalidDataSourceName
 	case "E18601":
@@ -162,6 +170,14 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrStopTransform
 	case "E18649":
 		err.ErrorType = reqerr.ErrBatchStatusCannotRerun
+	case "E18650":
+		err.ErrorType = reqerr.ErrNoExecutableJob
+	case "E18651":
+		err.ErrorType = reqerr.ErrJobExportSpec
+	case "E18652":
+		err.ErrorType = reqerr.ErrWorkflowCreatingTooManyRepos
+	case "E18653":
+		err.ErrorType = reqerr.ErrWorkflowJobsCoexist
 	case "E9000":
 		err.ErrorType = reqerr.InternalServerError
 	case "E9001":

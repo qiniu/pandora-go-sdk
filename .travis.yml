@@ -7,3 +7,4 @@ script:
   - go get ./...
   - cd pipeline && go test ./... && cd -
   - cd logdb && go test ./... && cd -
+  - cd base && go test ./... && cd -

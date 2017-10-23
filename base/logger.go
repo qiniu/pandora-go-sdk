@@ -5,17 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 )
 
 type LogLevelType uint
-
-func LogLevel(l LogLevelType) LogLevelType {
-	return l
-}
-
-func (l LogLevelType) AtMost(v LogLevelType) bool {
-	return l <= v
-}
 
 const (
 	LogDebug LogLevelType = iota
@@ -52,8 +45,8 @@ type Logger interface {
 func SetLogger(l Logger) { pipelineLogger = l }
 
 var (
-	defaultLogger  = &DefaultLogger{Logger: log.New(os.Stderr, "Pandora ", log.LstdFlags)}
-	discardLogger  = &DefaultLogger{Logger: log.New(ioutil.Discard, "", 0)}
+	defaultLogger  = &DefaultLogger{Logger: log.New(os.Stderr, "Pandora ", log.LstdFlags), rwMu: &sync.RWMutex{}}
+	discardLogger  = &DefaultLogger{Logger: log.New(ioutil.Discard, "", 0), rwMu: &sync.RWMutex{}}
 	pipelineLogger = Logger(defaultLogger)
 )
 
@@ -68,9 +61,24 @@ func NewDefaultLogger() *DefaultLogger {
 type DefaultLogger struct {
 	*log.Logger
 	level LogLevelType
+	rwMu *sync.RWMutex
+}
+
+func (l *DefaultLogger) LogLevel() LogLevelType {
+	l.rwMu.RLock()
+	defer l.rwMu.RUnlock()
+	return l.level
+}
+
+func (l *DefaultLogger) AtMost(v LogLevelType) bool {
+	l.rwMu.RLock()
+	defer l.rwMu.RUnlock()
+	return l.level <= v
 }
 
 func (l *DefaultLogger) SetLoggerLevel(level LogLevelType) {
+	l.rwMu.Lock()
+	defer l.rwMu.Unlock()
 	l.level = level
 }
 
@@ -79,74 +87,74 @@ func (l *DefaultLogger) EnableTimestamps() {
 }
 
 func (l *DefaultLogger) Debug(v ...interface{}) {
-	if l.level.AtMost(LogDebug) {
+	if l.AtMost(LogDebug) {
 		l.Output(calldepth, header("DEBUG", fmt.Sprint(v...)))
 	}
 }
 
 func (l *DefaultLogger) Debugf(format string, v ...interface{}) {
-	if l.level.AtMost(LogDebug) {
+	if l.AtMost(LogDebug) {
 		l.Output(calldepth, header("DEBUG", fmt.Sprintf(format, v...)))
 	}
 }
 
 func (l *DefaultLogger) Info(v ...interface{}) {
-	if l.level.AtMost(LogInfo) {
+	if l.AtMost(LogInfo) {
 		l.Output(calldepth, header("INFO", fmt.Sprint(v...)))
 	}
 }
 
 func (l *DefaultLogger) Infof(format string, v ...interface{}) {
-	if l.level.AtMost(LogInfo) {
+	if l.AtMost(LogInfo) {
 		l.Output(calldepth, header("INFO", fmt.Sprintf(format, v...)))
 	}
 }
 
 func (l *DefaultLogger) Warn(v ...interface{}) {
-	if l.level.AtMost(LogWarn) {
+	if l.AtMost(LogWarn) {
 		l.Output(calldepth, header("WARN", fmt.Sprint(v...)))
 	}
 }
 
 func (l *DefaultLogger) Warnf(format string, v ...interface{}) {
-	if l.level.AtMost(LogWarn) {
+	if l.AtMost(LogWarn) {
 		l.Output(calldepth, header("WARN", fmt.Sprintf(format, v...)))
 	}
 }
 
 func (l *DefaultLogger) Error(v ...interface{}) {
-	if l.level.AtMost(LogError) {
+	if l.AtMost(LogError) {
 		l.Output(calldepth, header("ERROR", fmt.Sprint(v...)))
 	}
 }
 
 func (l *DefaultLogger) Errorf(format string, v ...interface{}) {
-	if l.level.AtMost(LogError) {
+	if l.AtMost(LogError) {
 		l.Output(calldepth, header("ERROR", fmt.Sprintf(format, v...)))
 	}
 }
 
 func (l *DefaultLogger) Panic(v ...interface{}) {
-	if l.level.AtMost(LogPanic) {
+	if l.AtMost(LogPanic) {
 		l.Logger.Panic(v)
 	}
 }
 
 func (l *DefaultLogger) Panicf(format string, v ...interface{}) {
-	if l.level.AtMost(LogPanic) {
+	if l.AtMost(LogPanic) {
 		l.Logger.Panicf(format, v...)
 	}
 }
 
 func (l *DefaultLogger) Fatal(v ...interface{}) {
-	if l.level.AtMost(LogFatal) {
+	if l.AtMost(LogFatal) {
 		l.Output(calldepth, header("FATAL", fmt.Sprint(v...)))
 		os.Exit(1)
 	}
 }
 
 func (l *DefaultLogger) Fatalf(format string, v ...interface{}) {
-	if l.level.AtMost(LogFatal) {
+	if l.AtMost(LogFatal) {
 		l.Output(calldepth, header("FATAL", fmt.Sprintf(format, v...)))
 		os.Exit(1)
 	}

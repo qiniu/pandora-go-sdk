@@ -39,6 +39,7 @@ const (
 	ToAnsjAnalyzer     = "to_ansj"
 	UserAnsjAnalyzer   = "user_ansj"
 	KeyWordAnalyzer    = "keyword"
+	PathAnalyzer       = "path"
 )
 
 const (
@@ -73,6 +74,7 @@ var analyzers = map[string]bool{
 	ToAnsjAnalyzer:     true,
 	UserAnsjAnalyzer:   true,
 	KeyWordAnalyzer:    true,
+	PathAnalyzer:       true,
 }
 
 func validateRepoName(r string) error {

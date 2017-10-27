@@ -1128,10 +1128,13 @@ type ExportKodoSpec struct {
 	Bucket         string            `json:"bucket"`
 	KeyPrefix      string            `json:"keyPrefix"`
 	Fields         map[string]string `json:"fields"`
+	RotateStrategy string            `json:"rotateStrategy,omitempty"`
+	RotateSize     int               `json:"rotateSize,omitempty"`
 	RotateInterval int               `json:"rotateInterval,omitempty"`
 	Email          string            `json:"email"`
 	AccessKey      string            `json:"accessKey"`
 	Format         string            `json:"format"`
+	Delimiter      string            `json:"delimiter"`
 	Compress       bool              `json:"compress"`
 	Retention      int               `json:"retention"`
 	Filter         *ExportFilter     `json:"filter,omitempty"`

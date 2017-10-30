@@ -15,6 +15,11 @@ import (
 	"github.com/qiniu/pandora-go-sdk/tsdb"
 )
 
+const (
+	systemVariableType = "system"
+	userVariableType   = "user"
+)
+
 func (c *Pipeline) CreateGroup(input *CreateGroupInput) (err error) {
 	op := c.newOperation(base.OpCreateGroup, input.GroupName)
 
@@ -1270,6 +1275,62 @@ func (c *Pipeline) JobExportExist(input *JobExportExistInput) (output *JobExport
 	op := c.newOperation(base.OpJobExportExists, input.JobName, input.ExportName)
 
 	output = &JobExportExistOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
+func (c *Pipeline) CreateVariable(input *CreateVariableInput) (err error) {
+	op := c.newOperation(base.OpCreateVariable, input.Name)
+
+	req := c.newRequest(op, input.Token, nil)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	return req.Send()
+}
+
+func (c *Pipeline) UpdateVariable(input *UpdateVariableInput) (err error) {
+	op := c.newOperation(base.OpUpdateVariable, input.Name)
+
+	req := c.newRequest(op, input.Token, nil)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	return req.Send()
+}
+
+func (c *Pipeline) DeleteVariable(input *DeleteVariableInput) (err error) {
+	op := c.newOperation(base.OpDeleteVariable, input.Name)
+
+	req := c.newRequest(op, input.Token, nil)
+	if err = req.SetVariantBody(input); err != nil {
+		return
+	}
+	return req.Send()
+}
+
+func (c *Pipeline) GetVariable(input *GetVariableInput) (output *GetVariableOutput, err error) {
+	if err = input.Validate(); err != nil {
+		return
+	}
+	op := c.newOperation(base.OpGetVariable, input.Name)
+
+	output = &GetVariableOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
+func (c *Pipeline) ListUserVariables(input *ListVariablesInput) (output *ListVariablesOutput, err error) {
+	op := c.newOperation(base.OpListUserVariables, userVariableType)
+
+	output = &ListVariablesOutput{}
+	req := c.newRequest(op, input.Token, output)
+	return output, req.Send()
+}
+
+func (c *Pipeline) ListSystemVariables(input *ListVariablesInput) (output *ListVariablesOutput, err error) {
+	op := c.newOperation(base.OpListSystemVariables, systemVariableType)
+	output = &ListVariablesOutput{}
 	req := c.newRequest(op, input.Token, output)
 	return output, req.Send()
 }

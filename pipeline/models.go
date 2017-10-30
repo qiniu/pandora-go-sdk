@@ -35,6 +35,7 @@ const (
 	workflowNamePattern   = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
 	nodeNamePattern       = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
 	pluginNamePattern     = "^[a-zA-Z][a-zA-Z0-9_\\.]{0,127}[a-zA-Z0-9_]$"
+	variableNameRex       = "^[a-zA-Z_][a-zA-Z0-9_]{0,127}$"
 )
 
 //Pandora Types
@@ -177,6 +178,17 @@ func validateNodeName(r string) error {
 	}
 	if !matched {
 		return reqerr.NewInvalidArgs("Workflow NodeName", fmt.Sprintf("invalid workflow node name: %s", r))
+	}
+	return nil
+}
+
+func validateVariableName(r string) error {
+	matched, err := regexp.MatchString(variableNameRex, r)
+	if err != nil {
+		return reqerr.NewInvalidArgs("VariableName", err.Error())
+	}
+	if !matched {
+		return reqerr.NewInvalidArgs("VariableName", fmt.Sprintf("invalid variable name: %s", r))
 	}
 	return nil
 }
@@ -2187,4 +2199,67 @@ type WorkflowSearchRet struct {
 	Log       []LogMessage       `json:"log"`
 	Recommend []RecommendMessage `json:"recommend"`
 	Metric    []MetricMessage    `json:"metric"`
+}
+
+type CreateVariableInput struct {
+	PipelineToken
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	Value  string `json:"value"`
+	Format string `json:"format"`
+}
+
+func (r *CreateVariableInput) Validate() (err error) {
+	if err = validateVariableName(r.Name); err != nil {
+		return
+	}
+	return
+}
+
+type UpdateVariableInput CreateVariableInput
+
+func (r *UpdateVariableInput) Validate() (err error) {
+	if err = validateVariableName(r.Name); err != nil {
+		return
+	}
+	return
+}
+
+type DeleteVariableInput struct {
+	PipelineToken
+	Name string `json:"name"`
+}
+
+func (r *DeleteVariableInput) Validate() (err error) {
+	if err = validateVariableName(r.Name); err != nil {
+		return
+	}
+	return
+}
+
+type GetVariableInput struct {
+	PipelineToken
+	Name string `json:"name"`
+}
+
+func (r *GetVariableInput) Validate() (err error) {
+	if err = validateVariableName(r.Name); err != nil {
+		return
+	}
+	return
+}
+
+type GetVariableOutput struct {
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	Value  string `json:"value"`
+	Format string `json:"format"`
+}
+
+type ListVariablesInput struct {
+	PipelineToken
+}
+
+type ListVariablesOutput struct {
+	Variables []GetVariableOutput `json:"variables"`
 }

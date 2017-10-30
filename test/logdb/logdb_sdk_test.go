@@ -231,11 +231,45 @@ func TestSendAndQueryLog(t *testing.T) {
 	if len(queryOut.Data) != 20 {
 		t.Errorf("log count should be 20, but %d", len(queryOut.Data))
 	}
+	if len(queryOut.ScrollId) != 0 {
+		t.Errorf("log scroll_id should be empty, but %v", len(queryOut.ScrollId))
+	}
+
+	queryInputWithScroll := queryInput
+	queryInputWithScroll.Size = 12
+	queryInputWithScroll.Scroll = "2m"
+
+	queryOutWithScroll, err := client.QueryLog(queryInputWithScroll)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(queryOutWithScroll.ScrollId) == 0 {
+		t.Errorf("log scroll_id should NOT be empty, but %v", len(queryOut.ScrollId))
+	}
+	if len(queryOut.Data) != 12 {
+		t.Errorf("log count should be 12, but %d", len(queryOut.Data))
+	}
+
+	scrollInput := &logdb.QueryScrollInput{
+		RepoName: repoName,
+		ScrollId: queryOutWithScroll.ScrollId,
+		Scroll:   "1m",
+	}
+	scrollOut, err := client.QueryScroll(scrollInput)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(scrollOut.Data) != 8 {
+		t.Errorf("log count should be 8, but %d", len(scrollOut.Data))
+	}
+	if scrollOut.Total != 20 {
+		t.Errorf("log total count should be 20, but %d", scrollOut.Total)
+	}
+
 	err = client.DeleteRepo(&logdb.DeleteRepoInput{RepoName: repoName})
 	if err != nil {
 		t.Error(err)
 	}
-
 }
 
 func TestSendLogWithToken(t *testing.T) {

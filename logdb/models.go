@@ -560,7 +560,7 @@ func (input *QueryScrollInput) Buf() (buf []byte, err error) {
 }
 
 type QueryLogOutput struct {
-	ScrollId       string                   `json:"scroll_id"`
+	ScrollId       string                   `json:"scroll_id,omitempty"`
 	Total          int                      `json:"total"`
 	PartialSuccess bool                     `json:"partialSuccess"`
 	Data           []map[string]interface{} `json:"data"`

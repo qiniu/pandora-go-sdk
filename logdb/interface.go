@@ -19,6 +19,8 @@ type LogdbAPI interface {
 
 	QueryLog(*QueryLogInput) (*QueryLogOutput, error)
 
+	QueryScroll(*QueryScrollInput) (*QueryLogOutput, error)
+
 	QueryHistogramLog(*QueryHistogramLogInput) (*QueryHistogramLogOutput, error)
 
 	PutRepoConfig(*PutRepoConfigInput) error

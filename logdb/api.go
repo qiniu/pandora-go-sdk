@@ -84,7 +84,7 @@ func (c *Logdb) QueryLog(input *QueryLogInput) (output *QueryLogOutput, err erro
 	if input.Highlight != nil {
 		highlight = true
 	}
-	op := c.newOperation(base.OpQueryLog, input.RepoName, url.QueryEscape(input.Query), input.Sort, input.From, input.Size, highlight)
+	op := c.newOperation(base.OpQueryLog, input.RepoName, url.QueryEscape(input.Query), input.Sort, input.From, input.Size, input.Scroll, highlight)
 
 	output = &QueryLogOutput{}
 	req := c.newRequest(op, input.Token, output)
@@ -94,6 +94,19 @@ func (c *Logdb) QueryLog(input *QueryLogInput) (output *QueryLogOutput, err erro
 		}
 		req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
 	}
+	return output, req.Send()
+}
+
+func (c *Logdb) QueryScroll(input *QueryScrollInput) (output *QueryLogOutput, err error) {
+	op := c.newOperation(base.OpQueryScroll, input.RepoName)
+	output = &QueryLogOutput{}
+	req := c.newRequest(op, input.Token, output)
+	buf, err := input.Buf()
+	if err != nil {
+		return
+	}
+	req.SetBufferBody(buf)
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
 	return output, req.Send()
 }
 

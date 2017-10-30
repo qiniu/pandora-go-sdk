@@ -540,10 +540,27 @@ type QueryLogInput struct {
 	Sort      string
 	From      int
 	Size      int
+	Scroll    string
 	Highlight *Highlight
 }
 
+type QueryScrollInput struct {
+	LogdbToken
+	RepoName string `json:"-"`
+	ScrollId string `json:"scroll_id"`
+	Scroll   string `json:"scroll"`
+}
+
+func (input *QueryScrollInput) Buf() (buf []byte, err error) {
+	buf, err = json.Marshal(input)
+	if err != nil {
+		return
+	}
+	return
+}
+
 type QueryLogOutput struct {
+	ScrollId       string                   `json:"scroll_id"`
 	Total          int                      `json:"total"`
 	PartialSuccess bool                     `json:"partialSuccess"`
 	Data           []map[string]interface{} `json:"data"`

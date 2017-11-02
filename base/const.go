@@ -85,6 +85,12 @@ const (
 	OpStartWorkflow       string = "StartWorkflow"
 	OpStopWorkflow        string = "StopWorkflow"
 	OpSearchDAGlog        string = "SearchDAGLog"
+	OpCreateVariable      string = "CreateVariable"
+	OpUpdateVariable      string = "UpdateVariable"
+	OpDeleteVariable      string = "DeleteVariable"
+	OpGetVariable         string = "GetVariable"
+	OpListUserVariables   string = "ListUserVariables"
+	OpListSystemVariables string = "ListSystemVariables"
 
 	OpUpdateRepo        string = "UpdateRepo"
 	OpSendLog           string = "SendLog"

@@ -28,6 +28,10 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 	switch errId {
 	case "E18005":
 		err.ErrorType = reqerr.EntityTooLargeError
+	case "E18016":
+		err.ErrorType = reqerr.ErrInvalidVariableType
+	case "E18017":
+		err.ErrorType = reqerr.ErrInvalidVariableName
 	case "E18120":
 		err.ErrorType = reqerr.NoSuchGroupError
 	case "E18218":
@@ -178,6 +182,12 @@ func (e errBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrWorkflowCreatingTooManyRepos
 	case "E18653":
 		err.ErrorType = reqerr.ErrWorkflowJobsCoexist
+	case "E18654":
+		err.ErrorType = reqerr.ErrVariableNotExist
+	case "E18655":
+		err.ErrorType = reqerr.ErrVariableAlreadyExist
+	case "E18656":
+		err.ErrorType = reqerr.ErrSameToSystemVariable
 	case "E9000":
 		err.ErrorType = reqerr.InternalServerError
 	case "E9001":

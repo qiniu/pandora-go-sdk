@@ -171,5 +171,17 @@ type PipelineAPI interface {
 
 	JobExportExist(input *JobExportExistInput) (output *JobExportExistOutput, err error)
 
+	CreateVariable(input *CreateVariableInput) (err error)
+
+	UpdateVariable(input *UpdateVariableInput) (err error)
+
+	DeleteVariable(input *DeleteVariableInput) (err error)
+
+	GetVariable(input *GetVariableInput) (output *GetVariableOutput, err error)
+
+	ListUserVariables(input *ListVariablesInput) (output *ListVariablesOutput, err error)
+
+	ListSystemVariables(input *ListVariablesInput) (output *ListVariablesOutput, err error)
+
 	Close() error
 }

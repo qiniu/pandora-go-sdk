@@ -46,6 +46,7 @@ const (
 	QueryInterruptError
 	ExecuteSqlError
 	EntityTooLargeError
+	ErrInvalidVariableType
 	InvalidDataSchemaError
 	ErrDBNameInvalidError
 	ErrInvalidSqlError
@@ -109,6 +110,10 @@ const (
 	ErrJobExportSpec
 	ErrWorkflowCreatingTooManyRepos
 	ErrWorkflowJobsCoexist
+	ErrInvalidVariableName
+	ErrVariableNotExist
+	ErrVariableAlreadyExist
+	ErrSameToSystemVariable
 )
 
 type ErrBuilder interface {

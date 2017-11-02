@@ -103,7 +103,7 @@ func convertSchema2LogDB(scs []RepoSchemaEntry) (ret []logdb.RepoSchemaEntry) {
 			rp.ValueType = v.ElemType
 		}
 		if v.ValueType == PandoraTypeString {
-			rp.Analyzer = logdb.KeyWordAnalyzer
+			rp.Analyzer = logdb.StandardAnalyzer
 		}
 		ret = append(ret, rp)
 	}

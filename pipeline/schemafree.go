@@ -531,7 +531,7 @@ func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSch
 				return
 			}
 		}
-		if option != nil && option.ToLogDB {
+		if option != nil && option.ToKODO {
 			err = c.AutoExportToKODO(&AutoExportToKODOInput{
 				RepoName:   repoName,
 				BucketName: option.KodoBucketName,

@@ -1146,7 +1146,7 @@ type ExportKodoSpec struct {
 	Email          string            `json:"email"`
 	AccessKey      string            `json:"accessKey"`
 	Format         string            `json:"format"`
-	Delimiter      string            `json:"delimiter"`
+	Delimiter      string            `json:"delimiter,omitempty"`
 	Compress       bool              `json:"compress"`
 	Retention      int               `json:"retention"`
 	Filter         *ExportFilter     `json:"filter,omitempty"`

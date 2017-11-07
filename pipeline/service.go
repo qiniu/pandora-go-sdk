@@ -15,7 +15,7 @@ import (
 	"github.com/qiniu/pandora-go-sdk/tsdb"
 )
 
-var builder errBuilder
+var builder PipelineErrBuilder
 
 type Pipeline struct {
 	Config        *config.Config

@@ -10,9 +10,9 @@ import (
 
 const errCodePrefixLen = 6
 
-type errBuilder struct{}
+type PipelineErrBuilder struct{}
 
-func (e errBuilder) Build(msg, text, reqId string, code int) error {
+func (e PipelineErrBuilder) Build(msg, text, reqId string, code int) error {
 
 	err := reqerr.New(msg, text, reqId, code)
 	if len(msg) <= errCodePrefixLen {

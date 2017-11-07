@@ -11,7 +11,7 @@ import (
 	"github.com/qiniu/pandora-go-sdk/base/request"
 )
 
-var builder errBuilder
+var builder LogdbErrBuilder
 
 type Logdb struct {
 	Config     *config.Config

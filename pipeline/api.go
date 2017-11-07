@@ -613,6 +613,14 @@ func (c *Pipeline) ListPlugins(input *ListPluginsInput) (output *ListPluginsOutp
 	return output, req.Send()
 }
 
+func (c *Pipeline) VerifyPlugin(input *VerifyPluginInput) (output *VerifyPluginOutput, err error) {
+	op := c.newOperation(base.OpVerifyPlugin, input.PluginName)
+
+	output = &VerifyPluginOutput{}
+	req := c.newRequest(op, input.Token, &output)
+	return output, req.Send()
+}
+
 func (c *Pipeline) GetPlugin(input *GetPluginInput) (output *GetPluginOutput, err error) {
 	op := c.newOperation(base.OpGetPlugin, input.PluginName)
 

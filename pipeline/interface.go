@@ -55,6 +55,8 @@ type PipelineAPI interface {
 
 	UploadPluginFromFile(*UploadPluginFromFileInput) error
 
+	VerifyPlugin(*VerifyPluginInput) (*VerifyPluginOutput, error)
+
 	ListPlugins(*ListPluginsInput) (*ListPluginsOutput, error)
 
 	GetPlugin(*GetPluginInput) (*GetPluginOutput, error)

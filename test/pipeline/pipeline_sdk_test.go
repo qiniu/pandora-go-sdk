@@ -1465,3 +1465,9 @@ func TestQuerySearch(t *testing.T) {
 	fmt.Println(ret)
 
 }
+
+func TestGetPluginVerify(t *testing.T) {
+	out, err := client.VerifyPlugin(&pipeline.VerifyPluginInput{PluginName: "com.package.WordSegmentParserV3"})
+	assert.NoError(t, err)
+	fmt.Println(out)
+}

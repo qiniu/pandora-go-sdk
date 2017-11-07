@@ -913,6 +913,20 @@ type GetPluginOutput struct {
 	PluginDesc
 }
 
+type VerifyPluginInput struct {
+	PipelineToken
+	PluginName string
+}
+
+type OutputField struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+type VerifyPluginOutput struct {
+	OutputFields []OutputField `json:"outputFields"`
+}
+
 type ListPluginsInput struct {
 	PipelineToken
 }

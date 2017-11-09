@@ -2065,14 +2065,15 @@ func (r *GetWorkflowInput) Validate() (err error) {
 }
 
 type GetWorkflowOutput struct {
-	Name       string           `json:"name,omitempty"`
-	Region     string           `json:"region"`
-	Nodes      map[string]*Node `json:"nodes"`
-	Comment    string           `json:"comment"`
-	CreateTime string           `json:"createTime"`
-	UpdateTime string           `json:"updateTime"`
-	Status     string           `json:"status"`
-	CanStart   bool             `json:"canStart"`
+	Name             string           `json:"name,omitempty"`
+	Region           string           `json:"region"`
+	Nodes            map[string]*Node `json:"nodes"`
+	Comment          string           `json:"comment"`
+	CreateTime       string           `json:"createTime"`
+	UpdateTime       string           `json:"updateTime"`
+	Status           string           `json:"status"`
+	CanStart         bool             `json:"canStart"`
+	IsManualWorkflow bool             `json:"isManualWorkflow"`
 }
 
 type GetWorkflowStatusInput GetWorkflowInput

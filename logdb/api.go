@@ -80,7 +80,7 @@ func (c *Logdb) SendLog(input *SendLogInput) (output *SendLogOutput, err error) 
 }
 
 // 输入JSON样例数据，输出对应的LOGDB Schema
-func (c *Logdb) SchemaRef(input *SchemaRefInput) (output *SchemaRefOut, err error) {
+func (c *Logdb) GetSampleDataSchema(input *SchemaRefInput) (output *SchemaRefOut, err error) {
 	op := c.newOperation(base.OpSchemaRef)
 
 	output = &SchemaRefOut{}

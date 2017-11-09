@@ -101,6 +101,7 @@ const (
 	OpPutRepoConfig     string = "PutRepoConfig"
 	OpGetRepoConfig     string = "GetRepoConfig"
 	OpPartialQuery      string = "PartialQuery"
+	OpSchemaRef         string = "SchemaRef"
 
 	OpUpdateRepoMetadata string = "UpdataRepoMetadata"
 	OpDeleteRepoMetadata string = "DeleteRepoMetadata"

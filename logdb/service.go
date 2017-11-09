@@ -87,6 +87,8 @@ func (c *Logdb) newOperation(opName string, args ...interface{}) *request.Operat
 		method, urlTmpl = base.MethodGet, "/v5/repos/%s/config"
 	case base.OpPartialQuery:
 		method, urlTmpl = base.MethodPost, "/v5/repos/%s/s"
+	case base.OpSchemaRef:
+		method, urlTmpl = base.MethodPost, "/v5/schema/derivation"
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

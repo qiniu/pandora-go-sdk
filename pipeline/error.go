@@ -188,6 +188,8 @@ func (e PipelineErrBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrVariableAlreadyExist
 	case "E18656":
 		err.ErrorType = reqerr.ErrSameToSystemVariable
+	case "E18660":
+		err.ErrorType = reqerr.ErrTransformUpdate
 	case "E9000":
 		err.ErrorType = reqerr.InternalServerError
 	case "E9001":

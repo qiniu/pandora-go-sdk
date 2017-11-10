@@ -114,6 +114,7 @@ const (
 	ErrVariableNotExist
 	ErrVariableAlreadyExist
 	ErrSameToSystemVariable
+	ErrTransformUpdate
 )
 
 type ErrBuilder interface {

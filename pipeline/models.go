@@ -737,6 +737,8 @@ type GetRepoOutput struct {
 	GroupName   string            `json:"group"`
 	Options     *RepoOptions      `json:"options"`
 	DerivedFrom string            `json:"derivedFrom"`
+	FromDag     bool              `json:"fromDag"`
+	Workflow    string            `json:"workflow"`
 }
 
 type SampleDataOutput struct {
@@ -748,6 +750,8 @@ type RepoDesc struct {
 	Region      string `json:"region"`
 	GroupName   string `json:"group"`
 	DerivedFrom string `json:"derivedFrom"`
+	FromDag     bool   `json:"fromDag"`
+	Workflow    string `json:"workflow"`
 }
 
 type ListReposInput struct {
@@ -1515,10 +1519,11 @@ type GetDatasourceInput struct {
 }
 
 type GetDatasourceOutput struct {
-	Region string            `json:"region"`
-	Type   string            `json:"type"`
-	Spec   interface{}       `json:"spec"`
-	Schema []RepoSchemaEntry `json:"schema"`
+	Region  string            `json:"region"`
+	Type    string            `json:"type"`
+	Spec    interface{}       `json:"spec"`
+	Schema  []RepoSchemaEntry `json:"schema"`
+	FromDag bool              `json:"fromDag,omitempty"`
 }
 
 type DatasourceExistInput GetDatasourceInput

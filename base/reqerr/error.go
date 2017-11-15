@@ -26,6 +26,7 @@ const (
 	ErrInvalidTransformInterval
 	ErrInvalidTransformSql
 	ErrInvalidTransformPluginOutput
+	ErrInvalidFieldInSQL
 	ErrDuplicateField
 	ErrUnsupportedFieldType
 	InvalidExportSpecError

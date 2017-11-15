@@ -64,6 +64,8 @@ func (e PipelineErrBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrInvalidTransformSql
 	case "E18211":
 		err.ErrorType = reqerr.ErrInvalidTransformPluginOutput
+	case "E18228":
+		err.ErrorType = reqerr.ErrInvalidFieldInSQL
 	case "E18104":
 		err.ErrorType = reqerr.ErrDuplicateField
 	case "E18107":

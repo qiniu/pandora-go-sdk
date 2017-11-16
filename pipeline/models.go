@@ -1066,26 +1066,14 @@ type ListTransformsOutput struct {
 	Transforms []TransformDesc `json:"transforms"`
 }
 
-type ExportFilter struct {
-	Rules     map[string]map[string]string `json:"rules"`
-	ToDefault bool                         `json:"toDefault"`
-}
-
-func (f *ExportFilter) Validate() (err error) {
-	if len(f.Rules) == 0 {
-		err = reqerr.NewInvalidArgs("ExportFilter", "rules in filter should be empty")
-		return
-	}
-	return
-}
-
 type ExportTsdbSpec struct {
 	DestRepoName string            `json:"destRepoName"`
 	SeriesName   string            `json:"series"`
 	Tags         map[string]string `json:"tags"`
 	Fields       map[string]string `json:"fields"`
+	OmitInvalid  bool              `json:"omitInvalid,omitempty"`
+	OmitEmpty    bool              `json:"omitEmpty,omitempty"`
 	Timestamp    string            `json:"timestamp,omitempty"`
-	Filter       *ExportFilter     `json:"filter,omitempty"`
 }
 
 func (s *ExportTsdbSpec) Validate() (err error) {
@@ -1097,10 +1085,7 @@ func (s *ExportTsdbSpec) Validate() (err error) {
 		err = reqerr.NewInvalidArgs("ExportSpec", "series name should not be empty")
 		return
 	}
-	if s.Filter == nil {
-		return
-	}
-	return s.Filter.Validate()
+	return
 }
 
 type ExportMongoSpec struct {
@@ -1111,7 +1096,6 @@ type ExportMongoSpec struct {
 	UpdateKey []string               `json:"updateKey,omitempty"`
 	Doc       map[string]interface{} `json:"doc"`
 	Version   string                 `json:"version,omitempty"`
-	Filter    *ExportFilter          `json:"filter,omitempty"`
 }
 
 func (s *ExportMongoSpec) Validate() (err error) {
@@ -1131,16 +1115,14 @@ func (s *ExportMongoSpec) Validate() (err error) {
 		err = reqerr.NewInvalidArgs("ExportSpec", fmt.Sprintf("invalid mode: %s, mode should be one of \"UPSERT\", \"INSERT\" and \"UPDATE\"", s.Mode))
 		return
 	}
-	if s.Filter == nil {
-		return
-	}
-	return s.Filter.Validate()
+	return
 }
 
 type ExportLogDBSpec struct {
 	DestRepoName string                 `json:"destRepoName"`
 	Doc          map[string]interface{} `json:"doc"`
-	Filter       *ExportFilter          `json:"filter,omitempty"`
+	OmitInvalid  bool                   `json:"omitInvalid,omitempty"`
+	OmitEmpty    bool                   `json:"omitEmpty,omitempty"`
 }
 
 func (s *ExportLogDBSpec) Validate() (err error) {
@@ -1148,10 +1130,7 @@ func (s *ExportLogDBSpec) Validate() (err error) {
 		err = reqerr.NewInvalidArgs("ExportSpec", "dest repo name should not be empty")
 		return
 	}
-	if s.Filter == nil {
-		return
-	}
-	return s.Filter.Validate()
+	return
 }
 
 type ExportKodoSpec struct {
@@ -1167,7 +1146,6 @@ type ExportKodoSpec struct {
 	Delimiter      string            `json:"delimiter,omitempty"`
 	Compress       bool              `json:"compress"`
 	Retention      int               `json:"retention"`
-	Filter         *ExportFilter     `json:"filter,omitempty"`
 }
 
 func (s *ExportKodoSpec) Validate() (err error) {
@@ -1175,10 +1153,7 @@ func (s *ExportKodoSpec) Validate() (err error) {
 		err = reqerr.NewInvalidArgs("ExportSpec", "bucket should not be empty")
 		return
 	}
-	if s.Filter == nil {
-		return
-	}
-	return s.Filter.Validate()
+	return
 }
 
 type ExportHttpSpec struct {

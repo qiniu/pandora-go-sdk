@@ -1303,16 +1303,18 @@ func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
 			},
 		},
 		Option: &pipeline.SchemaFreeOption{
-			ToLogDB:        true,
-			LogDBRepoName:  "tologdb",
-			LogDBRetention: "3d",
+			ToLogDB: true,
+			AutoExportToLogDBInput: pipeline.AutoExportToLogDBInput{
+				RepoName:  "tologdb",
+				Retention: "3d",
+			},
 		},
 	}
 	schemas, err := client.PostDataSchemaFree(postDataInput)
 	if err != nil {
 		t.Error(err)
 	}
-	logdbrepoinfo, err := logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.LogDBRepoName})
+	logdbrepoinfo, err := logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.AutoExportToLogDBInput.RepoName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -1346,16 +1348,18 @@ func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
 			},
 		},
 		Option: &pipeline.SchemaFreeOption{
-			ToLogDB:        true,
-			LogDBRepoName:  "tologdb",
-			LogDBRetention: "3d",
+			ToLogDB: true,
+			AutoExportToLogDBInput: pipeline.AutoExportToLogDBInput{
+				RepoName:  "tologdb",
+				Retention: "3d",
+			},
 		},
 	}
 	schemas, err = client.PostDataSchemaFree(postDataInput)
 	if err != nil {
 		t.Error(err)
 	}
-	logdbrepoinfo, err = logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.LogDBRepoName})
+	logdbrepoinfo, err = logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.AutoExportToLogDBInput.RepoName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -1387,9 +1391,11 @@ func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
 			},
 		},
 		Option: &pipeline.SchemaFreeOption{
-			ToLogDB:        true,
-			LogDBRepoName:  "tologdb",
-			LogDBRetention: "3d",
+			ToLogDB: true,
+			AutoExportToLogDBInput: pipeline.AutoExportToLogDBInput{
+				RepoName:  "tologdb",
+				Retention: "3d",
+			},
 		},
 	}
 	schemas, err = client.PostDataSchemaFree(postDataInput)

@@ -159,6 +159,9 @@ func IsExistError(err error) bool {
 	if reqErr.ErrorType == RepoAlreadyExistsError || reqErr.ErrorType == SeriesAlreadyExistsError {
 		return true
 	}
+	if reqErr.ErrorType == ExportAlreadyExistsError {
+		return true
+	}
 	return false
 }
 

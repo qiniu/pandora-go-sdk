@@ -11,6 +11,8 @@ type PipelineAPI interface {
 
 	AutoExportToKODO(*AutoExportToKODOInput) error
 
+	AutoExportToTSDB(*AutoExportToTSDBInput) error
+
 	CreateGroup(*CreateGroupInput) error
 
 	UpdateGroup(*UpdateGroupInput) error

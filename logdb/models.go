@@ -475,12 +475,13 @@ type GetRepoOutput struct {
 }
 
 type RepoDesc struct {
-	RepoName     string `json:"name"`
-	Region       string `json:"region"`
-	PrimaryField string `json:"primaryField"`
-	Retention    string `json:"retention"`
-	CreateTime   string `json:"createTime"`
-	UpdateTime   string `json:"updateTime"`
+	RepoName     string            `json:"name"`
+	Schema       []RepoSchemaEntry `json:"schema"`
+	Region       string            `json:"region"`
+	PrimaryField string            `json:"primaryField"`
+	Retention    string            `json:"retention"`
+	CreateTime   string            `json:"createTime"`
+	UpdateTime   string            `json:"updateTime"`
 }
 
 type ListReposInput struct {

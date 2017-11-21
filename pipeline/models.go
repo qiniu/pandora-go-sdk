@@ -350,6 +350,7 @@ type CreateRepoDSLInput struct {
 	DSL       string       `json:"dsl"`
 	Options   *RepoOptions `json:"options"`
 	GroupName string       `json:"group"`
+	Workflow  string       `json:"workflow"` // 请注意：如果此处workflow不指定，默认会同名的workflow
 }
 
 /*
@@ -638,11 +639,17 @@ type CreateRepoInput struct {
 	Schema    []RepoSchemaEntry `json:"schema"`
 	Options   *RepoOptions      `json:"options"`
 	GroupName string            `json:"group"`
+	Workflow  string            `json:"workflow"` // 请注意：如果此处workflow不指定，默认会同名的workflow
 }
 
 func (r *CreateRepoInput) Validate() (err error) {
 	if err = validateRepoName(r.RepoName); err != nil {
 		return
+	}
+	if r.Workflow != "" {
+		if err = validateWorkflowName(r.Workflow); err != nil {
+			return
+		}
 	}
 
 	if r.Schema == nil || len(r.Schema) == 0 {
@@ -1023,6 +1030,7 @@ type TransformDesc struct {
 	TransformName string         `json:"name"`
 	DestRepoName  string         `json:"to"`
 	Spec          *TransformSpec `json:"spec"`
+	Workflow      string         `json:"workflow"`
 }
 
 type GetTransformInput struct {
@@ -1071,8 +1079,8 @@ type ExportTsdbSpec struct {
 	SeriesName   string            `json:"series"`
 	Tags         map[string]string `json:"tags"`
 	Fields       map[string]string `json:"fields"`
-	OmitInvalid  bool              `json:"omitInvalid,omitempty"`
-	OmitEmpty    bool              `json:"omitEmpty,omitempty"`
+	OmitInvalid  bool              `json:"omitInvalid"`
+	OmitEmpty    bool              `json:"omitEmpty"`
 	Timestamp    string            `json:"timestamp,omitempty"`
 }
 
@@ -1121,8 +1129,8 @@ func (s *ExportMongoSpec) Validate() (err error) {
 type ExportLogDBSpec struct {
 	DestRepoName string                 `json:"destRepoName"`
 	Doc          map[string]interface{} `json:"doc"`
-	OmitInvalid  bool                   `json:"omitInvalid,omitempty"`
-	OmitEmpty    bool                   `json:"omitEmpty,omitempty"`
+	OmitInvalid  bool                   `json:"omitInvalid"`
+	OmitEmpty    bool                   `json:"omitEmpty"`
 }
 
 func (s *ExportLogDBSpec) Validate() (err error) {
@@ -1256,10 +1264,11 @@ func (e *UpdateExportInput) Validate() (err error) {
 }
 
 type ExportDesc struct {
-	Name   string                 `json:"name,omitempty"`
-	Type   string                 `json:"type"`
-	Spec   map[string]interface{} `json:"spec"`
-	Whence string                 `json:"whence,omitempty"`
+	Name     string                 `json:"name,omitempty"`
+	Type     string                 `json:"type"`
+	Spec     map[string]interface{} `json:"spec"`
+	Whence   string                 `json:"whence,omitempty"`
+	Workflow string                 `json:"workflow"`
 }
 
 type GetExportInput struct {
@@ -1453,6 +1462,7 @@ type CreateDatasourceInput struct {
 	Spec           interface{}       `json:"spec"`
 	Schema         []RepoSchemaEntry `json:"schema"`
 	NoVerifySchema bool              `json:"noVerifySchema"`
+	Workflow       string            `json:"workflow"` // 请注意：如果此处workflow不指定，默认会同名的workflow
 }
 
 func (c *CreateDatasourceInput) Validate() (err error) {
@@ -1461,6 +1471,11 @@ func (c *CreateDatasourceInput) Validate() (err error) {
 	}
 	if c.Type == "" {
 		return reqerr.NewInvalidArgs("Type", fmt.Sprintf("type of datasource should not be empty"))
+	}
+	if c.Workflow != "" {
+		if err = validateWorkflowName(c.Workflow); err != nil {
+			return
+		}
 	}
 	if len(c.Schema) == 0 {
 		return reqerr.NewInvalidArgs("Schema", fmt.Sprintf("schema of datasource should not be empty"))
@@ -1494,11 +1509,12 @@ type GetDatasourceInput struct {
 }
 
 type GetDatasourceOutput struct {
-	Region  string            `json:"region"`
-	Type    string            `json:"type"`
-	Spec    interface{}       `json:"spec"`
-	Schema  []RepoSchemaEntry `json:"schema"`
-	FromDag bool              `json:"fromDag,omitempty"`
+	Region   string            `json:"region"`
+	Type     string            `json:"type"`
+	Spec     interface{}       `json:"spec"`
+	Schema   []RepoSchemaEntry `json:"schema"`
+	FromDag  bool              `json:"fromDag,omitempty"`
+	Workflow string            `json:"workflow"`
 }
 
 type DatasourceExistInput GetDatasourceInput
@@ -1515,11 +1531,12 @@ type DatasourceExistOutput struct {
 }
 
 type DatasourceDesc struct {
-	Name   string            `json:"name"`
-	Region string            `json:"region"`
-	Type   string            `json:"type"`
-	Spec   interface{}       `json:"spec"`
-	Schema []RepoSchemaEntry `json:"schema"`
+	Name     string            `json:"name"`
+	Region   string            `json:"region"`
+	Type     string            `json:"type"`
+	Spec     interface{}       `json:"spec"`
+	Schema   []RepoSchemaEntry `json:"schema"`
+	Workflow string            `json:"workflow"`
 }
 
 type ListDatasourcesOutput struct {
@@ -1637,6 +1654,7 @@ type GetJobOutput struct {
 	Container   *Container    `json:"container,omitempty"`
 	Scheduler   *JobScheduler `json:"scheduler,omitempty"`
 	Params      []Param       `json:"params,omitempty"`
+	Workflow    string        `json:"workflow"`
 }
 
 type JobDesc struct {
@@ -1745,7 +1763,7 @@ type JobExportKodoSpec struct {
 	Format      string   `json:"format"`
 	Compression string   `json:"compression,omitempty"`
 	Retention   int      `json:"retention"`
-	PartitionBy []string `json:"partitionBy"`
+	PartitionBy []string `json:"partitionBy,omitempty"`
 	FileCount   int      `json:"fileCount"`
 	SaveMode    string   `json:"saveMode"`
 }
@@ -1859,8 +1877,9 @@ type JobExportExistOutput struct {
 }
 
 type GetJobExportOutput struct {
-	Type string      `json:"type"`
-	Spec interface{} `json:"spec"`
+	Type     string      `json:"type"`
+	Spec     interface{} `json:"spec"`
+	Workflow string      `json:"workflow"`
 }
 
 type JobExportDesc struct {
@@ -2012,13 +2031,17 @@ type Node struct {
 
 type CreateWorkflowInput struct {
 	PipelineToken
+	WorkflowName string `json:"name"`
+	Region       string `json:"region"`
+	Comment      string `json:"comment,omitempty"`
+}
+
+type UpdateWorkflowInput struct {
+	PipelineToken
 	WorkflowName string           `json:"name"`
 	Region       string           `json:"region"`
 	Nodes        map[string]*Node `json:"nodes"`
-	Comment      string           `json:"comment,omitempty"`
 }
-
-type UpdateWorkflowInput CreateWorkflowInput
 
 type DeleteWorkflowInput struct {
 	PipelineToken
@@ -2107,7 +2130,7 @@ func validateWorkflow(name, region string, nodes map[string]*Node) (err error) {
 }
 
 func (r *CreateWorkflowInput) Validate() (err error) {
-	if err = validateWorkflow(r.WorkflowName, r.Region, r.Nodes); err != nil {
+	if err = validateWorkflow(r.WorkflowName, r.Region, nil); err != nil {
 		return
 	}
 	return

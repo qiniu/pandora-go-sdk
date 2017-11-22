@@ -140,7 +140,7 @@ func (c *Pipeline) AutoExportToTSDB(input *AutoExportToTSDBInput) error {
 		input.SeriesName = input.RepoName
 	}
 	if input.Retention == "" {
-		input.Retention = "7d"
+		input.Retention = "30d"
 	}
 	repoInfo, err := c.GetRepo(&GetRepoInput{
 		RepoName: input.RepoName,
@@ -209,7 +209,7 @@ func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 	}
 	input.LogRepoName = strings.ToLower(input.LogRepoName)
 	if input.Retention == "" {
-		input.Retention = "3d"
+		input.Retention = "30d"
 	}
 	repoInfo, err := c.GetRepo(&GetRepoInput{
 		RepoName: input.RepoName,
@@ -280,6 +280,9 @@ func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 func (c *Pipeline) AutoExportToKODO(input *AutoExportToKODOInput) error {
 	if input.BucketName == "" {
 		input.BucketName = input.RepoName
+	}
+	if input.Retention == 0 {
+		input.Retention = 90
 	}
 	input.BucketName = strings.Replace(input.BucketName, "_", "-", -1)
 

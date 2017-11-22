@@ -579,6 +579,8 @@ type AutoExportToLogDBInput struct {
 	RepoName    string
 	LogRepoName string
 	Retention   string
+	OmitInvalid bool
+	OmitEmpty   bool
 }
 
 type CreateRepoForLogDBInput struct {
@@ -587,6 +589,8 @@ type CreateRepoForLogDBInput struct {
 	Region      string
 	Schema      []RepoSchemaEntry
 	Retention   string
+	OmitInvalid bool
+	OmitEmpty   bool
 }
 
 type CreateRepoForLogDBDSLInput struct {
@@ -602,7 +606,12 @@ type AutoExportToTSDBInput struct {
 	TSDBRepoName string
 	Retention    string
 	SeriesName   string
-	Tags         []string
+	OmitInvalid  bool
+	OmitEmpty    bool
+	Timestamp    string
+	IsMetric     bool
+	SeriesTags   map[string][]string
+	ExpandAttr   []RepoSchemaEntry
 }
 
 type CreateRepoForTSDBInput struct {
@@ -613,6 +622,36 @@ type CreateRepoForTSDBInput struct {
 	Retention    string
 	SeriesName   string
 	Tags         []string
+	OmitInvalid  bool
+	OmitEmpty    bool
+	Timestamp    string
+}
+
+type CreateRepoForKodoInput struct {
+	Retention int
+	Ak        string
+	Email     string
+	Region    string
+	Bucket    string
+	RepoName  string
+	Schema    []RepoSchemaEntry
+}
+
+type SeriesInfo struct {
+	SeriesName string
+	Tags       []string
+	TimeStamp  string
+	Schema     []RepoSchemaEntry
+}
+
+type CreateRepoForMutiExportTSDBInput struct {
+	RepoName     string
+	TSDBRepoName string
+	Region       string
+	Retention    string
+	OmitInvalid  bool
+	OmitEmpty    bool
+	SeriesMap    map[string]SeriesInfo
 }
 
 func IsTag(key string, tags []string) bool {
@@ -679,10 +718,11 @@ type UpdateRepoInput struct {
 }
 
 func (r *UpdateRepoInput) IsTag(key string) bool {
-	if r == nil || r.Option == nil || len(r.Option.TSDBtags) <= 0 {
+	tags := r.Option.SeriesTags[r.Option.SeriesName]
+	if r == nil || r.Option == nil || len(tags) <= 0 {
 		return false
 	}
-	for _, k := range r.Option.TSDBtags {
+	for _, k := range tags {
 		if key == k {
 			return true
 		}
@@ -858,18 +898,12 @@ type SchemaFreeInput struct {
 
 type SchemaFreeOption struct {
 	ToLogDB          bool
-	LogDBRepoName    string
-	LogDBRetention   string
 	ToTSDB           bool
-	TSDBRepoName     string
-	TSDBtags         []string
-	TSDBSeriesName   string
-	TSDBRetention    string
 	ToKODO           bool
-	KodoBucketName   string
-	KodoRetention    int
-	KodoEmail        string
 	ForceDataConvert bool
+	AutoExportToLogDBInput
+	AutoExportToKODOInput
+	AutoExportToTSDBInput
 }
 
 type PostDataFromFileInput struct {

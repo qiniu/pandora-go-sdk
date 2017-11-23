@@ -35,6 +35,7 @@ var (
 	logger            base.Logger
 	defaultRepoSchema []pipeline.RepoSchemaEntry
 	defaultContainer  *pipeline.Container
+	defaultScheduler  *pipeline.JobScheduler
 )
 
 func init() {
@@ -83,8 +84,14 @@ func init() {
 		},
 	}
 	defaultContainer = &pipeline.Container{
-		Type:  "M16C4",
+		Type:  "1U2G",
 		Count: 1,
+	}
+	defaultScheduler = &pipeline.JobScheduler{
+		Type: "loop",
+		Spec: &pipeline.JobSchedulerSpec{
+			Loop: "10m",
+		},
 	}
 }
 
@@ -1476,4 +1483,248 @@ func TestGetPluginVerify(t *testing.T) {
 	out, err := client.VerifyPlugin(&pipeline.VerifyPluginInput{PluginName: "com.package.WordSegmentParserV3"})
 	assert.NoError(t, err)
 	fmt.Println(out)
+}
+
+func TestWorkflow(t *testing.T) {
+	workflowName := "workflow_test"
+	var err error
+	defer func() {
+		err = client.DeleteExport(&pipeline.DeleteExportInput{
+			RepoName:   "my_test_repo",
+			ExportName: "my_test_export",
+		})
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: "my_test_repo"})
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = client.DeleteJobExport(&pipeline.DeleteJobExportInput{JobName: "my_test_job", ExportName: "my_test_jobexport"})
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = client.DeleteJob(&pipeline.DeleteJobInput{JobName: "my_test_job"})
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = client.DeleteDatasource(&pipeline.DeleteDatasourceInput{DatasourceName: "my_test_datasource"})
+		if err != nil {
+			t.Error(err)
+		}
+		err := client.DeleteWorkflow(&pipeline.DeleteWorkflowInput{WorkflowName: workflowName})
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+	t.Log(">>>>>>>>>>>>>>>>> begin workflow test >>>>>>>>>>>>>>>>>>>>>>>>")
+	createWorkflowInput := &pipeline.CreateWorkflowInput{
+		WorkflowName: workflowName,
+		Comment:      "myComment",
+		Region:       "nb",
+	}
+	err = client.CreateWorkflow(createWorkflowInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	repoName := "my_test_repo"
+	createRepoInput := &pipeline.CreateRepoInput{
+		RepoName: repoName,
+		Schema:   defaultRepoSchema,
+		Region:   "nb",
+		Workflow: workflowName,
+	}
+	err = client.CreateRepo(createRepoInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	transName := "my_test_transform"
+	dstRepoName := "my_test_repo_dst"
+	transformSpec := &pipeline.TransformSpec{
+		Mode:      "sql",
+		Code:      "select * from stream",
+		Interval:  "1m",
+		Container: defaultContainer,
+	}
+	createTransInput := &pipeline.CreateTransformInput{
+		SrcRepoName:   repoName,
+		DestRepoName:  dstRepoName,
+		TransformName: transName,
+		Spec:          transformSpec,
+	}
+	err = client.CreateTransform(createTransInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	exportHttpSpec := &pipeline.ExportHttpSpec{
+		Host:   "http://10.200.20.40:9090/",
+		Uri:    "/home/qboxserver/integration_test/test_export_http",
+		Format: "json",
+	}
+
+	createExportInput := &pipeline.CreateExportInput{
+		RepoName:   "my_test_repo",
+		ExportName: "my_test_export",
+		Type:       "http",
+		Spec:       exportHttpSpec,
+		Whence:     "newest",
+	}
+	err = client.CreateExport(createExportInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	datasourceName := "my_test_datasource"
+	keyPrefixesJson := []string{"batch/json"}
+	batchDatasourceBucket := "integrationtest"
+
+	kodoSourceSpec := &pipeline.KodoSourceSpec{
+		Bucket:      batchDatasourceBucket,
+		KeyPrefixes: keyPrefixesJson,
+		FileType:    "json",
+	}
+
+	schema := []pipeline.RepoSchemaEntry{
+		pipeline.RepoSchemaEntry{
+			Key:       "fstring",
+			ValueType: "string",
+			Required:  true,
+		},
+		pipeline.RepoSchemaEntry{
+			Key:       "flong",
+			ValueType: "long",
+			Required:  true,
+		},
+	}
+
+	createDatasourceInput := &pipeline.CreateDatasourceInput{
+		DatasourceName: datasourceName,
+		Spec:           kodoSourceSpec,
+		Region:         "nb",
+		Type:           "kodo",
+		Schema:         schema,
+		Workflow:       workflowName,
+	}
+	err = client.CreateDatasource(createDatasourceInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	jobName := "my_test_job"
+	tableName := "tbl"
+	jobSrcs := []pipeline.JobSrc{
+		pipeline.JobSrc{
+			SrcName:    datasourceName,
+			FileFilter: "",
+			Type:       "datasource",
+			TableName:  tableName,
+		},
+	}
+
+	computation := pipeline.Computation{
+		Code: fmt.Sprintf("select * from %s", tableName),
+		Type: "sql",
+	}
+
+	createJobInput := &pipeline.CreateJobInput{
+		JobName:     jobName,
+		Container:   defaultContainer,
+		Srcs:        jobSrcs,
+		Computation: computation,
+		Scheduler:   defaultScheduler,
+	}
+	err = client.CreateJob(createJobInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	jobexportName := "my_test_jobexport"
+	jobexportSpec := &pipeline.JobExportKodoSpec{
+		Bucket:      batchDatasourceBucket,
+		KeyPrefix:   "test/1121",
+		Format:      "json",
+		Retention:   1,
+		FileCount:   1,
+		SaveMode:    "append",
+		PartitionBy: []string{},
+	}
+	createJobexportInput := &pipeline.CreateJobExportInput{
+		JobName:    jobName,
+		ExportName: jobexportName,
+		Type:       "kodo",
+		Spec:       jobexportSpec,
+	}
+	err = client.CreateJobExport(createJobexportInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = client.StartWorkflow(&pipeline.StartWorkflowInput{WorkflowName: workflowName})
+	if err != nil {
+		t.Error(err)
+	}
+
+	getDatasourceOutput, err := client.GetDatasource(&pipeline.GetDatasourceInput{
+		DatasourceName: "my_test_datasource",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(getDatasourceOutput)
+
+	getJobOutput, err := client.GetJob(&pipeline.GetJobInput{
+		JobName: "my_test_job",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(getJobOutput)
+
+	getExportOutput, err := client.GetJobExport(&pipeline.GetJobExportInput{
+		JobName:    "my_test_job",
+		ExportName: "my_test_jobexport",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(getExportOutput)
+
+	getRepoOutput, err := client.GetRepo(&pipeline.GetRepoInput{
+		RepoName: "my_test_repo",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(getRepoOutput)
+
+	getTransformOut, err := client.GetTransform(&pipeline.GetTransformInput{
+		RepoName:      "my_test_repo",
+		TransformName: "my_test_transform",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(getTransformOut)
+
+	getExportOut, err := client.GetExport(&pipeline.GetExportInput{
+		RepoName:   "my_test_repo",
+		ExportName: "my_test_export",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(getExportOut)
+
+	//err = client.StopWorkflow(&pipeline.StopWorkflowInput{WorkflowName: workflowName})
+	//if err != nil {
+	//	t.Error(err)
+	//}
+	assert.NoError(t, err)
 }

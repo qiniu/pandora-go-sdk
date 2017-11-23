@@ -350,7 +350,7 @@ type CreateRepoDSLInput struct {
 	DSL       string       `json:"dsl"`
 	Options   *RepoOptions `json:"options"`
 	GroupName string       `json:"group"`
-	Workflow  string       `json:"workflow"` // 请注意：如果此处workflow不指定，默认会同名的workflow
+	Workflow  string       `json:"workflow"` // 请注意：果此处workflow不指定，默认会创建名称为前缀"streaming_auto_"与实际RepoName拼接的workflow
 }
 
 /*
@@ -678,7 +678,7 @@ type CreateRepoInput struct {
 	Schema    []RepoSchemaEntry `json:"schema"`
 	Options   *RepoOptions      `json:"options"`
 	GroupName string            `json:"group"`
-	Workflow  string            `json:"workflow"` // 请注意：如果此处workflow不指定，默认会同名的workflow
+	Workflow  string            `json:"workflow"` // 请注意：果此处workflow不指定，默认会创建名称为前缀"streaming_auto_"与实际RepoName拼接的workflow
 }
 
 func (r *CreateRepoInput) Validate() (err error) {
@@ -803,6 +803,7 @@ type RepoDesc struct {
 
 type ListReposInput struct {
 	PipelineToken
+	WithDag bool `json:"-"`
 }
 
 type ListReposOutput struct {
@@ -1496,7 +1497,7 @@ type CreateDatasourceInput struct {
 	Spec           interface{}       `json:"spec"`
 	Schema         []RepoSchemaEntry `json:"schema"`
 	NoVerifySchema bool              `json:"noVerifySchema"`
-	Workflow       string            `json:"workflow"` // 请注意：如果此处workflow不指定，默认会同名的workflow
+	Workflow       string            `json:"workflow"` // 请注意：果此处workflow不指定，默认会创建名称为前缀"batch_auto_"与实际RepoName拼接的workflow
 }
 
 func (c *CreateDatasourceInput) Validate() (err error) {

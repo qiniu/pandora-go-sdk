@@ -23,10 +23,10 @@ func NewConfig() *config.Config {
 }
 
 func New(c *config.Config) (LogdbAPI, error) {
-	return newClient(c)
+	return NewClient(c)
 }
 
-func newClient(c *config.Config) (p *Logdb, err error) {
+func NewClient(c *config.Config) (p *Logdb, err error) {
 	if c.LogdbEndpoint == "" {
 		c.LogdbEndpoint = c.Endpoint
 	}

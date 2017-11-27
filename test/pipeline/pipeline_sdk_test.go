@@ -1485,6 +1485,38 @@ func TestGetPluginVerify(t *testing.T) {
 	fmt.Println(out)
 }
 
+func TestVariables(t *testing.T) {
+	err := client.CreateVariable(&pipeline.CreateVariableInput{
+		Name:  "timeVar",
+		Type:  pipeline.VariableTimeType,
+		Value: "$(now)-1d",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = client.CreateVariable(&pipeline.CreateVariableInput{
+		Name:  "stringVar",
+		Type:  pipeline.VariableStringType,
+		Value: "$(now)-1d",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	userVars, err := client.ListUserVariables(&pipeline.ListVariablesInput{})
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("userVariables is: %v", userVars)
+
+	systemVars, err := client.ListSystemVariables(&pipeline.ListVariablesInput{})
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("systemVariables is: %v", systemVars)
+}
+
 func TestWorkflow(t *testing.T) {
 	workflowName := "workflow_test"
 	var err error

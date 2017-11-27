@@ -18,7 +18,11 @@ type PipelineToken struct {
 	Token string `json:"-"`
 }
 
-const defaultRegion = "nb"
+const (
+	defaultRegion      = "nb"
+	VariableTimeType   = "time"
+	VariableStringType = "string"
+)
 
 //PandoraMaxBatchSize 发送到Pandora的batch限制
 var PandoraMaxBatchSize = 2 * 1024 * 1024

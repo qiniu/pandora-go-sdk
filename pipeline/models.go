@@ -18,7 +18,11 @@ type PipelineToken struct {
 	Token string `json:"-"`
 }
 
-const defaultRegion = "nb"
+const (
+	defaultRegion      = "nb"
+	VariableTimeType   = "time"
+	VariableStringType = "string"
+)
 
 //PandoraMaxBatchSize 发送到Pandora的batch限制
 var PandoraMaxBatchSize = 2 * 1024 * 1024
@@ -1793,14 +1797,16 @@ type RerunJobBatchOutput struct {
 }
 
 type JobExportKodoSpec struct {
-	Bucket      string   `json:"bucket"`
-	KeyPrefix   string   `json:"keyPrefix"`
-	Format      string   `json:"format"`
-	Compression string   `json:"compression,omitempty"`
-	Retention   int      `json:"retention"`
-	PartitionBy []string `json:"partitionBy,omitempty"`
-	FileCount   int      `json:"fileCount"`
-	SaveMode    string   `json:"saveMode"`
+	Bucket         string   `json:"bucket"`
+	KeyPrefix      string   `json:"keyPrefix"`
+	Format         string   `json:"format"`
+	Compression    string   `json:"compression,omitempty"`
+	Retention      int      `json:"retention"`
+	PartitionBy    []string `json:"partitionBy,omitempty"`
+	FileCount      int      `json:"fileCount"`
+	SaveMode       string   `json:"saveMode"`
+	Delimiter      string   `json:"delimiter"`
+	ContainsHeader bool     `json:"containsHeader"`
 }
 
 func (e *JobExportKodoSpec) Validate() (err error) {
@@ -1809,6 +1815,11 @@ func (e *JobExportKodoSpec) Validate() (err error) {
 	}
 	if e.Format == "" {
 		return reqerr.NewInvalidArgs("Format", fmt.Sprintf("format should not be empty"))
+	}
+	if strings.ToLower(e.Format) == "csv" {
+		if e.Delimiter == "" {
+			return reqerr.NewInvalidArgs("Delimiter", fmt.Sprintf("csv's delimiter should not be empty"))
+		}
 	}
 	if e.FileCount <= 0 {
 		return reqerr.NewInvalidArgs("FileCount", fmt.Sprintf("fileCount should be larger than 0"))

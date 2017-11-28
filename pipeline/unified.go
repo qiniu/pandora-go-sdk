@@ -119,16 +119,22 @@ func convertSchema2LogDB(scs []RepoSchemaEntry) (ret []logdb.RepoSchemaEntry) {
 }
 
 func getSeriesName(seriesTag map[string][]string, schemaKey string) string {
+	length := 0
+	resSeries := ""
 	for series, _ := range seriesTag {
 		if len(series) < len(schemaKey) {
 			// 判断 schemaKey 的前缀是不是 series, 如果是并且 schemaKey 除去前缀后的下一位为"_" 则认为 schemaKey 属于这个 series
 			// 之所以判断前缀的下一位是为了避免 disk 和 diskio 这种情况，具有相同的前缀, 无法区分
 			if schemaKey[:len(series)] == series && string(schemaKey[len(series)]) == "_" {
-				return series
+				// 避免出现 kernel_xxx 与 kernel_vmstat_xxx 不能区分的情况
+				if len(series) > length {
+					length = len(series)
+					resSeries = series
+				}
 			}
 		}
 	}
-	return ""
+	return resSeries
 }
 
 // logkit 开启导出到 tsdb 功能时会调用这个函数，如果不是 metric 信息，走正常的流程，否则根据字段名称前缀 export 到不同的 series 里面

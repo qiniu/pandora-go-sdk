@@ -576,6 +576,8 @@ func getFormatDSL(schemas []RepoSchemaEntry, depth int, indent string) (dsl stri
 type AutoExportToKODOInput struct {
 	RepoName   string
 	BucketName string
+	Prefix     string
+	Format     string
 	Email      string
 	Retention  int //数字，单位为天
 }
@@ -639,6 +641,8 @@ type CreateRepoForKodoInput struct {
 	Region    string
 	Bucket    string
 	RepoName  string
+	Prefix    string
+	Format    string
 	Schema    []RepoSchemaEntry
 }
 

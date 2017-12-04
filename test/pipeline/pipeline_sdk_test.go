@@ -1529,6 +1529,14 @@ func TestWorkflow(t *testing.T) {
 			t.Error(err)
 		}
 
+		err = client.DeleteTransform(&pipeline.DeleteTransformInput{
+			RepoName:      "my_test_repo",
+			TransformName: "my_test_transform",
+		})
+		if err != nil {
+			t.Error(err)
+		}
+
 		err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: "my_test_repo"})
 		if err != nil {
 			t.Error(err)
@@ -1703,6 +1711,21 @@ func TestWorkflow(t *testing.T) {
 		t.Error(err)
 	}
 
+	err = pipeline.WaitWorkflowStarted(workflowName, client, logger)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = client.StopWorkflow(&pipeline.StopWorkflowInput{WorkflowName: workflowName})
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = pipeline.WaitWorkflowStopped(workflowName, client, logger)
+	if err != nil {
+		t.Error(err)
+	}
+
 	getDatasourceOutput, err := client.GetDatasource(&pipeline.GetDatasourceInput{
 		DatasourceName: "my_test_datasource",
 	})
@@ -1754,9 +1777,5 @@ func TestWorkflow(t *testing.T) {
 	}
 	t.Log(getExportOut)
 
-	//err = client.StopWorkflow(&pipeline.StopWorkflowInput{WorkflowName: workflowName})
-	//if err != nil {
-	//	t.Error(err)
-	//}
 	assert.NoError(t, err)
 }

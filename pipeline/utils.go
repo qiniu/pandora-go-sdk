@@ -8,7 +8,7 @@ import (
 )
 
 func WaitWorkflowStarted(workflowName string, client PipelineAPI, logger base.Logger) (err error) {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
@@ -21,14 +21,14 @@ func WaitWorkflowStarted(workflowName string, client PipelineAPI, logger base.Lo
 			}
 			logger.Infof("waiting for workflow: %s to be started", workflowName)
 		case <-time.After(300 * time.Second):
-			return fmt.Errorf("waiting for workflow: %s started timeout", workflowName)
+			return fmt.Errorf("waiting for workflow: %s to be started timeout", workflowName)
 		}
 	}
 	return
 }
 
 func WaitWorkflowStopped(workflowName string, client PipelineAPI, logger base.Logger) (err error) {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
@@ -41,7 +41,7 @@ func WaitWorkflowStopped(workflowName string, client PipelineAPI, logger base.Lo
 			}
 			logger.Infof("waiting for workflow: %s to be stopped", workflowName)
 		case <-time.After(300 * time.Second):
-			return fmt.Errorf("waiting for workflow: %s stopped timeout", workflowName)
+			return fmt.Errorf("waiting for workflow: %s to be stopped timeout", workflowName)
 		}
 	}
 	return

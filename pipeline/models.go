@@ -899,8 +899,9 @@ func escapeStringField(in string) string {
 
 type PostDataInput struct {
 	PipelineToken
-	RepoName string
-	Points   Points
+	ResourceOwner string
+	RepoName      string
+	Points        Points
 }
 
 type SchemaFreeInput struct {
@@ -2081,21 +2082,24 @@ type Node struct {
 
 type CreateWorkflowInput struct {
 	PipelineToken
-	WorkflowName string `json:"name"`
-	Region       string `json:"region"`
-	Comment      string `json:"comment,omitempty"`
+	ResourceOwner string `json:"-"`
+	WorkflowName  string `json:"name"`
+	Region        string `json:"region"`
+	Comment       string `json:"comment,omitempty"`
 }
 
 type UpdateWorkflowInput struct {
 	PipelineToken
-	WorkflowName string           `json:"name"`
-	Region       string           `json:"region"`
-	Nodes        map[string]*Node `json:"nodes"`
+	ResourceOwner string           `json:"-"`
+	WorkflowName  string           `json:"name"`
+	Region        string           `json:"region"`
+	Nodes         map[string]*Node `json:"nodes"`
 }
 
 type DeleteWorkflowInput struct {
 	PipelineToken
-	WorkflowName string `json:"name"`
+	ResourceOwner string `json:"-"`
+	WorkflowName  string `json:"name"`
 }
 
 func (r *DeleteWorkflowInput) Validate() (err error) {
@@ -2107,7 +2111,8 @@ func (r *DeleteWorkflowInput) Validate() (err error) {
 
 type GetWorkflowInput struct {
 	PipelineToken
-	WorkflowName string `json:"name"`
+	ResourceOwner string `json:"-"`
+	WorkflowName  string `json:"name"`
 }
 
 func (r *GetWorkflowInput) Validate() (err error) {
@@ -2153,6 +2158,7 @@ type NodeStatus struct {
 
 type ListWorkflowInput struct {
 	PipelineToken
+	ResourceOwner string `json:"-"`
 }
 
 func (c *ListWorkflowInput) Validate() error {
@@ -2195,7 +2201,8 @@ func (r *UpdateWorkflowInput) Validate() (err error) {
 
 type StartWorkflowInput struct {
 	PipelineToken
-	WorkflowName string `json:"name"`
+	ResourceOwner string `json:"-"`
+	WorkflowName  string `json:"name"`
 }
 
 func (r *StartWorkflowInput) Validate() (err error) {

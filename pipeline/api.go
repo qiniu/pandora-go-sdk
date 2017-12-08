@@ -364,6 +364,9 @@ func (c *Pipeline) PostData(input *PostDataInput) (err error) {
 	req := c.newRequest(op, input.Token, nil)
 	req.SetBufferBody(input.Points.Buffer())
 	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeText)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	req.SetFlowLimiter(c.flowLimit)
 	req.SetReqLimiter(c.reqLimit)
 	return req.Send()
@@ -1220,6 +1223,9 @@ func (c *Pipeline) UpdateWorkflow(input *UpdateWorkflowInput) (err error) {
 		return
 	}
 	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return req.Send()
 }
 
@@ -1230,6 +1236,9 @@ func (c *Pipeline) GetWorkflow(input *GetWorkflowInput) (output *GetWorkflowOutp
 	op := c.newOperation(base.OpGetWorkflow, input.WorkflowName)
 	output = &GetWorkflowOutput{}
 	req := c.newRequest(op, input.Token, output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -1240,6 +1249,9 @@ func (c *Pipeline) GetWorkflowStatus(input *GetWorkflowStatusInput) (output *Get
 	op := c.newOperation(base.OpGetWorkflowStatus, input.WorkflowName)
 	output = &GetWorkflowStatusOutput{}
 	req := c.newRequest(op, input.Token, output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -1247,6 +1259,9 @@ func (c *Pipeline) DeleteWorkflow(input *DeleteWorkflowInput) (err error) {
 	op := c.newOperation(base.OpDeleteWorkflow, input.WorkflowName)
 
 	req := c.newRequest(op, input.Token, nil)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return req.Send()
 }
 
@@ -1255,6 +1270,9 @@ func (c *Pipeline) ListWorkflows(input *ListWorkflowInput) (output *ListWorkflow
 
 	output = &ListWorkflowOutput{}
 	req := c.newRequest(op, input.Token, &output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -1262,6 +1280,9 @@ func (c *Pipeline) StopWorkflow(input *StopWorkflowInput) (err error) {
 	op := c.newOperation(base.OpStopWorkflow, input.WorkflowName)
 
 	req := c.newRequest(op, input.Token, nil)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	if err = req.SetVariantBody(input); err != nil {
 		return
 	}
@@ -1272,6 +1293,9 @@ func (c *Pipeline) StartWorkflow(input *StartWorkflowInput) (err error) {
 	op := c.newOperation(base.OpStartWorkflow, input.WorkflowName)
 
 	req := c.newRequest(op, input.Token, nil)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	if err = req.SetVariantBody(input); err != nil {
 		return
 	}

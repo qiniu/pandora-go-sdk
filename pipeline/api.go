@@ -817,6 +817,9 @@ func (c *Pipeline) GetJobHistory(input *GetJobHistoryInput) (output *GetJobHisto
 
 	output = &GetJobHistoryOutput{}
 	req := c.newRequest(op, input.Token, output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -836,6 +839,9 @@ func (c *Pipeline) StopJobBatch(input *StopJobBatchInput) (output *StopJobBatchO
 		return
 	}
 	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -848,6 +854,9 @@ func (c *Pipeline) RerunJobBatch(input *RerunJobBatchInput) (output *RerunJobBat
 		return
 	}
 	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 

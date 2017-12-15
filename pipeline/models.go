@@ -944,19 +944,22 @@ type PostDataFromBytesInput struct {
 
 type UploadPluginInput struct {
 	PipelineToken
-	PluginName string
-	Buffer     *bytes.Buffer
+	ResourceOwner string
+	PluginName    string
+	Buffer        *bytes.Buffer
 }
 
 type UploadPluginFromFileInput struct {
 	PipelineToken
-	PluginName string
-	FilePath   string
+	ResourceOwner string
+	PluginName    string
+	FilePath      string
 }
 
 type GetPluginInput struct {
 	PipelineToken
-	PluginName string
+	ResourceOwner string
+	PluginName    string
 }
 
 type PluginDesc struct {
@@ -970,7 +973,8 @@ type GetPluginOutput struct {
 
 type VerifyPluginInput struct {
 	PipelineToken
-	PluginName string
+	ResourceOwner string
+	PluginName    string
 }
 
 type OutputField struct {
@@ -984,6 +988,7 @@ type VerifyPluginOutput struct {
 
 type ListPluginsInput struct {
 	PipelineToken
+	ResourceOwner string
 }
 
 type ListPluginsOutput struct {
@@ -992,7 +997,8 @@ type ListPluginsOutput struct {
 
 type DeletePluginInput struct {
 	PipelineToken
-	PluginName string
+	ResourceOwner string
+	PluginName    string
 }
 
 type TransformPluginOutputEntry struct {
@@ -1746,7 +1752,8 @@ type StopJobInput struct {
 
 type GetJobHistoryInput struct {
 	PipelineToken
-	JobName string
+	ResourceOwner string
+	JobName       string
 }
 
 type JobHistory struct {
@@ -1766,8 +1773,9 @@ type GetJobHistoryOutput struct {
 
 type StopJobBatchInput struct {
 	PipelineToken
-	JobName string `json:"jobName"`
-	RunId   int    `json:"runId"`
+	ResourceOwner string `json:"-"`
+	JobName       string `json:"jobName"`
+	RunId         int    `json:"runId"`
 }
 
 func (s *StopJobBatchInput) Validate() (err error) {
@@ -1784,8 +1792,9 @@ type StopJobBatchOutput struct {
 
 type RerunJobBatchInput struct {
 	PipelineToken
-	JobName string `json:"jobName"`
-	RunId   int    `json:"runId"`
+	ResourceOwner string `json:"-"`
+	JobName       string `json:"jobName"`
+	RunId         int    `json:"runId"`
 }
 
 func (s *RerunJobBatchInput) Validate() (err error) {
@@ -1956,20 +1965,23 @@ type DeleteJobExportInput struct {
 
 type UploadUdfInput struct {
 	PipelineToken
-	UdfName string
-	Buffer  *bytes.Buffer
+	ResourceOwner string
+	UdfName       string
+	Buffer        *bytes.Buffer
 }
 
 type UploadUdfFromFileInput struct {
 	PipelineToken
-	UdfName  string
-	FilePath string
+	ResourceOwner string
+	UdfName       string
+	FilePath      string
 }
 
 type PutUdfMetaInput struct {
 	PipelineToken
-	UdfName     string `json:"-"`
-	Description string `json:"description"`
+	ResourceOwner string `json:"-"`
+	UdfName       string `json:"-"`
+	Description   string `json:"description"`
 }
 
 const MaxDescriptionLen = 1500
@@ -1983,7 +1995,8 @@ func (e *PutUdfMetaInput) Validate() error {
 
 type DeleteUdfInfoInput struct {
 	PipelineToken
-	UdfName string
+	ResourceOwner string
+	UdfName       string
 }
 
 type PageRequest struct {
@@ -1995,6 +2008,7 @@ type PageRequest struct {
 type ListUdfsInput struct {
 	PipelineToken
 	PageRequest
+	ResourceOwner string
 }
 
 type UdfInfoOutput struct {
@@ -2009,6 +2023,7 @@ type ListUdfsOutput struct {
 
 type RegisterUdfFunctionInput struct {
 	PipelineToken
+	ResourceOwner   string `json:"-"`
 	FuncName        string `json:"-"`
 	JarName         string `json:"jarName"`
 	ClassName       string `json:"className"`
@@ -2028,14 +2043,16 @@ func (e *RegisterUdfFunctionInput) Validate() error {
 
 type DeregisterUdfFunctionInput struct {
 	PipelineToken
-	FuncName string
+	ResourceOwner string
+	FuncName      string
 }
 
 type ListUdfFunctionsInput struct {
 	PipelineToken
 	PageRequest
-	JarNamesIn  []string
-	FuncNamesIn []string
+	ResourceOwner string
+	JarNamesIn    []string
+	FuncNamesIn   []string
 }
 
 type UdfFunctionInfoOutput struct {
@@ -2053,7 +2070,8 @@ type ListUdfFunctionsOutput struct {
 type ListBuiltinUdfFunctionsInput struct {
 	PipelineToken
 	PageRequest
-	Categories []string
+	ResourceOwner string
+	Categories    []string
 }
 
 type ListUdfBuiltinFunctionsOutput struct {
@@ -2158,7 +2176,7 @@ type NodeStatus struct {
 
 type ListWorkflowInput struct {
 	PipelineToken
-	ResourceOwner string `json:"-"`
+	ResourceOwner string
 }
 
 func (c *ListWorkflowInput) Validate() error {
@@ -2223,15 +2241,16 @@ func (r *StopWorkflowInput) Validate() (err error) {
 
 type DagLogSearchInput struct {
 	PipelineToken
-	WorkflowName string `json:"-"`
-	Type         string `json:"type"`
-	Name         string `json:"name"`
-	Repo         string `json:"reponame"`
-	Query        string `json:"query"`
-	Size         int    `json:"size"`
-	Region       string `json:"region"`
-	StartTime    int64  `json:"startTime"`
-	EndTime      int64  `json:"endTime"`
+	ResourceOwner string `json:"-"`
+	WorkflowName  string `json:"-"`
+	Type          string `json:"type"`
+	Name          string `json:"name"`
+	Repo          string `json:"reponame"`
+	Query         string `json:"query"`
+	Size          int    `json:"size"`
+	Region        string `json:"region"`
+	StartTime     int64  `json:"startTime"`
+	EndTime       int64  `json:"endTime"`
 }
 
 func (r *DagLogSearchInput) Validate() (err error) {
@@ -2278,10 +2297,11 @@ type WorkflowSearchRet struct {
 
 type CreateVariableInput struct {
 	PipelineToken
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Value  string `json:"value"`
-	Format string `json:"format"`
+	ResourceOwner string `json:"-"`
+	Name          string `json:"name"`
+	Type          string `json:"type"`
+	Value         string `json:"value"`
+	Format        string `json:"format"`
 }
 
 func (r *CreateVariableInput) Validate() (err error) {
@@ -2302,7 +2322,8 @@ func (r *UpdateVariableInput) Validate() (err error) {
 
 type DeleteVariableInput struct {
 	PipelineToken
-	Name string `json:"name"`
+	ResourceOwner string `json:"-"`
+	Name          string `json:"name"`
 }
 
 func (r *DeleteVariableInput) Validate() (err error) {
@@ -2314,7 +2335,8 @@ func (r *DeleteVariableInput) Validate() (err error) {
 
 type GetVariableInput struct {
 	PipelineToken
-	Name string `json:"name"`
+	ResourceOwner string `json:"-"`
+	Name          string `json:"name"`
 }
 
 func (r *GetVariableInput) Validate() (err error) {
@@ -2333,6 +2355,7 @@ type GetVariableOutput struct {
 
 type ListVariablesInput struct {
 	PipelineToken
+	ResourceOwner string
 }
 
 type ListVariablesOutput struct {

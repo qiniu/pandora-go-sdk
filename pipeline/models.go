@@ -197,6 +197,14 @@ func validateVariableName(r string) error {
 	return nil
 }
 
+func validateVariableType(varType string) (err error) {
+	if varType != VariableTimeType && varType != VariableStringType {
+		err = reqerr.NewInvalidArgs("type", "variable type must be `time` or `string`")
+		return
+	}
+	return
+}
+
 type Container struct {
 	Type   string `json:"type"`
 	Count  int    `json:"count"`
@@ -2305,7 +2313,14 @@ type CreateVariableInput struct {
 }
 
 func (r *CreateVariableInput) Validate() (err error) {
+	if r.Type == VariableTimeType && r.Format == "" {
+		err = reqerr.NewInvalidArgs("format", "time variable's format should not be empty")
+		return
+	}
 	if err = validateVariableName(r.Name); err != nil {
+		return
+	}
+	if err = validateVariableType(r.Type); err != nil {
 		return
 	}
 	return
@@ -2314,7 +2329,14 @@ func (r *CreateVariableInput) Validate() (err error) {
 type UpdateVariableInput CreateVariableInput
 
 func (r *UpdateVariableInput) Validate() (err error) {
+	if r.Type == VariableTimeType && r.Format == "" {
+		err = reqerr.NewInvalidArgs("format", "time variable's format should not be empty")
+		return
+	}
 	if err = validateVariableName(r.Name); err != nil {
+		return
+	}
+	if err = validateVariableType(r.Type); err != nil {
 		return
 	}
 	return

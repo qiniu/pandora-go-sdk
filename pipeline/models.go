@@ -197,6 +197,14 @@ func validateVariableName(r string) error {
 	return nil
 }
 
+func validateVariableType(varType string) (err error) {
+	if varType != VariableTimeType && varType != VariableStringType {
+		err = reqerr.NewInvalidArgs("type", "variable type must be `time` or `string`")
+		return
+	}
+	return
+}
+
 type Container struct {
 	Type   string `json:"type"`
 	Count  int    `json:"count"`
@@ -354,7 +362,7 @@ type CreateRepoDSLInput struct {
 	DSL       string       `json:"dsl"`
 	Options   *RepoOptions `json:"options"`
 	GroupName string       `json:"group"`
-	Workflow  string       `json:"workflow"` // 请注意：果此处workflow不指定，默认会创建名称为前缀"streaming_auto_"与实际RepoName拼接的workflow
+	Workflow  string       `json:"workflow"`
 }
 
 /*
@@ -686,7 +694,7 @@ type CreateRepoInput struct {
 	Schema    []RepoSchemaEntry `json:"schema"`
 	Options   *RepoOptions      `json:"options"`
 	GroupName string            `json:"group"`
-	Workflow  string            `json:"workflow"` // 请注意：果此处workflow不指定，默认会创建名称为前缀"streaming_auto_"与实际RepoName拼接的workflow
+	Workflow  string            `json:"workflow"`
 }
 
 func (r *CreateRepoInput) Validate() (err error) {
@@ -1511,8 +1519,8 @@ type CreateDatasourceInput struct {
 	Type           string            `json:"type"`
 	Spec           interface{}       `json:"spec"`
 	Schema         []RepoSchemaEntry `json:"schema"`
-	NoVerifySchema bool              `json:"noVerifySchema"`
-	Workflow       string            `json:"workflow"` // 请注意：果此处workflow不指定，默认会创建名称为前缀"batch_auto_"与实际RepoName拼接的workflow
+	NoVerifySchema bool              `json:"noVerifySchema"` // 是否触发推断 schema，可选项，默认值为 false
+	Workflow       string            `json:"workflow"`
 }
 
 func (c *CreateDatasourceInput) Validate() (err error) {
@@ -2305,7 +2313,14 @@ type CreateVariableInput struct {
 }
 
 func (r *CreateVariableInput) Validate() (err error) {
+	if r.Type == VariableTimeType && r.Format == "" {
+		err = reqerr.NewInvalidArgs("format", "time variable's format should not be empty")
+		return
+	}
 	if err = validateVariableName(r.Name); err != nil {
+		return
+	}
+	if err = validateVariableType(r.Type); err != nil {
 		return
 	}
 	return
@@ -2314,7 +2329,14 @@ func (r *CreateVariableInput) Validate() (err error) {
 type UpdateVariableInput CreateVariableInput
 
 func (r *UpdateVariableInput) Validate() (err error) {
+	if r.Type == VariableTimeType && r.Format == "" {
+		err = reqerr.NewInvalidArgs("format", "time variable's format should not be empty")
+		return
+	}
 	if err = validateVariableName(r.Name); err != nil {
+		return
+	}
+	if err = validateVariableType(r.Type); err != nil {
 		return
 	}
 	return

@@ -1487,18 +1487,19 @@ func TestGetPluginVerify(t *testing.T) {
 
 func TestVariables(t *testing.T) {
 	err := client.CreateVariable(&pipeline.CreateVariableInput{
-		Name:  "timeVar",
-		Type:  pipeline.VariableTimeType,
-		Value: "$(now)-1d",
+		Name:   "timeVariable",
+		Type:   pipeline.VariableTimeType,
+		Value:  "$(now)-1d",
+		Format: "yyyy-MM-dd HH:mm:ss",
 	})
 	if err != nil {
 		t.Error(err)
 	}
 
 	err = client.CreateVariable(&pipeline.CreateVariableInput{
-		Name:  "stringVar",
+		Name:  "stringVariable",
 		Type:  pipeline.VariableStringType,
-		Value: "$(now)-1d",
+		Value: "constants",
 	})
 	if err != nil {
 		t.Error(err)

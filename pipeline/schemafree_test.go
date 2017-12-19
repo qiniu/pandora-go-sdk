@@ -3,18 +3,18 @@ package pipeline
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
-	"sort"
-
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetPandoraKeyValueTypeBase(t *testing.T) {
+func TestGetTrimedDataSchemaBase(t *testing.T) {
 	var data map[string]interface{}
-	dc := json.NewDecoder(strings.NewReader("{\"a\":123,\"b\":123.1,\"c\":\"123\",\"d\":true,\"e\":[1,2,3],\"f\":[1.2,2.1,3.1],\"g\":{\"g1\":\"1\"}}"))
+	dc := json.NewDecoder(strings.NewReader(`{"a":123,"b":123.1,"c":"123","d":true,"e":[1,2,3],"f":[1.2,2.1,3.1],"g":{"g1":"1"},"h":[],"i":[1,1],"j":[null,1,2]}`))
 	dc.UseNumber()
 	err := dc.Decode(&data)
 	emp := formValueType("e", PandoraTypeArray)
@@ -28,6 +28,12 @@ func TestGetPandoraKeyValueTypeBase(t *testing.T) {
 			ValueType: PandoraTypeString,
 		},
 	}
+	imp := formValueType("i", PandoraTypeArray)
+	imp.ElemType = PandoraTypeLong
+
+	// 测试当数组的第一个元素为 null 时, 将该数组的元素类型设定为 string
+	jmp := formValueType("j", PandoraTypeArray)
+	jmp.ElemType = PandoraTypeString
 
 	exp := map[string]RepoSchemaEntry{
 		"a": formValueType("a", PandoraTypeLong),
@@ -37,9 +43,11 @@ func TestGetPandoraKeyValueTypeBase(t *testing.T) {
 		"e": emp,
 		"f": fmp,
 		"g": gmp,
+		"i": imp,
+		"j": jmp,
 	}
 	assert.NoError(t, err)
-	vt := getPandoraKeyValueType(data)
+	vt := getTrimedDataSchema(data)
 	assert.Equal(t, exp, vt)
 	data = map[string]interface{}{
 		"a": 1,
@@ -127,11 +135,11 @@ func TestGetPandoraKeyValueTypeBase(t *testing.T) {
 
 		"i": formValueType("i", PandoraTypeBool),
 	}
-	vt = getPandoraKeyValueType(data)
+	vt = getTrimedDataSchema(data)
 	assert.EqualValues(t, exp, vt)
 }
 
-func TestGetPandoraKeyValueTypeJsonString(t *testing.T) {
+func TestGetTrimedDataSchemaJsonString(t *testing.T) {
 	jsontest := `{
    "client_uuid":"hongyaa_test_local",
    "created_at":"2017-07-24 15:55:13",
@@ -167,7 +175,7 @@ func TestGetPandoraKeyValueTypeJsonString(t *testing.T) {
 	var jsonobj map[string]interface{}
 	err := json.Unmarshal([]byte(jsontest), &jsonobj)
 	assert.NoError(t, err)
-	gotschemas := getPandoraKeyValueType(Data(jsonobj))
+	gotschemas := getTrimedDataSchema(Data(jsonobj))
 
 	var schemas []RepoSchemaEntry
 	var keys sort.StringSlice
@@ -898,5 +906,96 @@ func TestConvertData(t *testing.T) {
 		got, err := dataConvert(ti.v, ti.schema)
 		assert.NoError(t, err)
 		assert.Equal(t, ti.exp, got)
+	}
+}
+
+func TestCopyAndConvertData(t *testing.T) {
+	data := Data{
+		"a": "a",
+		"b": 1,
+		"c": nil,
+		"d": map[string]interface{}{
+			"a-1": "a",
+			"b1":  1,
+			"c-1": nil,
+			"d1": map[string]interface{}{
+				"a2":  "a",
+				"b-2": 1,
+				"c_2": nil,
+				"d-2": map[string]interface{}{
+					"a_3": "a",
+					"b-3": 1,
+					"c3":  nil,
+					"d-3": []string{"a", "b", "c"},
+				},
+			},
+		},
+	}
+	expData := Data{
+		"a": "a",
+		"b": 1,
+		"d": map[string]interface{}{
+			"a_1": "a",
+			"b1":  1,
+			"d1": map[string]interface{}{
+				"a2":  "a",
+				"b_2": 1,
+				"d_2": map[string]interface{}{
+					"a_3": "a",
+					"b_3": 1,
+					"d_3": []string{"a", "b", "c"},
+				},
+			},
+		},
+	}
+	gotData := copyAndConvertData(data)
+	if !reflect.DeepEqual(expData, gotData) {
+		t.Fatalf("test error exp %v, but got %v", expData, gotData)
+	}
+}
+
+func TestGetTrimedDataSchemaTrimNil(t *testing.T) {
+	data := Data{
+		"a": "a",
+		"b": 1,
+		"c": nil,
+		"d": map[string]interface{}{
+			"a-1": "a",
+			"b1":  1,
+			"c-1": []interface{}{},
+			"d1": map[string]interface{}{
+				"a2":  "a",
+				"b-2": 1,
+				"c_2": nil,
+				"d-2": map[string]interface{}{
+					"a_3": "a",
+					"b-3": 1,
+					"c3":  []interface{}{nil, 1, 2, 4},
+					"d-3": []string{"a", "b", "c"},
+				},
+			},
+		},
+	}
+	expData := Data{
+		"a": "a",
+		"b": 1,
+		"d": map[string]interface{}{
+			"a-1": "a",
+			"b1":  1,
+			"d1": map[string]interface{}{
+				"a2":  "a",
+				"b-2": 1,
+				"d-2": map[string]interface{}{
+					"a_3": "a",
+					"b-3": 1,
+					"c3":  []interface{}{nil, 1, 2, 4},
+					"d-3": []string{"a", "b", "c"},
+				},
+			},
+		},
+	}
+	getTrimedDataSchema(data)
+	if !reflect.DeepEqual(expData, data) {
+		t.Fatalf("test error exp %v, but got %v", expData, data)
 	}
 }

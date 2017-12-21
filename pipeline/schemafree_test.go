@@ -914,19 +914,55 @@ func TestCopyAndConvertData(t *testing.T) {
 		"a": "a",
 		"b": 1,
 		"c": nil,
+		"e": []interface{}{},
 		"d": map[string]interface{}{
 			"a-1": "a",
 			"b1":  1,
 			"c-1": nil,
+			"e1":  []interface{}{1, 2, "3"},
 			"d1": map[string]interface{}{
 				"a2":  "a",
 				"b-2": 1,
 				"c_2": nil,
+				"e2":  []string{"a", "b", "c"},
 				"d-2": map[string]interface{}{
 					"a_3": "a",
 					"b-3": 1,
 					"c3":  nil,
-					"d-3": []string{"a", "b", "c"},
+					"e3":  []int{1, 2, 3, 4, 5},
+					"d-3": map[string]interface{}{
+						"a4": "a",
+						"b4": 1,
+						"c4": nil,
+						"d4": map[string]interface{}{},
+					},
+					"f3": map[string]interface{}{
+						"a4": "a",
+						"b4": 1,
+						"c4": nil,
+						"d4": map[string]interface{}{
+							"a5": "a",
+							"b5": 1,
+							"c5": nil,
+							"d5": []string{"1", "2", "3", "4"},
+						},
+					},
+					"g3": map[string]interface{}{
+						"a4": "a",
+						"b4": 1,
+						"c4": nil,
+						"d4": map[string]interface{}{
+							"a5": "a",
+							"b5": 1,
+							"c5": nil,
+							"d5": map[string]interface{}{
+								"a6": "a",
+								"b6": 1,
+								"c6": nil,
+								"d6": []int{1, 2, 3, 4, 5},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -937,18 +973,35 @@ func TestCopyAndConvertData(t *testing.T) {
 		"d": map[string]interface{}{
 			"a_1": "a",
 			"b1":  1,
+			"e1":  []interface{}{1, 2, "3"},
 			"d1": map[string]interface{}{
 				"a2":  "a",
 				"b_2": 1,
+				"e2":  []string{"a", "b", "c"},
 				"d_2": map[string]interface{}{
 					"a_3": "a",
 					"b_3": 1,
-					"d_3": []string{"a", "b", "c"},
+					"e3":  []int{1, 2, 3, 4, 5},
+					"d_3": map[string]interface{}{
+						"a4": "a",
+						"b4": 1,
+						"d4": `{}`,
+					},
+					"f3": map[string]interface{}{
+						"a4": "a",
+						"b4": 1,
+						"d4": `{"a5":"a","b5":1,"c5":null,"d5":["1","2","3","4"]}`,
+					},
+					"g3": map[string]interface{}{
+						"a4": "a",
+						"b4": 1,
+						"d4": `{"a5":"a","b5":1,"c5":null,"d5":{"a6":"a","b6":1,"c6":null,"d6":[1,2,3,4,5]}}`,
+					},
 				},
 			},
 		},
 	}
-	gotData := copyAndConvertData(data)
+	gotData := copyAndConvertData(data, 1)
 	if !reflect.DeepEqual(expData, gotData) {
 		t.Fatalf("test error exp %v, but got %v", expData, gotData)
 	}

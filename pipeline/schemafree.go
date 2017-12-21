@@ -13,6 +13,10 @@ import (
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 )
 
+const (
+	maxMapLevel = 5
+)
+
 func (c *Pipeline) getSchemas(repoName string) (schemas map[string]RepoSchemaEntry, err error) {
 	repo, err := c.GetRepo(&GetRepoInput{
 		RepoName: repoName,
@@ -47,6 +51,7 @@ func deepDeleteCheck(data interface{}, schema RepoSchemaEntry) bool {
 				if sv.ValueType == PandoraTypeMap && !deepDeleteCheck(v, sv) {
 					return false
 				}
+				break
 			}
 		}
 		if notfind {
@@ -94,16 +99,34 @@ func dataConvert(data interface{}, schema RepoSchemaEntry) (converted interface{
 			}
 		}
 	case PandoraTypeString:
-		value := reflect.ValueOf(data)
-		switch value.Kind() {
-		case reflect.Int64, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
-			return strconv.FormatInt(value.Int(), 10), nil
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-			return strconv.FormatUint(value.Uint(), 10), nil
-		case reflect.Float32, reflect.Float64:
-			return strconv.FormatFloat(value.Float(), 'f', -1, 64), nil
+		switch value := data.(type) {
+		case json.Number:
+			v, err := value.Int64()
+			if err == nil {
+				return strconv.FormatInt(v, 10), nil
+			} else {
+				return data, nil
+			}
+		case map[string]interface{}:
+			str, err := json.Marshal(value)
+			if err != nil {
+				return "", err
+			}
+			return string(str), nil
 		default:
-			return data, nil
+			v := reflect.ValueOf(data)
+			switch v.Kind() {
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				return strconv.FormatInt(v.Int(), 10), nil
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+				return strconv.FormatUint(v.Uint(), 10), nil
+			case reflect.Float32, reflect.Float64:
+				return strconv.FormatFloat(v.Float(), 'f', -1, 64), nil
+			case reflect.Bool:
+				return strconv.FormatBool(v.Bool()), nil
+			default:
+				return data, nil
+			}
 		}
 	case PandoraTypeJsonString:
 		return data, nil
@@ -303,16 +326,28 @@ func mapDataConvert(mpvalue map[string]interface{}, schemas []RepoSchemaEntry) (
 	return mpvalue
 }
 
-func copyAndConvertData(d Data) Data {
+func copyAndConvertData(d Data, mapLevel int) Data {
 	md := make(Data, len(d))
 	for k, v := range d {
-		if v == nil {
+		switch nv := v.(type) {
+		case map[string]interface{}:
+			if mapLevel >= 5 {
+				str, err := json.Marshal(nv)
+				if err != nil {
+					log.Warnf("Nesting depth of repo schema is exceeded: maximum nesting depth %v, data %v will be ignored", maxMapLevel, nv)
+				}
+				v = string(str)
+			} else {
+				v = map[string]interface{}(copyAndConvertData(nv, mapLevel+1))
+			}
+		case []interface{}:
+			if len(nv) == 0 {
+				continue
+			}
+		case nil:
 			continue
 		}
 		nk := strings.Replace(k, "-", "_", -1)
-		if nv, ok := v.(map[string]interface{}); ok {
-			v = map[string]interface{}(copyAndConvertData(nv))
-		}
 		md[nk] = v
 	}
 	return md
@@ -350,7 +385,8 @@ func checkIgnore(value interface{}, schemeType string) bool {
 
 func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool, option *SchemaFreeOption, repooptions *RepoOptions) (point Point, err error) {
 	// copyAndConvertData 函数会将包含'-'的 key 用 '_' 来代替
-	data := copyAndConvertData(oldData)
+	// 同时该函数会去除数据中无法判断类型的部分
+	data := copyAndConvertData(oldData, 1)
 	point = Point{}
 	c.repoSchemaMux.Lock()
 	schemas := c.repoSchemas[repoName]
@@ -363,10 +399,10 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 				return
 			}
 		}
+		c.repoSchemaMux.Lock()
+		c.repoSchemas[repoName] = schemas
+		c.repoSchemaMux.Unlock()
 	}
-	c.repoSchemaMux.Lock()
-	c.repoSchemas[repoName] = schemas
-	c.repoSchemaMux.Unlock()
 	for name, v := range schemas {
 		value, ok := data[name]
 		if !ok {
@@ -399,6 +435,7 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 
 		//忽略一些不合法的空值
 		if !v.Required && checkIgnore(value, v.ValueType) {
+			delete(data, name)
 			continue
 		}
 
@@ -441,65 +478,67 @@ func (s Schemas) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-func mergePandoraSchemas(a, b []RepoSchemaEntry) (ret []RepoSchemaEntry, err error) {
+func mergePandoraSchemas(oldScs, addScs []RepoSchemaEntry) (ret []RepoSchemaEntry, err error) {
 	ret = make([]RepoSchemaEntry, 0)
-	if a == nil && b == nil {
+	if oldScs == nil && addScs == nil {
 		return
 	}
-	if a == nil {
-		ret = b
+	if oldScs == nil {
+		ret = addScs
 		return
 	}
-	if b == nil {
-		ret = a
+	if addScs == nil {
+		ret = oldScs
 		return
 	}
-	sa := Schemas(a)
-	sb := Schemas(b)
-	sort.Sort(sa)
-	sort.Sort(sb)
+	sOldScs := Schemas(oldScs)
+	sAddScs := Schemas(addScs)
+	sort.Sort(sOldScs)
+	sort.Sort(sAddScs)
 	i, j := 0, 0
 	for {
-		if i >= len(sa) {
+		if i >= len(sOldScs) {
 			break
 		}
-		if j >= len(sb) {
+		if j >= len(sAddScs) {
 			break
 		}
-		if sa[i].Key < sb[j].Key {
-			ret = append(ret, sa[i])
+		if sOldScs[i].Key < sAddScs[j].Key {
+			ret = append(ret, sOldScs[i])
 			i++
 			continue
 		}
-		if sa[i].Key > sb[j].Key {
-			ret = append(ret, sb[j])
+		if sOldScs[i].Key > sAddScs[j].Key {
+			ret = append(ret, sAddScs[j])
 			j++
 			continue
 		}
-		if sa[i].ValueType != sb[j].ValueType {
-			err = fmt.Errorf("type conflict: key %v old type is <%v> want change to type <%v>", sa[i].Key, sa[i].ValueType, sb[j].ValueType)
+		if sOldScs[i].ValueType != sAddScs[j].ValueType {
+			err = fmt.Errorf("type conflict: key %v old type is <%v> want change to type <%v>", sOldScs[i].Key, sOldScs[i].ValueType, sAddScs[j].ValueType)
 			return
 		}
-		if sa[i].ValueType == PandoraTypeMap {
-			if sa[i].Schema, err = mergePandoraSchemas(sa[i].Schema, sb[j].Schema); err != nil {
+		if sOldScs[i].ValueType == PandoraTypeMap {
+			if sOldScs[i].Schema, err = mergePandoraSchemas(sOldScs[i].Schema, sAddScs[j].Schema); err != nil {
 				return
 			}
 		}
-		ret = append(ret, sa[i])
+		ret = append(ret, sOldScs[i])
 		i++
 		j++
 	}
-	for ; i < len(sa); i++ {
-		ret = append(ret, sa[i])
+	for ; i < len(sOldScs); i++ {
+		ret = append(ret, sOldScs[i])
 	}
-	for ; j < len(sb); j++ {
-		ret = append(ret, sb[j])
+	for ; j < len(sAddScs); j++ {
+		ret = append(ret, sAddScs[j])
 	}
 	return
 }
 
 func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSchemaEntry, option *SchemaFreeOption, repooptions *RepoOptions) (err error) {
-
+	if len(addSchemas) == 0 {
+		return
+	}
 	var addScs, oldScs []RepoSchemaEntry
 	for _, v := range addSchemas {
 		addScs = append(addScs, v)
@@ -649,7 +688,7 @@ func getTrimedDataSchema(data Data) (valueType map[string]RepoSchemaEntry) {
 			valueType[k] = sc
 		case []string:
 			sc := formValueType(k, PandoraTypeArray)
-			sc.ElemType = PandoraTypeBool
+			sc.ElemType = PandoraTypeString
 			valueType[k] = sc
 		case []json.Number:
 			sc := formValueType(k, PandoraTypeArray)

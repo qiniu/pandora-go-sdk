@@ -1319,6 +1319,9 @@ func (c *Pipeline) SearchWorkflow(input *DagLogSearchInput) (ret *WorkflowSearch
 	if err = req.SetVariantBody(input); err != nil {
 		return
 	}
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return ret, req.Send()
 }
 

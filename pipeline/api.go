@@ -233,8 +233,22 @@ func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
 		return
 	}
 	err = c.updateRepo(input)
-	if err != nil {
-		return
+	if err != nil && reqerr.IsWorkflowStatError(err) {
+		// 如果当前 workflow 的状态不允许更新，则先等待停止 workflow 再更新
+		workflow, subErr := c.GetWorkflow(&GetWorkflowInput{
+			WorkflowName: input.workflow,
+		})
+		if subErr != nil {
+			return subErr
+		}
+		if subErr := c.changeWorkflowToStopped(workflow, true); subErr != nil {
+			return subErr
+		}
+		if err = c.updateRepo(input); err != nil {
+			return err
+		}
+	} else {
+		return err
 	}
 	if input.Option == nil {
 		return nil
@@ -436,7 +450,16 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 	var buf bytes.Buffer
 	var start = 0
 	for i, d := range input.Datas {
-		point, err := c.generatePoint(input.RepoName, d, !input.NoUpdate, input.Option, input.RepoOptions)
+		point, err := c.generatePoint(d, &InitOrUpdateWorkflowInput{
+			NoUpdate:     input.NoUpdate,
+			SendToDag:    input.SendToDag,
+			Region:       input.Region,
+			RepoName:     input.RepoName,
+			WorkflowName: input.WorkflowName,
+			RepoOptions:  input.RepoOptions,
+			Option:       input.Option,
+		})
+		//point, err := c.generatePoint(input.RepoName, d, !input.NoUpdate, input.Option, input.RepoOptions)
 		if err != nil {
 			return nil, err
 		}

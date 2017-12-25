@@ -661,7 +661,7 @@ func TestMergePandoraSchemas(t *testing.T) {
 		},
 	}
 	for idx, ti := range tests {
-		got, err := mergePandoraSchemas(ti.oldScs, ti.newScs)
+		got, _, err := mergePandoraSchemas(ti.oldScs, ti.newScs)
 		if ti.err {
 			assert.Error(t, err)
 		} else {

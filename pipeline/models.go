@@ -1973,23 +1973,20 @@ type DeleteJobExportInput struct {
 
 type UploadUdfInput struct {
 	PipelineToken
-	ResourceOwner string
-	UdfName       string
-	Buffer        *bytes.Buffer
+	UdfName string
+	Buffer  *bytes.Buffer
 }
 
 type UploadUdfFromFileInput struct {
 	PipelineToken
-	ResourceOwner string
-	UdfName       string
-	FilePath      string
+	UdfName  string
+	FilePath string
 }
 
 type PutUdfMetaInput struct {
 	PipelineToken
-	ResourceOwner string `json:"-"`
-	UdfName       string `json:"-"`
-	Description   string `json:"description"`
+	UdfName     string `json:"-"`
+	Description string `json:"description"`
 }
 
 const MaxDescriptionLen = 1500
@@ -2003,8 +2000,7 @@ func (e *PutUdfMetaInput) Validate() error {
 
 type DeleteUdfInfoInput struct {
 	PipelineToken
-	ResourceOwner string
-	UdfName       string
+	UdfName string
 }
 
 type PageRequest struct {
@@ -2031,7 +2027,6 @@ type ListUdfsOutput struct {
 
 type RegisterUdfFunctionInput struct {
 	PipelineToken
-	ResourceOwner   string `json:"-"`
 	FuncName        string `json:"-"`
 	JarName         string `json:"jarName"`
 	ClassName       string `json:"className"`
@@ -2051,8 +2046,7 @@ func (e *RegisterUdfFunctionInput) Validate() error {
 
 type DeregisterUdfFunctionInput struct {
 	PipelineToken
-	ResourceOwner string
-	FuncName      string
+	FuncName string
 }
 
 type ListUdfFunctionsInput struct {
@@ -2078,8 +2072,7 @@ type ListUdfFunctionsOutput struct {
 type ListBuiltinUdfFunctionsInput struct {
 	PipelineToken
 	PageRequest
-	ResourceOwner string
-	Categories    []string
+	Categories []string
 }
 
 type ListUdfBuiltinFunctionsOutput struct {

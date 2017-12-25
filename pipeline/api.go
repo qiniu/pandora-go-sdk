@@ -606,6 +606,9 @@ func (c *Pipeline) ListPlugins(input *ListPluginsInput) (output *ListPluginsOutp
 
 	output = &ListPluginsOutput{}
 	req := c.newRequest(op, input.Token, &output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -622,6 +625,9 @@ func (c *Pipeline) GetPlugin(input *GetPluginInput) (output *GetPluginOutput, er
 
 	output = &GetPluginOutput{}
 	req := c.newRequest(op, input.Token, output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -1139,6 +1145,9 @@ func (c *Pipeline) ListUdfs(input *ListUdfsInput) (output *ListUdfsOutput, err e
 
 	output = &ListUdfsOutput{}
 	req := c.newRequest(op, input.Token, output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -1184,6 +1193,9 @@ func (c *Pipeline) ListUdfFunctions(input *ListUdfFunctionsInput) (output *ListU
 
 	output = &ListUdfFunctionsOutput{}
 	req := c.newRequest(op, input.Token, output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -1428,6 +1440,9 @@ func (c *Pipeline) GetVariable(input *GetVariableInput) (output *GetVariableOutp
 
 	output = &GetVariableOutput{}
 	req := c.newRequest(op, input.Token, output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -1436,6 +1451,9 @@ func (c *Pipeline) ListUserVariables(input *ListVariablesInput) (output *ListVar
 
 	output = &ListVariablesOutput{}
 	req := c.newRequest(op, input.Token, output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }
 
@@ -1443,5 +1461,8 @@ func (c *Pipeline) ListSystemVariables(input *ListVariablesInput) (output *ListV
 	op := c.newOperation(base.OpListSystemVariables, systemVariableType)
 	output = &ListVariablesOutput{}
 	req := c.newRequest(op, input.Token, output)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
 	return output, req.Send()
 }

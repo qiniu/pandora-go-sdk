@@ -178,7 +178,6 @@ func isInExpandAttr(key string, expandAttr []string) bool {
 	return false
 }
 
-// logkit 开启导出到 tsdb 功能时会调用这个函数，如果不是 metric 信息，走正常的流程，否则根据字段名称前缀 export 到不同的 series 里面
 func (c *Pipeline) AutoExportToTSDB(input *AutoExportToTSDBInput) error {
 	if input.TSDBRepoName == "" {
 		input.TSDBRepoName = input.RepoName
@@ -257,7 +256,6 @@ func (c *Pipeline) AutoExportToTSDB(input *AutoExportToTSDBInput) error {
 	return err
 }
 
-// 这个api在logkit启动的时候调用一次
 func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 	if input.LogRepoName == "" {
 		input.LogRepoName = input.RepoName

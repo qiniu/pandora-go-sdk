@@ -425,7 +425,7 @@ func (c *Pipeline) generatePoint(oldData Data, input *InitOrUpdateWorkflowInput)
 		}
 
 		//对于没有autoupdate的情况就不delete了，节省CPU
-		if !input.NoUpdate {
+		if input.SchemaFree {
 			if deepDeleteCheck(value, v) {
 				delete(data, name)
 			} else {
@@ -449,7 +449,7 @@ func (c *Pipeline) generatePoint(oldData Data, input *InitOrUpdateWorkflowInput)
 	/*
 		data中剩余的值，但是在schema中不存在的，根据schemaFree增加。
 	*/
-	if !input.NoUpdate && haveNewData(data) {
+	if input.SchemaFree && haveNewData(data) {
 		//defaultAll 为false时，过滤一批不要的
 		// 该函数有两个作用，1. 获取 data 中所有字段的 schema; 2. 将 data 中值为 nil, 无法判断类型的键值对，从 data 中删掉
 		valueType := getTrimedDataSchema(data)
@@ -646,19 +646,23 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 				Schema:   input.Schema,
 				Options:  input.RepoOptions,
 				Workflow: input.WorkflowName,
-			}); err != nil && reqerr.IsWorkflowStatError(err) {
-				// 如果当前 workflow 的状态不允许更新，则先等待停止 workflow 再更新
-				if subErr := c.changeWorkflowToStopped(workflow, true); subErr != nil {
-					return subErr
-				}
-				if subErr := c.CreateRepo(&CreateRepoInput{
-					RepoName: input.RepoName,
-					Region:   input.Region,
-					Schema:   input.Schema,
-					Options:  input.RepoOptions,
-					Workflow: input.WorkflowName,
-				}); subErr != nil {
-					return subErr
+			}); err != nil {
+				if reqerr.IsWorkflowStatError(err) {
+					// 如果当前 workflow 的状态不允许更新，则先等待停止 workflow 再更新
+					if subErr := c.changeWorkflowToStopped(workflow, true); subErr != nil {
+						return subErr
+					}
+					if subErr := c.CreateRepo(&CreateRepoInput{
+						RepoName: input.RepoName,
+						Region:   input.Region,
+						Schema:   input.Schema,
+						Options:  input.RepoOptions,
+						Workflow: input.WorkflowName,
+					}); subErr != nil {
+						return subErr
+					}
+				} else {
+					return err
 				}
 			}
 			// 创建、更新各种导出
@@ -694,20 +698,37 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 		if err != nil {
 			return err
 		}
-		if needUpdate && !input.NoUpdate {
-			if err := c.UpdateRepo(&UpdateRepoInput{
+		if needUpdate && input.SchemaFree {
+			updateRepoInput := &UpdateRepoInput{
 				RepoName:    input.RepoName,
 				Schema:      schemas,
 				Option:      input.Option,
 				workflow:    repo.Workflow,
 				RepoOptions: input.RepoOptions,
-			}); err != nil {
-				return err
+			}
+			if err := c.UpdateRepo(updateRepoInput); err != nil {
+				if reqerr.IsWorkflowStatError(err) {
+					// 如果当前 workflow 的状态不允许更新，则先等待停止 workflow 再更新
+					workflow, subErr := c.GetWorkflow(&GetWorkflowInput{
+						WorkflowName: updateRepoInput.workflow,
+					})
+					if subErr != nil {
+						return subErr
+					}
+					if subErr := c.changeWorkflowToStopped(workflow, true); subErr != nil {
+						return subErr
+					}
+					if subErr = c.UpdateRepo(updateRepoInput); subErr != nil {
+						return subErr
+					}
+				} else if err != nil {
+					return err
+				}
 			}
 			// 此处的更新是为了调用方可以拿到最新的 schema
 			input.Schema = schemas
 		}
-		// 如果 repo 已经存在, 不会关心配置里面是否有 sendToDag, 即此处不做 pipeline -> dag 的迁移
+		// 如果 repo 已经存在, repo 本身的 fromDag 字段就表明了是否来自workflow
 		if repo.FromDag {
 			workflow, err := c.GetWorkflow(&GetWorkflowInput{WorkflowName: repo.Workflow})
 			if err != nil {

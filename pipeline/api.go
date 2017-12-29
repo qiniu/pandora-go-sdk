@@ -174,9 +174,13 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 	if err != nil {
 		return err
 	}
+	analyzers := AnalyzerInfo{}
+	if input.Option != nil {
+		analyzers = input.Option.AutoExportToLogDBInput.AnalyzerInfo
+	}
 	for _, v := range input.Schema {
 		if schemaNotIn(v.Key, repoInfo.Schema) {
-			scs := convertSchema2LogDB([]RepoSchemaEntry{v})
+			scs := convertSchema2LogDB([]RepoSchemaEntry{v}, analyzers)
 			if len(scs) > 0 {
 				repoInfo.Schema = append(repoInfo.Schema, scs[0])
 			}
@@ -232,22 +236,7 @@ func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
 	if err != nil {
 		return
 	}
-	err = c.updateRepo(input)
-	if err != nil && reqerr.IsWorkflowStatError(err) {
-		// 如果当前 workflow 的状态不允许更新，则先等待停止 workflow 再更新
-		workflow, subErr := c.GetWorkflow(&GetWorkflowInput{
-			WorkflowName: input.workflow,
-		})
-		if subErr != nil {
-			return subErr
-		}
-		if subErr := c.changeWorkflowToStopped(workflow, true); subErr != nil {
-			return subErr
-		}
-		if err = c.updateRepo(input); err != nil {
-			return err
-		}
-	} else {
+	if err = c.updateRepo(input); err != nil {
 		return err
 	}
 	if input.Option == nil {
@@ -451,7 +440,7 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 	var start = 0
 	for i, d := range input.Datas {
 		point, err := c.generatePoint(d, &InitOrUpdateWorkflowInput{
-			NoUpdate:     input.NoUpdate,
+			SchemaFree:   !input.NoUpdate,
 			SendToDag:    input.SendToDag,
 			Region:       input.Region,
 			RepoName:     input.RepoName,
@@ -459,7 +448,6 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 			RepoOptions:  input.RepoOptions,
 			Option:       input.Option,
 		})
-		//point, err := c.generatePoint(input.RepoName, d, !input.NoUpdate, input.Option, input.RepoOptions)
 		if err != nil {
 			return nil, err
 		}

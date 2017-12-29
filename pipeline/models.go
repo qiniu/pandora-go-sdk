@@ -590,12 +590,18 @@ type AutoExportToKODOInput struct {
 	Retention  int //数字，单位为天
 }
 
+type AnalyzerInfo struct {
+	Default  string
+	Analyzer map[string]string
+}
+
 type AutoExportToLogDBInput struct {
 	RepoName    string
 	LogRepoName string
 	Retention   string
 	OmitInvalid bool
 	OmitEmpty   bool
+	AnalyzerInfo
 }
 
 type CreateRepoForLogDBInput struct {
@@ -606,6 +612,7 @@ type CreateRepoForLogDBInput struct {
 	Retention   string
 	OmitInvalid bool
 	OmitEmpty   bool
+	AnalyzerInfo
 }
 
 type CreateRepoForLogDBDSLInput struct {
@@ -926,7 +933,7 @@ type SchemaFreeInput struct {
 }
 
 type InitOrUpdateWorkflowInput struct {
-	NoUpdate     bool
+	SchemaFree   bool
 	SendToDag    bool
 	Region       string
 	RepoName     string

@@ -185,7 +185,6 @@ func IsNoSuchWorkflow(err error) bool {
 	return false
 }
 
-<<<<<<< HEAD
 func IsWorkflowStatError(err error) bool {
 	reqErr, ok := err.(*RequestError)
 	if !ok {
@@ -208,8 +207,6 @@ func IsWorkflowNoExecutableJob(err error) bool {
 	return false
 }
 
-=======
->>>>>>> 支持 logkit 打点到 dag
 func IsNoSuchResourceError(err error) bool {
 	reqErr, ok := err.(*RequestError)
 	if !ok {

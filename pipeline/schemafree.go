@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/qiniu/log"
+	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 )
 
@@ -383,16 +384,16 @@ func checkIgnore(value interface{}, schemeType string) bool {
 	return false
 }
 
-func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool, option *SchemaFreeOption, repooptions *RepoOptions) (point Point, err error) {
+func (c *Pipeline) generatePoint(oldData Data, input *InitOrUpdateWorkflowInput) (point Point, err error) {
 	// copyAndConvertData 函数会将包含'-'的 key 用 '_' 来代替
 	// 同时该函数会去除数据中无法判断类型的部分
 	data := copyAndConvertData(oldData, 1)
 	point = Point{}
 	c.repoSchemaMux.Lock()
-	schemas := c.repoSchemas[repoName]
+	schemas := c.repoSchemas[input.RepoName]
 	c.repoSchemaMux.Unlock()
 	if schemas == nil {
-		schemas, err = c.getSchemas(repoName)
+		schemas, err = c.getSchemas(input.RepoName)
 		if err != nil {
 			reqe, ok := err.(*reqerr.RequestError)
 			if ok && reqe.ErrorType != reqerr.NoSuchRepoError {
@@ -400,7 +401,7 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 			}
 		}
 		c.repoSchemaMux.Lock()
-		c.repoSchemas[repoName] = schemas
+		c.repoSchemas[input.RepoName] = schemas
 		c.repoSchemaMux.Unlock()
 	}
 	for name, v := range schemas {
@@ -414,7 +415,7 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 			}
 		}
 
-		if option != nil && option.ForceDataConvert {
+		if input.Option != nil && input.Option.ForceDataConvert {
 			nvalue, err := dataConvert(value, v)
 			if err != nil {
 				log.Errorf("convert value %v to schema %v error %v, ignore this value...", value, v, err)
@@ -424,7 +425,7 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 		}
 
 		//对于没有autoupdate的情况就不delete了，节省CPU
-		if schemaFree {
+		if input.SchemaFree {
 			if deepDeleteCheck(value, v) {
 				delete(data, name)
 			} else {
@@ -448,11 +449,11 @@ func (c *Pipeline) generatePoint(repoName string, oldData Data, schemaFree bool,
 	/*
 		data中剩余的值，但是在schema中不存在的，根据schemaFree增加。
 	*/
-	if schemaFree && haveNewData(data) {
+	if input.SchemaFree && haveNewData(data) {
 		//defaultAll 为false时，过滤一批不要的
 		// 该函数有两个作用，1. 获取 data 中所有字段的 schema; 2. 将 data 中值为 nil, 无法判断类型的键值对，从 data 中删掉
 		valueType := getTrimedDataSchema(data)
-		if err = c.addRepoSchemas(repoName, valueType, option, repooptions); err != nil {
+		if err = c.addRepoSchemas(valueType, input); err != nil {
 			err = fmt.Errorf("schemafree add Repo schema error %v", err)
 			return
 		}
@@ -478,13 +479,14 @@ func (s Schemas) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 
-func mergePandoraSchemas(oldScs, addScs []RepoSchemaEntry) (ret []RepoSchemaEntry, err error) {
+func mergePandoraSchemas(oldScs, addScs []RepoSchemaEntry) (ret []RepoSchemaEntry, needUpdate bool, err error) {
 	ret = make([]RepoSchemaEntry, 0)
 	if oldScs == nil && addScs == nil {
 		return
 	}
 	if oldScs == nil {
 		ret = addScs
+		needUpdate = true
 		return
 	}
 	if addScs == nil {
@@ -511,6 +513,7 @@ func mergePandoraSchemas(oldScs, addScs []RepoSchemaEntry) (ret []RepoSchemaEntr
 		if sOldScs[i].Key > sAddScs[j].Key {
 			ret = append(ret, sAddScs[j])
 			j++
+			needUpdate = true
 			continue
 		}
 		if sOldScs[i].ValueType != sAddScs[j].ValueType {
@@ -518,8 +521,12 @@ func mergePandoraSchemas(oldScs, addScs []RepoSchemaEntry) (ret []RepoSchemaEntr
 			return
 		}
 		if sOldScs[i].ValueType == PandoraTypeMap {
-			if sOldScs[i].Schema, err = mergePandoraSchemas(sOldScs[i].Schema, sAddScs[j].Schema); err != nil {
+			var update bool
+			if sOldScs[i].Schema, update, err = mergePandoraSchemas(sOldScs[i].Schema, sAddScs[j].Schema); err != nil {
 				return
+			}
+			if update {
+				needUpdate = true
 			}
 		}
 		ret = append(ret, sOldScs[i])
@@ -530,78 +537,232 @@ func mergePandoraSchemas(oldScs, addScs []RepoSchemaEntry) (ret []RepoSchemaEntr
 		ret = append(ret, sOldScs[i])
 	}
 	for ; j < len(sAddScs); j++ {
+		needUpdate = true
 		ret = append(ret, sAddScs[j])
 	}
 	return
 }
 
-func (c *Pipeline) addRepoSchemas(repoName string, addSchemas map[string]RepoSchemaEntry, option *SchemaFreeOption, repooptions *RepoOptions) (err error) {
+func (c *Pipeline) changeWorkflowToStopped(workflow *GetWorkflowOutput, waitStopped bool) error {
+	logger := base.NewDefaultLogger()
+	switch workflow.Status {
+	case base.WorkflowStarted:
+		if err := c.StopWorkflow(&StopWorkflowInput{WorkflowName: workflow.Name}); err != nil {
+			return err
+		}
+	case base.WorkflowStarting:
+		if err := WaitWorkflowStarted(workflow.Name, c, logger); err != nil {
+			return err
+		}
+		if err := c.StopWorkflow(&StopWorkflowInput{WorkflowName: workflow.Name}); err != nil {
+			return err
+		}
+	case base.WorkflowStopping:
+		// stopping 不做特殊处理，直接等待停止
+	default:
+		// 当处于 ready, stopped 时可以直接返回
+		workflow.Status = base.WorkflowStopped
+		return nil
+	}
+	if waitStopped {
+		if err := WaitWorkflowStopped(workflow.Name, c, logger); err != nil {
+			return err
+		}
+	}
+	workflow.Status = base.WorkflowStopped
+	return nil
+}
+
+func (c *Pipeline) changeWorkflowToStarted(workflow *GetWorkflowOutput, waitStarted bool) error {
+	logger := base.NewDefaultLogger()
+	switch workflow.Status {
+	case base.WorkflowReady, base.WorkflowStopped:
+		if err := c.StartWorkflow(&StartWorkflowInput{WorkflowName: workflow.Name}); err != nil {
+			return err
+		}
+	case base.WorkflowStopping:
+		if err := WaitWorkflowStopped(workflow.Name, c, logger); err != nil {
+			return err
+		}
+		if err := c.StartWorkflow(&StartWorkflowInput{WorkflowName: workflow.Name}); err != nil {
+			return err
+		}
+	case base.WorkflowStarting:
+		// 处于 starting 时，不做特殊处理， 直接等待 started
+	default:
+		// 处于 started 直接返回
+		workflow.Status = base.WorkflowStarted
+		return nil
+	}
+
+	if waitStarted {
+		if err := WaitWorkflowStarted(workflow.Name, c, logger); err != nil {
+			return err
+		}
+	}
+	workflow.Status = base.WorkflowStarted
+	return nil
+}
+
+// 初始化/更新 workflow, 有以下几个功能
+// 1. 根据参数确保 workflow 存在(如果是打到 dag 的话)
+// 2. 根据参数创建导出到 logdb, tsdb, kodo 等
+// 3. 根据参数初始化消息队列, 这个初始化将包括 logkit 的 dsl 用户自动创建的字段
+// 4. 确保 workflow 处于启动状态，每次发送数据前不再确认 workflow 是否是启动状态
+// 注意: 处于兼容性考虑，未删除 AutoExportTo* 这些函数的 GetRepo 请求，即每个函数额外请求一次
+func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error {
+	if input.RepoName == "" {
+		return fmt.Errorf("repo name can not be empty")
+	}
+	// 获取 repo
+	repo, err := c.GetRepo(&GetRepoInput{RepoName: input.RepoName})
+	if err != nil && reqerr.IsNoSuchResourceError(err) {
+		// 如果 repo 不存在
+		var workflow *GetWorkflowOutput
+		if input.SendToDag {
+			// 如果导出到 dag, 确保 workflow 存在, 不存在时创建
+			if input.WorkflowName == "" {
+				return fmt.Errorf("workflow name can not be empty")
+			}
+			workflow, err = c.GetWorkflow(&GetWorkflowInput{
+				WorkflowName: input.WorkflowName,
+			})
+			if err != nil && reqerr.IsNoSuchWorkflow(err) {
+				if err = c.CreateWorkflow(&CreateWorkflowInput{
+					WorkflowName: input.WorkflowName,
+					Region:       input.Region,
+				}); err != nil {
+					return err
+				}
+			} else if err != nil {
+				return err
+			}
+		}
+		if len(input.Schema) != 0 {
+			// repo 不存在且传入了非空的 schema, 此时要新建 repo
+			if err := c.CreateRepo(&CreateRepoInput{
+				RepoName: input.RepoName,
+				Region:   input.Region,
+				Schema:   input.Schema,
+				Options:  input.RepoOptions,
+				Workflow: input.WorkflowName,
+			}); err != nil {
+				if reqerr.IsWorkflowStatError(err) {
+					// 如果当前 workflow 的状态不允许更新，则先等待停止 workflow 再更新
+					if subErr := c.changeWorkflowToStopped(workflow, true); subErr != nil {
+						return subErr
+					}
+					if subErr := c.CreateRepo(&CreateRepoInput{
+						RepoName: input.RepoName,
+						Region:   input.Region,
+						Schema:   input.Schema,
+						Options:  input.RepoOptions,
+						Workflow: input.WorkflowName,
+					}); subErr != nil {
+						return subErr
+					}
+				} else {
+					return err
+				}
+			}
+			// 创建、更新各种导出
+			if input.Option != nil && input.Option.ToKODO {
+				if err := c.AutoExportToKODO(&input.Option.AutoExportToKODOInput); err != nil {
+					return err
+				}
+			}
+			if input.Option != nil && input.Option.ToLogDB {
+				if err := c.AutoExportToLogDB(&input.Option.AutoExportToLogDBInput); err != nil {
+					return err
+				}
+			}
+			if input.Option != nil && input.Option.ToTSDB {
+				if err := c.AutoExportToTSDB(&input.Option.AutoExportToTSDBInput); err != nil {
+					return err
+				}
+			}
+		}
+		if input.SendToDag {
+			if err := c.changeWorkflowToStarted(workflow, false); err != nil {
+				if reqerr.IsWorkflowNoExecutableJob(err) {
+					return nil
+				}
+				return err
+			}
+		}
+	} else if err != nil {
+		return err
+	} else {
+		// 如果 repo 存在, 则要对比下 repo 现有的 schema，是否已经包含参数中的 schema，即是否需要更新 repo
+		schemas, needUpdate, err := mergePandoraSchemas(repo.Schema, input.Schema)
+		if err != nil {
+			return err
+		}
+		if needUpdate && input.SchemaFree {
+			updateRepoInput := &UpdateRepoInput{
+				RepoName:    input.RepoName,
+				Schema:      schemas,
+				Option:      input.Option,
+				workflow:    repo.Workflow,
+				RepoOptions: input.RepoOptions,
+			}
+			if err := c.UpdateRepo(updateRepoInput); err != nil {
+				if reqerr.IsWorkflowStatError(err) {
+					// 如果当前 workflow 的状态不允许更新，则先等待停止 workflow 再更新
+					workflow, subErr := c.GetWorkflow(&GetWorkflowInput{
+						WorkflowName: updateRepoInput.workflow,
+					})
+					if subErr != nil {
+						return subErr
+					}
+					if subErr := c.changeWorkflowToStopped(workflow, true); subErr != nil {
+						return subErr
+					}
+					if subErr = c.UpdateRepo(updateRepoInput); subErr != nil {
+						return subErr
+					}
+				} else if err != nil {
+					return err
+				}
+			}
+			// 此处的更新是为了调用方可以拿到最新的 schema
+			input.Schema = schemas
+		}
+		// 如果 repo 已经存在, repo 本身的 fromDag 字段就表明了是否来自workflow
+		if repo.FromDag {
+			workflow, err := c.GetWorkflow(&GetWorkflowInput{WorkflowName: repo.Workflow})
+			if err != nil {
+				return err
+			}
+			if err := c.changeWorkflowToStarted(workflow, false); err != nil {
+				if reqerr.IsWorkflowNoExecutableJob(err) {
+					return nil
+				}
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (c *Pipeline) addRepoSchemas(addSchemas map[string]RepoSchemaEntry, input *InitOrUpdateWorkflowInput) (err error) {
 	if len(addSchemas) == 0 {
 		return
 	}
-	var addScs, oldScs []RepoSchemaEntry
+	var addScs []RepoSchemaEntry
 	for _, v := range addSchemas {
 		addScs = append(addScs, v)
 	}
-	repo, err := c.GetRepo(&GetRepoInput{
-		RepoName: repoName,
-	})
-	if err != nil {
-		reqe, ok := err.(*reqerr.RequestError)
-		if ok && reqe.ErrorType != reqerr.NoSuchRepoError {
-			return
-		}
-	} else {
-		oldScs = repo.Schema
-	}
-	schemas, err := mergePandoraSchemas(oldScs, addScs)
-	if err != nil {
-		return
-	}
-	if oldScs == nil {
-		if err = c.CreateRepo(&CreateRepoInput{
-			RepoName: repoName,
-			Schema:   schemas,
-			Options:  repooptions,
-		}); err != nil {
-			return
-		}
-		if option != nil && option.ToLogDB {
-			err = c.AutoExportToLogDB(&option.AutoExportToLogDBInput)
-			if err != nil {
-				return
-			}
-		}
-		if option != nil && option.ToKODO {
-			err = c.AutoExportToKODO(&option.AutoExportToKODOInput)
-			if err != nil {
-				return
-			}
-		}
-		if option != nil && option.ToTSDB {
-			err = c.AutoExportToTSDB(&option.AutoExportToTSDBInput)
-			if err != nil {
-				return
-			}
-		}
-		return
-	} else {
-		err = c.UpdateRepo(&UpdateRepoInput{
-			RepoName:    repoName,
-			Schema:      schemas,
-			Option:      option,
-			RepoOptions: repooptions,
-		})
-	}
-	if err != nil {
-		return
+	input.Schema = addScs
+	if err := c.InitOrUpdateWorkflow(input); err != nil {
+		return err
 	}
 	mpschemas := RepoSchema{}
-	for _, sc := range schemas {
+	for _, sc := range input.Schema {
 		mpschemas[sc.Key] = sc
 	}
 	c.repoSchemaMux.Lock()
-	c.repoSchemas[repoName] = mpschemas
+	c.repoSchemas[input.RepoName] = mpschemas
 	c.repoSchemaMux.Unlock()
 	return
 }

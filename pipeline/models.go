@@ -167,10 +167,10 @@ func validateJobexportName(e string) error {
 func validateWorkflowName(r string) error {
 	matched, err := regexp.MatchString(workflowNamePattern, r)
 	if err != nil {
-		return reqerr.NewInvalidArgs("WorkflowName", err.Error())
+		return reqerr.NewInvalidArgs("Workflow", err.Error())
 	}
 	if !matched {
-		return reqerr.NewInvalidArgs("WorkflowName", fmt.Sprintf("invalid workflow name: %s", r))
+		return reqerr.NewInvalidArgs("Workflow", fmt.Sprintf("invalid workflow name: %s", r))
 	}
 	return nil
 }
@@ -590,12 +590,18 @@ type AutoExportToKODOInput struct {
 	Retention  int //数字，单位为天
 }
 
+type AnalyzerInfo struct {
+	Default  string
+	Analyzer map[string]string
+}
+
 type AutoExportToLogDBInput struct {
 	RepoName    string
 	LogRepoName string
 	Retention   string
 	OmitInvalid bool
 	OmitEmpty   bool
+	AnalyzerInfo
 }
 
 type CreateRepoForLogDBInput struct {
@@ -606,6 +612,7 @@ type CreateRepoForLogDBInput struct {
 	Retention   string
 	OmitInvalid bool
 	OmitEmpty   bool
+	AnalyzerInfo
 }
 
 type CreateRepoForLogDBDSLInput struct {
@@ -735,6 +742,7 @@ func (r *CreateRepoInput) Validate() (err error) {
 type UpdateRepoInput struct {
 	PipelineToken
 	RepoName    string
+	workflow    string
 	Schema      []RepoSchemaEntry `json:"schema"`
 	Option      *SchemaFreeOption
 	RepoOptions *RepoOptions `json:"options"`
@@ -914,11 +922,25 @@ type PostDataInput struct {
 
 type SchemaFreeInput struct {
 	PipelineToken
-	RepoName    string
-	Datas       Datas
-	NoUpdate    bool
-	Option      *SchemaFreeOption
-	RepoOptions *RepoOptions
+	Datas        Datas
+	NoUpdate     bool
+	SendToDag    bool
+	Region       string
+	RepoName     string
+	WorkflowName string
+	Option       *SchemaFreeOption
+	RepoOptions  *RepoOptions
+}
+
+type InitOrUpdateWorkflowInput struct {
+	SchemaFree   bool
+	SendToDag    bool
+	Region       string
+	RepoName     string
+	WorkflowName string
+	RepoOptions  *RepoOptions
+	Schema       []RepoSchemaEntry
+	Option       *SchemaFreeOption
 }
 
 type SchemaFreeOption struct {

@@ -3,6 +3,7 @@ package pipeline
 import (
 	"testing"
 
+	"github.com/qiniu/pandora-go-sdk/logdb"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -116,4 +117,353 @@ func TestGetSeriesName(t *testing.T) {
 	assert.Equal(t, "diskio", series)
 	series = getSeriesName(seriesTag, "diskio__name")
 	assert.Equal(t, "diskio", series)
+}
+
+func TestConvertSchema2LogDB_Analyzer(t *testing.T) {
+	testData := []struct {
+		analyzer  AnalyzerInfo
+		schemas   []RepoSchemaEntry
+		expSchema []logdb.RepoSchemaEntry
+	}{
+		{
+			// Analyzer 包括所有字段
+			analyzer: AnalyzerInfo{
+				Analyzer: map[string]string{
+					"a": logdb.KeyWordAnalyzer,
+					"b": logdb.DicAnajAnalyzer,
+					"c": logdb.AnsjAnalyzer,
+					"d": logdb.SimpleAnalyzer,
+					"e": logdb.StandardAnalyzer,
+					"f": logdb.StopAnalyzer,
+					"g": logdb.KeyWordAnalyzer,
+				},
+			},
+			schemas: []RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "e",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "f",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "g",
+					ValueType: PandoraTypeString,
+				},
+			},
+			expSchema: []logdb.RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.KeyWordAnalyzer,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.DicAnajAnalyzer,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.AnsjAnalyzer,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.SimpleAnalyzer,
+				},
+				{
+					Key:       "e",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StandardAnalyzer,
+				},
+				{
+					Key:       "f",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StopAnalyzer,
+				},
+				{
+					Key:       "g",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.KeyWordAnalyzer,
+				},
+			},
+		},
+		{
+			// Analyzer 包括部分字段
+			// 其余的为默认的 标准分词
+			analyzer: AnalyzerInfo{
+				Analyzer: map[string]string{
+					"a": logdb.KeyWordAnalyzer,
+					"b": logdb.DicAnajAnalyzer,
+					"c": logdb.AnsjAnalyzer,
+				},
+			},
+			schemas: []RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+				},
+			},
+			expSchema: []logdb.RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.KeyWordAnalyzer,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.DicAnajAnalyzer,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.AnsjAnalyzer,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StandardAnalyzer,
+				},
+			},
+		},
+		{
+			// Analyzer 包括部分字段
+			// 其余的为 Default 指定的分词
+			analyzer: AnalyzerInfo{
+				Default: logdb.StopAnalyzer,
+				Analyzer: map[string]string{
+					"a": logdb.KeyWordAnalyzer,
+					"b": logdb.DicAnajAnalyzer,
+					"c": logdb.AnsjAnalyzer,
+				},
+			},
+			schemas: []RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+				},
+			},
+			expSchema: []logdb.RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.KeyWordAnalyzer,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.DicAnajAnalyzer,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.AnsjAnalyzer,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StopAnalyzer,
+				},
+			},
+		},
+		{
+			// Analyzer 为 nil
+			// 所有字段为 Default 指定的分词
+			analyzer: AnalyzerInfo{
+				Default:  logdb.StopAnalyzer,
+				Analyzer: nil,
+			},
+			schemas: []RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+				},
+			},
+			expSchema: []logdb.RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StopAnalyzer,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StopAnalyzer,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StopAnalyzer,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StopAnalyzer,
+				},
+			},
+		},
+		{
+			// Analyzer 为 nil
+			// Default 为空
+			// 所有字段均为 标准分词
+			analyzer: AnalyzerInfo{},
+			schemas: []RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+				},
+			},
+			expSchema: []logdb.RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StandardAnalyzer,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StandardAnalyzer,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StandardAnalyzer,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StandardAnalyzer,
+				},
+			},
+		},
+		{
+			analyzer: AnalyzerInfo{
+				Default: "aaaaa",
+				Analyzer: map[string]string{
+					"a": "aa",
+					"b": "bb",
+					"c": "cc",
+				},
+			},
+			schemas: []RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+				},
+			},
+			expSchema: []logdb.RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StandardAnalyzer,
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StandardAnalyzer,
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StandardAnalyzer,
+				},
+				{
+					Key:       "d",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.StandardAnalyzer,
+				},
+			},
+		},
+	}
+
+	for _, td := range testData {
+		gotSchema := convertSchema2LogDB(td.schemas, td.analyzer)
+		if len(gotSchema) != len(td.expSchema) {
+			t.Fatalf("got schema number error, exp %v, but got %v", len(td.expSchema), len(gotSchema))
+		}
+		for i, ret := range gotSchema {
+			assert.Equal(t, td.expSchema[i].Key, ret.Key)
+			assert.Equal(t, td.expSchema[i].Analyzer, ret.Analyzer)
+			assert.Equal(t, td.expSchema[i].ValueType, ret.ValueType)
+		}
+	}
 }

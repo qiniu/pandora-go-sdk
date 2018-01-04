@@ -114,6 +114,12 @@ func dataConvert(data interface{}, schema RepoSchemaEntry) (converted interface{
 				return "", err
 			}
 			return string(str), nil
+		case []interface{}:
+			str, err := json.Marshal(value)
+			if err != nil {
+				return "", err
+			}
+			return string(str), nil
 		default:
 			v := reflect.ValueOf(data)
 			switch v.Kind() {
@@ -125,6 +131,12 @@ func dataConvert(data interface{}, schema RepoSchemaEntry) (converted interface{
 				return strconv.FormatFloat(v.Float(), 'f', -1, 64), nil
 			case reflect.Bool:
 				return strconv.FormatBool(v.Bool()), nil
+			case reflect.Slice, reflect.Array:
+				str, err := json.Marshal(data)
+				if err != nil {
+					return "", err
+				}
+				return string(str), nil
 			default:
 				return data, nil
 			}

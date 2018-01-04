@@ -901,6 +901,34 @@ func TestConvertData(t *testing.T) {
 				},
 			},
 		},
+		{
+			v: []interface{}{1, "2", 3.2, true, "false"},
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeString,
+			},
+			exp: `[1,"2",3.2,true,"false"]`,
+		},
+		{
+			v: [5]interface{}{1, "2", 3.2, true, "false"},
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeString,
+			},
+			exp: `[1,"2",3.2,true,"false"]`,
+		},
+		{
+			v: []int{1, 2, 3, 4, 5},
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeString,
+			},
+			exp: `[1,2,3,4,5]`,
+		},
+		{
+			v: [6]float32{1.1, 2.2, 3.3, 4.4, 5.5, 6.6},
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeString,
+			},
+			exp: `[1.1,2.2,3.3,4.4,5.5,6.6]`,
+		},
 	}
 	for _, ti := range tests {
 		got, err := dataConvert(ti.v, ti.schema)

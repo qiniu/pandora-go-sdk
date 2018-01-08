@@ -125,6 +125,8 @@ const (
 	ErrTimeFormatInvalid
 	ErrNoSuchResourceOwner
 	ErrAccessDenied
+	ErrTooManySchema
+	ErrSchemaLimitUnderflow
 )
 
 type ErrBuilder interface {

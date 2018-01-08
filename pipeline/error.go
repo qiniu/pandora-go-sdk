@@ -44,6 +44,10 @@ func (e PipelineErrBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.NoSuchRepoError
 	case "E18101":
 		err.ErrorType = reqerr.RepoAlreadyExistsError
+	case "E18134":
+		err.ErrorType = reqerr.ErrTooManySchema
+	case "E18135":
+		err.ErrorType = reqerr.ErrSchemaLimitUnderflow
 	case "E18202":
 		err.ErrorType = reqerr.NoSuchTransformError
 	case "E18201":

@@ -214,6 +214,8 @@ func (e PipelineErrBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrNoSuchResourceOwner
 	case "E18665":
 		err.ErrorType = reqerr.ErrAccessDenied
+	case "E18703":
+		err.ErrorType = reqerr.ErrTransformRepeatRestart
 	case "E9000":
 		err.ErrorType = reqerr.InternalServerError
 	case "E9001":

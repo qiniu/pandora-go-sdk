@@ -125,6 +125,7 @@ const (
 	ErrTimeFormatInvalid
 	ErrNoSuchResourceOwner
 	ErrAccessDenied
+	ErrTransformRepeatRestart
 	ErrTooManySchema
 	ErrSchemaLimitUnderflow
 )

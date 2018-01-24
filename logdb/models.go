@@ -389,6 +389,11 @@ func getFormatDSL(schemas []RepoSchemaEntry, depth int, indent string) (dsl stri
 	return
 }
 
+type fullText struct {
+	Enabled  bool   `json:"enabled"`
+	Analyzer string `json:"analyzer"`
+}
+
 type CreateRepoInput struct {
 	LogdbToken
 	RepoName     string
@@ -396,6 +401,7 @@ type CreateRepoInput struct {
 	Retention    string            `json:"retention"`
 	Schema       []RepoSchemaEntry `json:"schema"`
 	PrimaryField string            `json:"primaryField"`
+	FullText     fullText          `json:"fullText"`
 }
 
 func (r *CreateRepoInput) Validate() (err error) {
@@ -472,15 +478,17 @@ type GetRepoOutput struct {
 	PrimaryField string            `json:"primaryField"`
 	CreateTime   string            `json:"createTime"`
 	UpdateTime   string            `json:"updateTime"`
+	FullText     fullText          `json:"fullText"`
 }
 
 type RepoDesc struct {
-	RepoName     string `json:"name"`
-	Region       string `json:"region"`
-	PrimaryField string `json:"primaryField"`
-	Retention    string `json:"retention"`
-	CreateTime   string `json:"createTime"`
-	UpdateTime   string `json:"updateTime"`
+	RepoName     string   `json:"name"`
+	Region       string   `json:"region"`
+	PrimaryField string   `json:"primaryField"`
+	Retention    string   `json:"retention"`
+	CreateTime   string   `json:"createTime"`
+	UpdateTime   string   `json:"updateTime"`
+	FullText     fullText `json:"fullText"`
 }
 
 type ListReposInput struct {

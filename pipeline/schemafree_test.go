@@ -136,7 +136,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 		"i": formValueType("i", PandoraTypeBool),
 	}
 	vt = getTrimedDataSchema(data)
-	assert.EqualValues(t, exp, vt)
+	assert.Equal(t, exp, vt)
 }
 
 func TestGetTrimedDataSchemaJsonString(t *testing.T) {
@@ -943,6 +943,7 @@ func TestCopyAndConvertData(t *testing.T) {
 		"b": 1,
 		"c": nil,
 		"e": []interface{}{},
+		"f": map[string]interface{}{},
 		"d": map[string]interface{}{
 			"a-1": "a",
 			"b1":  1,
@@ -1013,7 +1014,6 @@ func TestCopyAndConvertData(t *testing.T) {
 					"d_3": map[string]interface{}{
 						"a4": "a",
 						"b4": 1,
-						"d4": `{}`,
 					},
 					"f3": map[string]interface{}{
 						"a4": "a",

@@ -84,6 +84,8 @@ const (
 	ErrInvalidUdfJarName
 	ErrInvalidUdfFuncName
 	ErrInvalidJavaClassName
+	ErrStartExport
+	ErrStopExport
 	ErrUdfClassTypeError
 	ErrUdfClassNotFound
 	ErrUdfFunctionNotImplement

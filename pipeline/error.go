@@ -142,6 +142,10 @@ func (e PipelineErrBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrInvalidUdfFuncName
 	case "E18630":
 		err.ErrorType = reqerr.ErrInvalidJavaClassName
+	case "E18306":
+		err.ErrorType = reqerr.ErrStartExport
+	case "E18307":
+		err.ErrorType = reqerr.ErrStopExport
 	case "E18631":
 		err.ErrorType = reqerr.ErrUdfClassTypeError
 	case "E18632":

@@ -80,6 +80,8 @@ func (e PipelineErrBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrUnsupportedFieldType
 	case "E18125", "E18123", "E18111", "E18110":
 		err.ErrorType = reqerr.InvalidDataSchemaError
+	case "E18128":
+		err.ErrorType = reqerr.ErrIncompatibleRepoSchema
 	case "E18305":
 		err.ErrorType = reqerr.InvalidExportSpecError
 	case "E18600":

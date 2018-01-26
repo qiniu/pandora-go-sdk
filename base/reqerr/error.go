@@ -49,6 +49,7 @@ const (
 	EntityTooLargeError
 	ErrInvalidVariableType
 	InvalidDataSchemaError
+	ErrIncompatibleRepoSchema
 	ErrDBNameInvalidError
 	ErrInvalidSqlError
 	ErrInternalServerError

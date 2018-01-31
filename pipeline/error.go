@@ -222,6 +222,10 @@ func (e PipelineErrBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrAccessDenied
 	case "E18703":
 		err.ErrorType = reqerr.ErrTransformRepeatRestart
+	case "E18704":
+		err.ErrorType = reqerr.ErrFusionPathUsedStringVariable
+	case "E18705":
+		err.ErrorType = reqerr.ErrFusionPathWithUndefinedVariable
 	case "E9000":
 		err.ErrorType = reqerr.InternalServerError
 	case "E9001":

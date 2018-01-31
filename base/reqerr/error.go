@@ -129,6 +129,8 @@ const (
 	ErrNoSuchResourceOwner
 	ErrAccessDenied
 	ErrTransformRepeatRestart
+	ErrFusionPathUsedStringVariable
+	ErrFusionPathWithUndefinedVariable
 	ErrTooManySchema
 	ErrSchemaLimitUnderflow
 )

@@ -29,9 +29,9 @@ var (
 	endpoint = os.Getenv("PIPELINE_HOST")
 	ak       = os.Getenv("ACCESS_KEY")
 	sk       = os.Getenv("SECRET_KEY")
-	//	endpoint          = os.Getenv("DEV_PIPELINE_HOST")
-	//	ak                = os.Getenv("DEV_ACCESS_KEY")
-	//	sk                = os.Getenv("DEV_SECRET_KEY")
+	//endpoint          = os.Getenv("DEV_PIPELINE_HOST")
+	//ak                = os.Getenv("DEV_ACCESS_KEY")
+	//sk                = os.Getenv("DEV_SECRET_KEY")
 	logger            base.Logger
 	defaultRepoSchema []pipeline.RepoSchemaEntry
 	defaultContainer  *pipeline.Container
@@ -573,6 +573,58 @@ func TestPostData(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+func TestWithOption(t *testing.T) {
+	repoName := "TestWithOption"
+	createRepoInput := &pipeline.CreateRepoInput{
+		RepoName: repoName,
+		Schema:   defaultRepoSchema,
+		Region:   "nb",
+		Options:  &pipeline.RepoOptions{WithTimestamp: "timestamp"},
+	}
+	err := client.CreateRepo(createRepoInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	postDataInput := &pipeline.PostDataInput{
+		RepoName: repoName,
+		Points: pipeline.Points{
+			pipeline.Point{
+				[]pipeline.PointField{
+					pipeline.PointField{
+						Key:   "f1",
+						Value: "12.7",
+					},
+					pipeline.PointField{
+						Key:   "f2",
+						Value: 1.0,
+					},
+				},
+			},
+		},
+	}
+	err = client.PostData(postDataInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	buf := []byte("f1=\"12.7\"\tf2=3.14\nf1=\"dang\"\tf2=1024.0")
+	postDataFromBytesInput := &pipeline.PostDataFromBytesInput{
+		RepoName: repoName,
+		Buffer:   buf,
+	}
+	err = client.PostDataFromBytes(postDataFromBytesInput)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = client.DeleteRepo(&pipeline.DeleteRepoInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+
 }
 
 func TestPostDataSchemaLess(t *testing.T) {

@@ -691,7 +691,8 @@ func IsTag(key string, tags []string) bool {
 }
 
 type RepoOptions struct {
-	WithIP string `json:"withIP"`
+	WithIP        string `json:"withIP"`
+	WithTimestamp string `json:"withTimestamp"`
 }
 
 type CreateRepoInput struct {

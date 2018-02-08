@@ -500,7 +500,7 @@ func Sample_PostDataWithToken() {
 				},
 			},
 		},
-		PipelineToken: PipelineToken{
+		PandoraToken: PandoraToken{
 			Token: token,
 		},
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/qiniu/log"
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
+	"github.com/qiniu/pandora-go-sdk/base/models"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	"github.com/qiniu/pandora-go-sdk/logdb"
 	"github.com/qiniu/pandora-go-sdk/pipeline"
@@ -1312,7 +1313,7 @@ func TestPostDataWithToken(t *testing.T) {
 				},
 			},
 		},
-		PipelineToken: pipeline.PipelineToken{
+		PandoraToken: models.PandoraToken{
 			Token: token,
 		},
 	}
@@ -1764,7 +1765,7 @@ func TestWorkflow(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = pipeline.WaitWorkflowStarted(workflowName, client, logger)
+	err = pipeline.WaitWorkflowStarted(workflowName, client, logger, models.PandoraToken{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -1774,7 +1775,7 @@ func TestWorkflow(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = pipeline.WaitWorkflowStopped(workflowName, client, logger)
+	err = pipeline.WaitWorkflowStopped(workflowName, client, logger, models.PandoraToken{})
 	if err != nil {
 		t.Error(err)
 	}

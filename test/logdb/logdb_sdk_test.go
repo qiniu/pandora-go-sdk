@@ -319,7 +319,7 @@ func TestSendLogWithToken(t *testing.T) {
 				"f4": 2,
 			},
 		},
-		LogdbToken: logdb.LogdbToken{
+		PandoraToken: logdb.PandoraToken{
 			Token: token,
 		},
 	}

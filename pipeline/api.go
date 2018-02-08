@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/qiniu/pandora-go-sdk/base"
+	"github.com/qiniu/pandora-go-sdk/base/models"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	"github.com/qiniu/pandora-go-sdk/base/request"
 	"github.com/qiniu/pandora-go-sdk/logdb"
@@ -99,13 +100,13 @@ func (c *Pipeline) CreateRepoFromDSL(input *CreateRepoDSLInput) (err error) {
 		return
 	}
 	return c.CreateRepo(&CreateRepoInput{
-		PipelineToken: input.PipelineToken,
-		RepoName:      input.RepoName,
-		Region:        input.Region,
-		GroupName:     input.GroupName,
-		Schema:        schemas,
-		Options:       input.Options,
-		Workflow:      input.Workflow,
+		PandoraToken: input.PandoraToken,
+		RepoName:     input.RepoName,
+		Region:       input.Region,
+		GroupName:    input.GroupName,
+		Schema:       schemas,
+		Options:      input.Options,
+		Workflow:     input.Workflow,
 	})
 }
 
@@ -135,9 +136,10 @@ func (c *Pipeline) UpdateRepoWithTSDB(input *UpdateRepoInput, ex ExportDesc) err
 	}
 	spec := ExportTsdbSpec{DestRepoName: repoName, SeriesName: seriesName, Tags: tags, Fields: fields}
 	err := c.UpdateExport(&UpdateExportInput{
-		RepoName:   input.RepoName,
-		ExportName: ex.Name,
-		Spec:       spec,
+		RepoName:     input.RepoName,
+		ExportName:   ex.Name,
+		Spec:         spec,
+		PandoraToken: input.Option.AutoExportTSDBTokens.UpdateExportToken,
 	})
 	if reqerr.IsExportRemainUnchanged(err) {
 		err = nil
@@ -170,7 +172,10 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 	if err != nil {
 		return err
 	}
-	repoInfo, err := logdbAPI.GetRepo(&logdb.GetRepoInput{RepoName: repoName})
+	repoInfo, err := logdbAPI.GetRepo(&logdb.GetRepoInput{
+		RepoName:     repoName,
+		PandoraToken: input.Option.AutoExportLogDBTokens.GetLogDBRepoToken,
+	})
 	if err != nil {
 		return err
 	}
@@ -188,17 +193,19 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 		}
 	}
 	if err = logdbAPI.UpdateRepo(&logdb.UpdateRepoInput{
-		RepoName:  repoName,
-		Retention: repoInfo.Retention,
-		Schema:    repoInfo.Schema,
+		RepoName:     repoName,
+		Retention:    repoInfo.Retention,
+		Schema:       repoInfo.Schema,
+		PandoraToken: input.Option.AutoExportLogDBTokens.UpdateLogDBRepoToken,
 	}); err != nil {
 		return err
 	}
 	spec := &ExportLogDBSpec{DestRepoName: repoName, Doc: docs}
 	err = c.UpdateExport(&UpdateExportInput{
-		RepoName:   input.RepoName,
-		ExportName: ex.Name,
-		Spec:       spec,
+		RepoName:     input.RepoName,
+		ExportName:   ex.Name,
+		Spec:         spec,
+		PandoraToken: input.Option.AutoExportLogDBTokens.UpdateExportToken,
 	})
 	if reqerr.IsExportRemainUnchanged(err) {
 		err = nil
@@ -221,9 +228,10 @@ func (c *Pipeline) UpdateRepoWithKodo(input *UpdateRepoInput, ex ExportDesc) err
 
 	spec := &ExportLogDBSpec{DestRepoName: repoName, Doc: docs}
 	err := c.UpdateExport(&UpdateExportInput{
-		RepoName:   input.RepoName,
-		ExportName: ex.Name,
-		Spec:       spec,
+		RepoName:     input.RepoName,
+		ExportName:   ex.Name,
+		Spec:         spec,
+		PandoraToken: input.Option.AutoExportToKODOInput.UpdateExportToken,
 	})
 	if reqerr.IsExportRemainUnchanged(err) {
 		err = nil
@@ -247,8 +255,19 @@ func (c *Pipeline) UpdateRepo(input *UpdateRepoInput) (err error) {
 	if !option.ToLogDB && !option.ToTSDB && !option.ToKODO {
 		return nil
 	}
+	var listExportToken models.PandoraToken
+	if option.ToLogDB {
+		listExportToken = option.AutoExportLogDBTokens.ListExportToken
+	}
+	if option.ToTSDB {
+		listExportToken = option.AutoExportTSDBTokens.ListExportToken
+	}
+	if option.ToKODO {
+		listExportToken = option.AutoExportKodoTokens.ListExportToken
+	}
 	exports, err := c.ListExports(&ListExportsInput{
-		RepoName: input.RepoName,
+		RepoName:     input.RepoName,
+		PandoraToken: listExportToken,
 	})
 	if err != nil {
 		return
@@ -440,12 +459,13 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 	var start = 0
 	for i, d := range input.Datas {
 		point, err := c.generatePoint(d, &InitOrUpdateWorkflowInput{
-			SchemaFree:   !input.NoUpdate,
-			Region:       input.Region,
-			RepoName:     input.RepoName,
-			WorkflowName: input.WorkflowName,
-			RepoOptions:  input.RepoOptions,
-			Option:       input.Option,
+			SchemaFree:      !input.NoUpdate,
+			Region:          input.Region,
+			RepoName:        input.RepoName,
+			WorkflowName:    input.WorkflowName,
+			RepoOptions:     input.RepoOptions,
+			Option:          input.Option,
+			SchemaFreeToken: input.SchemaFreeToken,
 		})
 		if err != nil {
 			return nil, err
@@ -472,8 +492,9 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 	packages = append(packages, pointContext{
 		datas: input.Datas[start:],
 		inputs: &PostDataFromBytesInput{
-			RepoName: input.RepoName,
-			Buffer:   tmpBuff,
+			RepoName:     input.RepoName,
+			Buffer:       tmpBuff,
+			PandoraToken: input.PipelinePostDataToken,
 		},
 	})
 	return
@@ -950,6 +971,7 @@ func (c *Pipeline) GetUpdateSchemas(repoName string) (schemas map[string]RepoSch
 
 func (c *Pipeline) CreateForLogDB(input *CreateRepoForLogDBInput) error {
 	pinput := formPipelineRepoInput(input.RepoName, input.Region, input.Schema)
+	pinput.PandoraToken = input.PipelineCreateRepoToken
 	err := c.CreateRepo(pinput)
 	if err != nil && !reqerr.IsExistError(err) {
 		return err
@@ -959,12 +981,14 @@ func (c *Pipeline) CreateForLogDB(input *CreateRepoForLogDBInput) error {
 	if err != nil {
 		return err
 	}
+	linput.PandoraToken = input.CreateLogDBRepoToken
 	err = logdbapi.CreateRepo(linput)
 	if err != nil && !reqerr.IsExistError(err) {
 		return err
 	}
 	logDBSpec := c.FormLogDBSpec(input)
 	exportInput := c.FormExportInput(input.RepoName, ExportTypeLogDB, logDBSpec)
+	exportInput.PandoraToken = input.CreateExportToken
 	return c.CreateExport(exportInput)
 }
 
@@ -974,18 +998,20 @@ func (c *Pipeline) CreateForLogDBDSL(input *CreateRepoForLogDBDSLInput) error {
 		return err
 	}
 	ci := &CreateRepoForLogDBInput{
-		RepoName:    input.RepoName,
-		LogRepoName: input.LogRepoName,
-		Region:      input.Region,
-		Schema:      schemas,
-		Retention:   input.Retention,
+		RepoName:              input.RepoName,
+		LogRepoName:           input.LogRepoName,
+		Region:                input.Region,
+		Schema:                schemas,
+		Retention:             input.Retention,
+		AutoExportLogDBTokens: input.AutoExportLogDBTokens,
 	}
 	return c.CreateForLogDB(ci)
 }
 
 func (c *Pipeline) CreateForTSDB(input *CreateRepoForTSDBInput) error {
 	_, err := c.GetRepo(&GetRepoInput{
-		RepoName: input.RepoName,
+		RepoName:     input.RepoName,
+		PandoraToken: input.PipelineGetRepoToken,
 	})
 	if err != nil {
 		return err
@@ -998,8 +1024,9 @@ func (c *Pipeline) CreateForTSDB(input *CreateRepoForTSDBInput) error {
 		input.TSDBRepoName = input.RepoName
 	}
 	err = tsdbapi.CreateRepo(&tsdb.CreateRepoInput{
-		RepoName: input.TSDBRepoName,
-		Region:   input.Region,
+		RepoName:     input.TSDBRepoName,
+		Region:       input.Region,
+		PandoraToken: input.CreateTSDBRepoToken,
 	})
 	if err != nil && !reqerr.IsExistError(err) {
 		return err
@@ -1007,10 +1034,15 @@ func (c *Pipeline) CreateForTSDB(input *CreateRepoForTSDBInput) error {
 	if input.SeriesName == "" {
 		input.SeriesName = input.RepoName
 	}
+	seriesToken, ok := input.CreateTSDBSeriesTokens[input.SeriesName]
+	if !ok {
+		seriesToken = models.PandoraToken{}
+	}
 	err = tsdbapi.CreateSeries(&tsdb.CreateSeriesInput{
-		RepoName:   input.TSDBRepoName,
-		SeriesName: input.SeriesName,
-		Retention:  input.Retention,
+		RepoName:     input.TSDBRepoName,
+		SeriesName:   input.SeriesName,
+		Retention:    input.Retention,
+		PandoraToken: seriesToken,
 	})
 	if err != nil && !reqerr.IsExistError(err) {
 		return err
@@ -1018,12 +1050,14 @@ func (c *Pipeline) CreateForTSDB(input *CreateRepoForTSDBInput) error {
 	tsdbSpec := c.FormTSDBSpec(input)
 	exportInput := c.FormExportInput(input.RepoName, ExportTypeTSDB, tsdbSpec)
 	exportInput.ExportName = base.FormExportTSDBName(input.RepoName, input.SeriesName, ExportTypeTSDB)
+	exportInput.PandoraToken = input.CreateExportToken
 	err = c.CreateExport(exportInput)
 	if err != nil && reqerr.IsExistError(err) {
 		err = c.UpdateExport(&UpdateExportInput{
-			RepoName:   exportInput.RepoName,
-			ExportName: exportInput.ExportName,
-			Spec:       exportInput.Spec,
+			RepoName:     exportInput.RepoName,
+			ExportName:   exportInput.ExportName,
+			Spec:         exportInput.Spec,
+			PandoraToken: input.UpdateExportToken,
 		})
 	}
 	return err
@@ -1031,7 +1065,8 @@ func (c *Pipeline) CreateForTSDB(input *CreateRepoForTSDBInput) error {
 
 func (c *Pipeline) CreateForMutiExportTSDB(input *CreateRepoForMutiExportTSDBInput) error {
 	_, err := c.GetRepo(&GetRepoInput{
-		RepoName: input.RepoName,
+		RepoName:     input.RepoName,
+		PandoraToken: input.PipelineGetRepoToken,
 	})
 	if err != nil {
 		return err
@@ -1044,17 +1079,24 @@ func (c *Pipeline) CreateForMutiExportTSDB(input *CreateRepoForMutiExportTSDBInp
 		input.TSDBRepoName = input.RepoName
 	}
 	err = tsdbapi.CreateRepo(&tsdb.CreateRepoInput{
-		RepoName: input.TSDBRepoName,
-		Region:   input.Region,
+		RepoName:     input.TSDBRepoName,
+		Region:       input.Region,
+		PandoraToken: input.CreateTSDBRepoToken,
 	})
 	if err != nil && !reqerr.IsExistError(err) {
 		return err
 	}
 	for _, series := range input.SeriesMap {
+		seriesToken, ok := input.CreateTSDBSeriesTokens[series.SeriesName]
+		if !ok {
+			seriesToken = models.PandoraToken{}
+		}
+
 		err = tsdbapi.CreateSeries(&tsdb.CreateSeriesInput{
-			RepoName:   input.TSDBRepoName,
-			SeriesName: series.SeriesName,
-			Retention:  input.Retention,
+			RepoName:     input.TSDBRepoName,
+			SeriesName:   series.SeriesName,
+			Retention:    input.Retention,
+			PandoraToken: seriesToken,
 		})
 		if err != nil && !reqerr.IsExistError(err) {
 			return err
@@ -1073,12 +1115,14 @@ func (c *Pipeline) CreateForMutiExportTSDB(input *CreateRepoForMutiExportTSDBInp
 		})
 		exportInput := c.FormExportInput(input.RepoName, ExportTypeTSDB, tsdbSpec)
 		exportInput.ExportName = base.FormExportTSDBName(input.RepoName, series.SeriesName, ExportTypeTSDB)
+		exportInput.PandoraToken = input.CreateExportToken
 		err = c.CreateExport(exportInput)
 		if err != nil && reqerr.IsExistError(err) {
 			err = c.UpdateExport(&UpdateExportInput{
-				RepoName:   exportInput.RepoName,
-				ExportName: exportInput.ExportName,
-				Spec:       exportInput.Spec,
+				RepoName:     exportInput.RepoName,
+				ExportName:   exportInput.ExportName,
+				Spec:         exportInput.Spec,
+				PandoraToken: input.UpdateExportToken,
 			})
 			if err != nil {
 				return err

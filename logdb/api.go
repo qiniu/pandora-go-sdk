@@ -23,11 +23,11 @@ func (c *Logdb) CreateRepoFromDSL(input *CreateRepoDSLInput) (err error) {
 		return
 	}
 	return c.CreateRepo(&CreateRepoInput{
-		LogdbToken: input.LogdbToken,
-		RepoName:   input.RepoName,
-		Region:     input.Region,
-		Retention:  input.Retention,
-		Schema:     schemas,
+		PandoraToken: input.PandoraToken,
+		RepoName:     input.RepoName,
+		Region:       input.Region,
+		Retention:    input.Retention,
+		Schema:       schemas,
 	})
 }
 

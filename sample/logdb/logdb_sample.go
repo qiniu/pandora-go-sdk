@@ -223,7 +223,7 @@ func Sample_SendLogWithToken() {
 				"f3": time.Now().UTC().Format(time.RFC3339),
 			},
 		},
-		LogdbToken: LogdbToken{
+		PandoraToken: PandoraToken{
 			Token: token,
 		},
 	}

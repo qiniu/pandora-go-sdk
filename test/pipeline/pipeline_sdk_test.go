@@ -10,11 +10,14 @@ import (
 	"testing"
 	"time"
 
+	"strings"
+
 	"github.com/qiniu/log"
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/base/models"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
+	"github.com/qiniu/pandora-go-sdk/base/request"
 	"github.com/qiniu/pandora-go-sdk/logdb"
 	"github.com/qiniu/pandora-go-sdk/pipeline"
 	"github.com/qiniu/pandora-go-sdk/tsdb"
@@ -44,7 +47,7 @@ func init() {
 	logger = base.NewDefaultLogger()
 	cfg = pipeline.NewConfig().
 		WithEndpoint(endpoint).
-		WithAccessKeySecretKey(ak, sk).
+		//WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
 		WithLoggerLevel(base.LogDebug).
 		WithLogDBEndpoint("https://logdb.qiniu.com").
@@ -1832,4 +1835,572 @@ func TestWorkflow(t *testing.T) {
 	t.Log(getExportOut)
 
 	assert.NoError(t, err)
+}
+
+/*
+type SchemaFreeToken struct {
+	PipelineCreateRepoToken        PandoraToken
+	PipelinePostDataToken          PandoraToken
+	PipelineGetRepoToken           PandoraToken
+	PipelineUpdateRepoToken        PandoraToken
+	PipelineGetWorkflowToken       PandoraToken
+	PipelineCreateWorkflowToken    PandoraToken
+	PipelineStartWorkflowToken     PandoraToken
+	PipelineStopWorkflowToken      PandoraToken
+	PipelineGetWorkflowStatusToken PandoraToken
+}
+*/
+func GenerateTokensForSchemaFree(repoName, workflowName, ak, sk string) map[string]models.PandoraToken {
+
+	typeTextPlain := "text/plain"
+	typeAppJson := "application/json"
+	tokens := make(map[string]models.PandoraToken)
+	ops := []struct {
+		Op   string
+		Arg1 interface{}
+		Arg2 interface{}
+		Ctp  string
+	}{
+		{
+			Op:   base.OpCreateRepo,
+			Arg1: repoName,
+			Ctp:  typeAppJson,
+		},
+		{
+			Op:   base.OpPostData,
+			Arg1: repoName,
+			Ctp:  typeTextPlain,
+		},
+		{
+			Op:   base.OpGetRepo,
+			Arg1: repoName,
+		},
+		{
+			Op:   base.OpUpdateRepo,
+			Arg1: repoName,
+			Ctp:  typeAppJson,
+		},
+		{
+			Op:   base.OpGetWorkflow,
+			Arg1: workflowName,
+		},
+		{
+			Op:   base.OpCreateWorkflow,
+			Arg1: workflowName,
+			Ctp:  typeAppJson,
+		},
+		{
+			Op:   base.OpStartWorkflow,
+			Arg1: workflowName,
+		},
+		{
+			Op:   base.OpStopWorkflow,
+			Arg1: workflowName,
+		},
+		{
+			Op:   base.OpGetWorkflowStatus,
+			Arg1: workflowName,
+		},
+	}
+
+	c, _ := pipeline.NewDefaultClient(pipeline.NewConfig())
+	for _, v := range ops {
+		op := c.NewOperation(v.Op, v.Arg1)
+
+		desc := base.TokenDesc{
+			Url:     op.Path,
+			Expires: time.Now().Add(24 * time.Hour).Unix(),
+			Method:  op.Method,
+		}
+		if v.Ctp != "" {
+			desc.ContentType = v.Ctp
+		}
+		token, err := base.MakeTokenInternal(ak, sk, &desc)
+		if err != nil {
+			log.Fatalf("%v %v", v.Op, err)
+		}
+		tokens[v.Op] = models.PandoraToken{Token: token}
+	}
+	return tokens
+}
+
+const (
+	pdPipeline = "pipeline"
+	pdLogdb    = "logdb"
+	pdTSDB     = "tsdb"
+)
+
+/*
+type AutoExportLogDBTokens struct {
+	PipelineCreateRepoToken PandoraToken
+	PipelineGetRepoToken    PandoraToken
+	CreateLogDBRepoToken    PandoraToken
+	UpdateLogDBRepoToken    PandoraToken
+	GetLogDBRepoToken       PandoraToken
+	CreateExportToken       PandoraToken
+	UpdateExportToken       PandoraToken
+	GetExportToken          PandoraToken
+	ListExportToken         PandoraToken
+}
+*/
+
+func GenerateTokensForAutoLogdb(pipelineRepoName, logdbRepoName, ak, sk string) map[string]models.PandoraToken {
+	typeAppJson := "application/json"
+	if logdbRepoName == "" {
+		logdbRepoName = pipelineRepoName
+	}
+	logdbRepoName = strings.ToLower(logdbRepoName)
+	tokens := make(map[string]models.PandoraToken)
+	ops := []struct {
+		Op   string
+		Arg1 interface{}
+		Arg2 interface{}
+		Ctp  string
+		pd   string
+	}{
+		{
+			Op:   base.OpCreateRepo,
+			Arg1: pipelineRepoName,
+			Ctp:  typeAppJson,
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpGetRepo,
+			Arg1: pipelineRepoName,
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpCreateRepo,
+			Arg1: logdbRepoName,
+			Ctp:  typeAppJson,
+			pd:   pdLogdb,
+		},
+		{
+			Op:   base.OpUpdateRepo,
+			Arg1: logdbRepoName,
+			Ctp:  typeAppJson,
+			pd:   pdLogdb,
+		},
+		{
+			Op:   base.OpGetRepo,
+			Arg1: logdbRepoName,
+			pd:   pdLogdb,
+		},
+		{
+			Op:   base.OpCreateExport,
+			Arg1: pipelineRepoName,
+			Arg2: base.FormExportName(pipelineRepoName, pipeline.ExportTypeLogDB),
+			Ctp:  typeAppJson,
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpUpdateExport,
+			Arg1: pipelineRepoName,
+			Arg2: base.FormExportName(pipelineRepoName, pipeline.ExportTypeLogDB),
+			Ctp:  typeAppJson,
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpGetExport,
+			Arg1: pipelineRepoName,
+			Arg2: base.FormExportName(pipelineRepoName, pipeline.ExportTypeLogDB),
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpListExports,
+			Arg1: pipelineRepoName,
+			pd:   pdPipeline,
+		},
+	}
+
+	pc, _ := pipeline.NewDefaultClient(pipeline.NewConfig())
+	lc, _ := logdb.NewClient(logdb.NewConfig())
+	for _, v := range ops {
+		var desc base.TokenDesc
+		switch v.pd {
+		case pdLogdb:
+			var op *request.Operation
+			if v.Arg2 == nil {
+				op = lc.NewOperation(v.Op, v.Arg1)
+			} else {
+				op = lc.NewOperation(v.Op, v.Arg1, v.Arg2)
+			}
+			desc = base.TokenDesc{
+				Url:     op.Path,
+				Expires: time.Now().Add(24 * time.Hour).Unix(),
+				Method:  op.Method,
+			}
+		case pdPipeline:
+			var op *request.Operation
+			if v.Arg2 == nil {
+				op = pc.NewOperation(v.Op, v.Arg1)
+			} else {
+				op = pc.NewOperation(v.Op, v.Arg1, v.Arg2)
+			}
+			desc = base.TokenDesc{
+				Url:     op.Path,
+				Expires: time.Now().Add(24 * time.Hour).Unix(),
+				Method:  op.Method,
+			}
+		}
+		if v.Ctp != "" {
+			desc.ContentType = v.Ctp
+		}
+		token, err := base.MakeTokenInternal(ak, sk, &desc)
+		if err != nil {
+			log.Fatalf("%v %v %v", v.Op, desc, err)
+		}
+		tokens[v.pd+"-"+v.Op] = models.PandoraToken{Token: token}
+	}
+	return tokens
+}
+
+/*
+type AutoExportKodoTokens struct {
+	PipelineGetRepoToken PandoraToken
+	CreateExportToken    PandoraToken
+	UpdateExportToken    PandoraToken
+	GetExportToken       PandoraToken
+	ListExportToken      PandoraToken
+}
+*/
+
+func GenerateTokensForAutoKodo(pipelineRepoName, bucketname, ak, sk string) map[string]models.PandoraToken {
+	typeAppJson := "application/json"
+	tokens := make(map[string]models.PandoraToken)
+	ops := []struct {
+		Op   string
+		Arg1 interface{}
+		Arg2 interface{}
+		Ctp  string
+		pd   string
+	}{
+		{
+			Op:   base.OpGetRepo,
+			Arg1: pipelineRepoName,
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpCreateExport,
+			Arg1: pipelineRepoName,
+			Arg2: base.FormExportName(pipelineRepoName, pipeline.ExportTypeKODO),
+			Ctp:  typeAppJson,
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpUpdateExport,
+			Arg1: pipelineRepoName,
+			Arg2: base.FormExportName(pipelineRepoName, pipeline.ExportTypeKODO),
+			Ctp:  typeAppJson,
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpGetExport,
+			Arg1: pipelineRepoName,
+			Arg2: base.FormExportName(pipelineRepoName, pipeline.ExportTypeKODO),
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpListExports,
+			Arg1: pipelineRepoName,
+			pd:   pdPipeline,
+		},
+	}
+
+	pc, _ := pipeline.NewDefaultClient(pipeline.NewConfig())
+	for _, v := range ops {
+		var desc base.TokenDesc
+		var op *request.Operation
+		if v.Arg2 == nil {
+			op = pc.NewOperation(v.Op, v.Arg1)
+		} else {
+			op = pc.NewOperation(v.Op, v.Arg1, v.Arg2)
+		}
+		desc = base.TokenDesc{
+			Url:     op.Path,
+			Expires: time.Now().Add(24 * time.Hour).Unix(),
+			Method:  op.Method,
+		}
+		if v.Ctp != "" {
+			desc.ContentType = v.Ctp
+		}
+		token, err := base.MakeTokenInternal(ak, sk, &desc)
+		if err != nil {
+			log.Fatalf("%v %v", v.Op, err)
+		}
+		tokens[v.Op] = models.PandoraToken{Token: token}
+	}
+	return tokens
+}
+
+/*
+type AutoExportTSDBTokens struct {
+	PipelineGetRepoToken   PandoraToken
+	CreateTSDBRepoToken    PandoraToken
+	CreateTSDBSeriesTokens map[string]PandoraToken
+	CreateExportToken      PandoraToken
+	UpdateExportToken      PandoraToken
+	GetExportToken         PandoraToken
+	ListExportToken        PandoraToken
+}
+*/
+
+func GenerateTokensForAutoTSDB(pipelineRepoName, tsdbRepoName, ak, sk string) map[string]models.PandoraToken {
+	typeAppJson := "application/json"
+	if tsdbRepoName == "" {
+		tsdbRepoName = pipelineRepoName
+	}
+	tokens := make(map[string]models.PandoraToken)
+	ops := []struct {
+		Op   string
+		Arg1 interface{}
+		Arg2 interface{}
+		Ctp  string
+		pd   string
+	}{
+		{
+			Op:   base.OpGetRepo,
+			Arg1: pipelineRepoName,
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpCreateRepo,
+			Arg1: tsdbRepoName,
+			Ctp:  typeAppJson,
+			pd:   pdTSDB,
+		},
+		{
+			Op:   base.OpGetRepo,
+			Arg1: tsdbRepoName,
+			pd:   pdTSDB,
+		},
+		{
+			Op:   base.OpCreateExport,
+			Arg1: pipelineRepoName,
+			Arg2: base.FormExportName(pipelineRepoName, pipeline.ExportTypeTSDB),
+			Ctp:  typeAppJson,
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpUpdateExport,
+			Arg1: pipelineRepoName,
+			Arg2: base.FormExportName(pipelineRepoName, pipeline.ExportTypeTSDB),
+			Ctp:  typeAppJson,
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpGetExport,
+			Arg1: pipelineRepoName,
+			Arg2: base.FormExportName(pipelineRepoName, pipeline.ExportTypeTSDB),
+			pd:   pdPipeline,
+		},
+		{
+			Op:   base.OpListExports,
+			Arg1: pipelineRepoName,
+			pd:   pdPipeline,
+		},
+	}
+
+	pc, _ := pipeline.NewDefaultClient(pipeline.NewConfig())
+	tc, _ := tsdb.NewDefaultClient(tsdb.NewConfig())
+	for _, v := range ops {
+		var desc base.TokenDesc
+		switch v.pd {
+		case pdTSDB:
+			var op *request.Operation
+			if v.Arg2 == nil {
+				op = tc.NewOperation(v.Op, v.Arg1)
+			} else {
+				op = tc.NewOperation(v.Op, v.Arg1, v.Arg2)
+			}
+			desc = base.TokenDesc{
+				Url:     op.Path,
+				Expires: time.Now().Add(24 * time.Hour).Unix(),
+				Method:  op.Method,
+			}
+		case pdPipeline:
+			var op *request.Operation
+			if v.Arg2 == nil {
+				op = pc.NewOperation(v.Op, v.Arg1)
+			} else {
+				op = pc.NewOperation(v.Op, v.Arg1, v.Arg2)
+			}
+			desc = base.TokenDesc{
+				Url:     op.Path,
+				Expires: time.Now().Add(24 * time.Hour).Unix(),
+				Method:  op.Method,
+			}
+		}
+		if v.Ctp != "" {
+			desc.ContentType = v.Ctp
+		}
+		token, err := base.MakeTokenInternal(ak, sk, &desc)
+		if err != nil {
+			log.Fatalf("%v %v", v.Op, err)
+		}
+		tokens[v.pd+"-"+v.Op] = models.PandoraToken{Token: token}
+	}
+	return tokens
+}
+
+func GenerateTokensForTSDBSeries(pipelineRepoName, tsdbRepoName, ak, sk string, tsdbserisNames []string) (createSerisTokens map[string]models.PandoraToken, createExportTokens map[string]models.PandoraToken, updateExportTokens map[string]models.PandoraToken) {
+	typeAppJson := "application/json"
+	if tsdbRepoName == "" {
+		tsdbRepoName = pipelineRepoName
+	}
+	createSerisTokens = make(map[string]models.PandoraToken)
+	createExportTokens = make(map[string]models.PandoraToken)
+	updateExportTokens = make(map[string]models.PandoraToken)
+	tc, _ := tsdb.NewDefaultClient(tsdb.NewConfig())
+	pc, _ := pipeline.NewDefaultClient(pipeline.NewConfig())
+
+	for _, v := range tsdbserisNames {
+		op := tc.NewOperation(base.OpCreateSeries, tsdbRepoName, v)
+		desc := base.TokenDesc{
+			Url:         op.Path,
+			Expires:     time.Now().Add(24 * time.Hour).Unix(),
+			Method:      op.Method,
+			ContentType: typeAppJson,
+		}
+		token, err := base.MakeTokenInternal(ak, sk, &desc)
+		if err != nil {
+			log.Fatalf("%v %v", base.OpCreateSeries, err)
+		}
+		createSerisTokens[v] = models.PandoraToken{Token: token}
+
+		op = pc.NewOperation(base.OpCreateExport, pipelineRepoName, base.FormExportTSDBName(pipelineRepoName, v, pipeline.ExportTypeTSDB))
+		desc = base.TokenDesc{
+			Url:         op.Path,
+			Expires:     time.Now().Add(24 * time.Hour).Unix(),
+			Method:      op.Method,
+			ContentType: typeAppJson,
+		}
+		token, err = base.MakeTokenInternal(ak, sk, &desc)
+		if err != nil {
+			log.Fatalf("%v %v", base.OpCreateExport, err)
+		}
+		createExportTokens[base.FormExportTSDBName(pipelineRepoName, v, pipeline.ExportTypeTSDB)] = models.PandoraToken{Token: token}
+
+		op = pc.NewOperation(base.OpUpdateExport, pipelineRepoName, base.FormExportTSDBName(pipelineRepoName, v, pipeline.ExportTypeTSDB))
+		desc = base.TokenDesc{
+			Url:         op.Path,
+			Expires:     time.Now().Add(24 * time.Hour).Unix(),
+			Method:      op.Method,
+			ContentType: typeAppJson,
+		}
+		token, err = base.MakeTokenInternal(ak, sk, &desc)
+		if err != nil {
+			log.Fatalf("%v %v", base.OpUpdateExport, err)
+		}
+		updateExportTokens[base.FormExportTSDBName(pipelineRepoName, v, pipeline.ExportTypeTSDB)] = models.PandoraToken{Token: token}
+	}
+	return
+}
+
+func TestPostDataSchemaFreeWithToken(t *testing.T) {
+	pipelineRepoName := "TestPostDataSchemaFreeWithTokennn13"
+	worklow := "TestPostDataSchemaFreeWithWorkflow1"
+	logdbRepoName := "TestPostDataSchemaFreeWithTokenLl2"
+	tsdbRepoName := "TestPostDataSchemaFreeWithTokenTt2"
+	bucketName := "defaut"
+
+	schematokens := GenerateTokensForSchemaFree(pipelineRepoName, worklow, ak, sk)
+	autoLogdbTokens := GenerateTokensForAutoLogdb(pipelineRepoName, logdbRepoName, ak, sk)
+	autoTsdbTokens := GenerateTokensForAutoTSDB(pipelineRepoName, tsdbRepoName, ak, sk)
+	seriesToken, serisCreateExportTokn, seriesUpdateExportToken := GenerateTokensForTSDBSeries(pipelineRepoName, tsdbRepoName, ak, sk, []string{"s1"})
+	autoKodoTokens := GenerateTokensForAutoKodo(pipelineRepoName, bucketName, ak, sk)
+
+	var err error
+
+	fmt.Println(autoTsdbTokens[pdTSDB+"-"+base.OpCreateRepo])
+
+	postDataInput := &pipeline.SchemaFreeInput{
+		SchemaFreeToken: pipeline.SchemaFreeToken{
+			PipelineCreateRepoToken:        schematokens[base.OpCreateRepo],
+			PipelinePostDataToken:          schematokens[base.OpPostData],
+			PipelineGetRepoToken:           schematokens[base.OpGetRepo],
+			PipelineUpdateRepoToken:        schematokens[base.OpUpdateRepo],
+			PipelineGetWorkflowToken:       schematokens[base.OpGetWorkflow],
+			PipelineCreateWorkflowToken:    schematokens[base.OpCreateWorkflow],
+			PipelineStartWorkflowToken:     schematokens[base.OpStartWorkflow],
+			PipelineStopWorkflowToken:      schematokens[base.OpStopWorkflow],
+			PipelineGetWorkflowStatusToken: schematokens[base.OpGetWorkflowStatus],
+		},
+		RepoName: pipelineRepoName,
+		Datas: pipeline.Datas{
+			pipeline.Data{
+				"f1": "12.7",
+				"f2": 1.0,
+				"f4": 123,
+				"f5": true,
+			},
+			pipeline.Data{
+				"f1": "12.7",
+				"f2": 1.0,
+				"f4": 123,
+				"f7": "x1",
+			},
+			pipeline.Data{
+				"f1": "12.7",
+				"f2": 1.0,
+				"f4": 123,
+				"f8": "x1",
+			},
+		},
+		Option: &pipeline.SchemaFreeOption{
+			ToLogDB: true,
+			AutoExportToLogDBInput: pipeline.AutoExportToLogDBInput{
+				RepoName:    pipelineRepoName,
+				LogRepoName: logdbRepoName,
+				Retention:   "3d",
+				AutoExportLogDBTokens: pipeline.AutoExportLogDBTokens{
+					PipelineCreateRepoToken: autoLogdbTokens[pdPipeline+"-"+base.OpCreateRepo],
+					PipelineGetRepoToken:    autoLogdbTokens[pdPipeline+"-"+base.OpGetRepo],
+					CreateLogDBRepoToken:    autoLogdbTokens[pdLogdb+"-"+base.OpCreateRepo],
+					UpdateLogDBRepoToken:    autoLogdbTokens[pdLogdb+"-"+base.OpUpdateRepo],
+					GetLogDBRepoToken:       autoLogdbTokens[pdLogdb+"-"+base.OpGetRepo],
+					CreateExportToken:       autoLogdbTokens[pdPipeline+"-"+base.OpCreateExport],
+					UpdateExportToken:       autoLogdbTokens[pdPipeline+"-"+base.OpUpdateExport],
+					GetExportToken:          autoLogdbTokens[pdPipeline+"-"+base.OpGetExport],
+					ListExportToken:         autoLogdbTokens[pdPipeline+"-"+base.OpListExports],
+				},
+			},
+			ToTSDB: true,
+			AutoExportToTSDBInput: pipeline.AutoExportToTSDBInput{
+				RepoName:     pipelineRepoName,
+				TSDBRepoName: tsdbRepoName,
+				Retention:    "3d",
+				SeriesName:   "s1",
+				SeriesTags:   make(map[string][]string),
+				AutoExportTSDBTokens: pipeline.AutoExportTSDBTokens{
+					PipelineGetRepoToken:   autoTsdbTokens[pdPipeline+"-"+base.OpGetRepo],
+					CreateTSDBRepoToken:    autoTsdbTokens[pdTSDB+"-"+base.OpCreateRepo],
+					CreateTSDBSeriesTokens: seriesToken,
+					CreateExportToken:      serisCreateExportTokn,
+					UpdateExportToken:      seriesUpdateExportToken,
+					GetExportToken:         autoTsdbTokens[pdPipeline+"-"+base.OpGetExport],
+					ListExportToken:        autoTsdbTokens[pdPipeline+"-"+base.OpListExports],
+				},
+			},
+			ToKODO: true,
+			AutoExportToKODOInput: pipeline.AutoExportToKODOInput{
+				RepoName:   pipelineRepoName,
+				BucketName: bucketName,
+				Email:      "sunjianbo@qiniu.com",
+				Retention:  2,
+				AutoExportKodoTokens: pipeline.AutoExportKodoTokens{
+					PipelineGetRepoToken: autoKodoTokens[base.OpGetRepo],
+					CreateExportToken:    autoKodoTokens[base.OpCreateExport],
+					UpdateExportToken:    autoKodoTokens[base.OpUpdateExport],
+					GetExportToken:       autoKodoTokens[base.OpGetExport],
+					ListExportToken:      autoKodoTokens[base.OpListExports],
+				},
+			},
+		},
+	}
+	_, err = client.PostDataSchemaFree(postDataInput)
+	if err != nil {
+		t.Error(err)
+	}
+
 }

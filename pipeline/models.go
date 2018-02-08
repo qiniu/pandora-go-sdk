@@ -643,8 +643,8 @@ type AutoExportTSDBTokens struct {
 	PipelineGetRepoToken   PandoraToken
 	CreateTSDBRepoToken    PandoraToken
 	CreateTSDBSeriesTokens map[string]PandoraToken
-	CreateExportToken      PandoraToken
-	UpdateExportToken      PandoraToken
+	CreateExportToken      map[string]PandoraToken
+	UpdateExportToken      map[string]PandoraToken
 	GetExportToken         PandoraToken
 	ListExportToken        PandoraToken
 }
@@ -671,6 +671,7 @@ type CreateRepoForKodoInput struct {
 	Bucket    string
 	RepoName  string
 	Prefix    string
+	Compress  bool
 	Format    string
 	Schema    []RepoSchemaEntry
 	AutoExportKodoTokens
@@ -688,6 +689,7 @@ type AutoExportToKODOInput struct {
 	RepoName   string
 	BucketName string
 	Prefix     string
+	Compress   bool
 	Format     string
 	Email      string
 	Retention  int //数字，单位为天

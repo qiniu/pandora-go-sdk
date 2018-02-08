@@ -9,6 +9,7 @@ import (
 
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
+	"github.com/qiniu/pandora-go-sdk/base/models"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	"github.com/qiniu/pandora-go-sdk/logdb"
 	"github.com/stretchr/testify/assert"
@@ -319,7 +320,7 @@ func TestSendLogWithToken(t *testing.T) {
 				"f4": 2,
 			},
 		},
-		PandoraToken: logdb.PandoraToken{
+		PandoraToken: models.PandoraToken{
 			Token: token,
 		},
 	}

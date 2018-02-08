@@ -3,6 +3,7 @@ package pipeline
 import (
 	"strings"
 
+	"github.com/qiniu/log"
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	"github.com/qiniu/pandora-go-sdk/logdb"
@@ -215,7 +216,7 @@ func (c *Pipeline) AutoExportToTSDB(input *AutoExportToTSDBInput) error {
 	}
 
 	if !input.IsMetric {
-		return c.CreateForTSDB(&CreateRepoForTSDBInput{
+		err = c.CreateForTSDB(&CreateRepoForTSDBInput{
 			Tags:                 tags,
 			RepoName:             input.RepoName,
 			TSDBRepoName:         input.TSDBRepoName,
@@ -228,6 +229,10 @@ func (c *Pipeline) AutoExportToTSDB(input *AutoExportToTSDBInput) error {
 			Timestamp:            input.Timestamp,
 			AutoExportTSDBTokens: input.AutoExportTSDBTokens,
 		})
+		if err != nil {
+			log.Error("create tsdb error", err)
+			return err
+		}
 	}
 
 	// 获取字段，并根据 seriesTag 中的 key 拿到series name
@@ -286,6 +291,7 @@ func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 		PandoraToken: input.PipelineGetRepoToken,
 	})
 	if err != nil {
+		log.Error("AutoExportToLogDB get pipeline repo error", err)
 		return err
 	}
 
@@ -307,9 +313,11 @@ func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 			PandoraToken: input.CreateLogDBRepoToken,
 		})
 		if err != nil && !reqerr.IsExistError(err) {
+			log.Error("AutoExportToLogDB create logdb repo error", err)
 			return err
 		}
 	} else if err != nil {
+		log.Error("AutoExportToLogDB get logdb repo error", err)
 		return err
 	} else {
 		//repo 存在，检查是否需要更新
@@ -328,6 +336,7 @@ func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 				Schema:       logdbrepoinfo.Schema,
 				PandoraToken: input.UpdateLogDBRepoToken,
 			}); err != nil {
+				log.Error("AutoExportToLogDB update logdb repo error", err)
 				return err
 			}
 		}
@@ -350,6 +359,7 @@ func (c *Pipeline) AutoExportToLogDB(input *AutoExportToLogDBInput) error {
 		exportInput.PandoraToken = input.CreateExportToken
 		return c.CreateExport(exportInput)
 	}
+	log.Error("AutoExportToLogDB get export error", err)
 	return err
 }
 
@@ -377,9 +387,19 @@ func (c *Pipeline) AutoExportToKODO(input *AutoExportToKODOInput) error {
 		PandoraToken: input.GetExportToken,
 	})
 	if reqerr.IsNoSuchResourceError(err) {
+		var ak string
+		if c.Config.Ak != "" {
+			ak = c.Config.Ak
+		}
+		if ak == "" && input.CreateExportToken.Token != "" {
+			tks := strings.Split(strings.TrimSpace(strings.TrimPrefix(input.CreateExportToken.Token, "Pandora")), ":")
+			if len(tks) > 0 {
+				ak = tks[0]
+			}
+		}
 		kodoSpec := c.FormKodoSpec(&CreateRepoForKodoInput{
 			Retention: input.Retention,
-			Ak:        c.Config.Ak,
+			Ak:        ak,
 			Email:     input.Email,
 			Bucket:    input.BucketName,
 			RepoName:  input.RepoName,

@@ -5,6 +5,7 @@ import (
 
 	. "github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
+	. "github.com/qiniu/pandora-go-sdk/base/models"
 	. "github.com/qiniu/pandora-go-sdk/logdb"
 )
 

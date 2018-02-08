@@ -693,6 +693,7 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 						Workflow:     input.WorkflowName,
 						PandoraToken: input.PipelineCreateRepoToken,
 					}); subErr != nil {
+						log.Error("Create Pipeline Repo  error", subErr)
 						return subErr
 					}
 				} else {
@@ -702,16 +703,19 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 			// 创建、更新各种导出
 			if input.Option != nil && input.Option.ToKODO {
 				if err := c.AutoExportToKODO(&input.Option.AutoExportToKODOInput); err != nil {
+					log.Error("AutoExportToKODO error", err)
 					return err
 				}
 			}
 			if input.Option != nil && input.Option.ToLogDB {
 				if err := c.AutoExportToLogDB(&input.Option.AutoExportToLogDBInput); err != nil {
+					log.Error("AutoExportToLogDB error", err)
 					return err
 				}
 			}
 			if input.Option != nil && input.Option.ToTSDB {
 				if err := c.AutoExportToTSDB(&input.Option.AutoExportToTSDBInput); err != nil {
+					log.Error("AutoExportToTSDB error", err)
 					return err
 				}
 			}

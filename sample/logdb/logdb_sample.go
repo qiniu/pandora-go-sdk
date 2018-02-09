@@ -5,6 +5,7 @@ import (
 
 	. "github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
+	. "github.com/qiniu/pandora-go-sdk/base/models"
 	. "github.com/qiniu/pandora-go-sdk/logdb"
 )
 
@@ -223,7 +224,7 @@ func Sample_SendLogWithToken() {
 				"f3": time.Now().UTC().Format(time.RFC3339),
 			},
 		},
-		LogdbToken: LogdbToken{
+		PandoraToken: PandoraToken{
 			Token: token,
 		},
 	}

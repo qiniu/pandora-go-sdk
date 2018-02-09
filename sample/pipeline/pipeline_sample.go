@@ -7,6 +7,7 @@ import (
 
 	. "github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
+	. "github.com/qiniu/pandora-go-sdk/base/models"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
 	. "github.com/qiniu/pandora-go-sdk/pipeline"
 )
@@ -500,7 +501,7 @@ func Sample_PostDataWithToken() {
 				},
 			},
 		},
-		PipelineToken: PipelineToken{
+		PandoraToken: PandoraToken{
 			Token: token,
 		},
 	}

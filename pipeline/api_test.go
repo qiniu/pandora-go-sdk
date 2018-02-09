@@ -13,7 +13,7 @@ func TestUnpack(t *testing.T) {
 	cfg := NewConfig().
 		WithEndpoint("https://pipeline.qiniu.com")
 
-	client, err := newClient(cfg)
+	client, err := NewDefaultClient(cfg)
 	if err != nil {
 		t.Error(err)
 	}

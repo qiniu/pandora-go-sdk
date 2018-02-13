@@ -929,6 +929,13 @@ func TestConvertData(t *testing.T) {
 			},
 			exp: `[1.1,2.2,3.3,4.4,5.5,6.6]`,
 		},
+		{
+			v: nil,
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeString,
+			},
+			exp: ``,
+		},
 	}
 	for _, ti := range tests {
 		got, err := dataConvert(ti.v, ti.schema)

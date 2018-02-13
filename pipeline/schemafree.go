@@ -122,6 +122,8 @@ func dataConvert(data interface{}, schema RepoSchemaEntry) (converted interface{
 				return "", err
 			}
 			return string(str), nil
+		case nil:
+			return "", nil
 		default:
 			v := reflect.ValueOf(data)
 			switch v.Kind() {

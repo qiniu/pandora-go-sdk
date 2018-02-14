@@ -2243,14 +2243,15 @@ func GenerateTokensForAutoTSDB(pipelineRepoName, tsdbRepoName, ak, sk string) ma
 	return tokens
 }
 
-func GenerateTokensForTSDBSeries(pipelineRepoName, tsdbRepoName, ak, sk string, tsdbserisNames []string) (createSerisTokens map[string]models.PandoraToken, createExportTokens map[string]models.PandoraToken, updateExportTokens map[string]models.PandoraToken) {
+func GenerateTokensForTSDBSeries(pipelineRepoName, tsdbRepoName, ak, sk string, tsdbserisNames []string) (createSeriesTokens, createExportTokens, updateExportTokens, getExportTokens map[string]models.PandoraToken) {
 	typeAppJson := "application/json"
 	if tsdbRepoName == "" {
 		tsdbRepoName = pipelineRepoName
 	}
-	createSerisTokens = make(map[string]models.PandoraToken)
+	createSeriesTokens = make(map[string]models.PandoraToken)
 	createExportTokens = make(map[string]models.PandoraToken)
 	updateExportTokens = make(map[string]models.PandoraToken)
+	getExportTokens = make(map[string]models.PandoraToken)
 	tc, _ := tsdb.NewDefaultClient(tsdb.NewConfig())
 	pc, _ := pipeline.NewDefaultClient(pipeline.NewConfig())
 
@@ -2266,7 +2267,7 @@ func GenerateTokensForTSDBSeries(pipelineRepoName, tsdbRepoName, ak, sk string, 
 		if err != nil {
 			log.Fatalf("%v %v", base.OpCreateSeries, err)
 		}
-		createSerisTokens[v] = models.PandoraToken{Token: token}
+		createSeriesTokens[v] = models.PandoraToken{Token: token}
 
 		op = pc.NewOperation(base.OpCreateExport, pipelineRepoName, base.FormExportTSDBName(pipelineRepoName, v, pipeline.ExportTypeTSDB))
 		desc = base.TokenDesc{
@@ -2293,6 +2294,19 @@ func GenerateTokensForTSDBSeries(pipelineRepoName, tsdbRepoName, ak, sk string, 
 			log.Fatalf("%v %v", base.OpUpdateExport, err)
 		}
 		updateExportTokens[base.FormExportTSDBName(pipelineRepoName, v, pipeline.ExportTypeTSDB)] = models.PandoraToken{Token: token}
+
+		op = pc.NewOperation(base.OpGetExport, pipelineRepoName, base.FormExportTSDBName(pipelineRepoName, v, pipeline.ExportTypeTSDB))
+		desc = base.TokenDesc{
+			Url:         op.Path,
+			Expires:     time.Now().Add(24 * time.Hour).Unix(),
+			Method:      op.Method,
+			ContentType: typeAppJson,
+		}
+		token, err = base.MakeTokenInternal(ak, sk, &desc)
+		if err != nil {
+			log.Fatalf("%v %v", base.OpGetExport, err)
+		}
+		getExportTokens[base.FormExportTSDBName(pipelineRepoName, v, pipeline.ExportTypeTSDB)] = models.PandoraToken{Token: token}
 	}
 	return
 }
@@ -2307,7 +2321,7 @@ func TestPostDataSchemaFreeWithToken(t *testing.T) {
 	schematokens := GenerateTokensForSchemaFree(pipelineRepoName, worklow, ak, sk)
 	autoLogdbTokens := GenerateTokensForAutoLogdb(pipelineRepoName, logdbRepoName, ak, sk)
 	autoTsdbTokens := GenerateTokensForAutoTSDB(pipelineRepoName, tsdbRepoName, ak, sk)
-	seriesToken, serisCreateExportTokn, seriesUpdateExportToken := GenerateTokensForTSDBSeries(pipelineRepoName, tsdbRepoName, ak, sk, []string{"s1"})
+	seriesToken, serisCreateExportTokn, seriesUpdateExportToken, getExportTokens := GenerateTokensForTSDBSeries(pipelineRepoName, tsdbRepoName, ak, sk, []string{"s1"})
 	autoKodoTokens := GenerateTokensForAutoKodo(pipelineRepoName, bucketName, ak, sk)
 
 	var err error
@@ -2378,7 +2392,7 @@ func TestPostDataSchemaFreeWithToken(t *testing.T) {
 					CreateTSDBSeriesTokens: seriesToken,
 					CreateExportToken:      serisCreateExportTokn,
 					UpdateExportToken:      seriesUpdateExportToken,
-					GetExportToken:         autoTsdbTokens[pdPipeline+"-"+base.OpGetExport],
+					GetExportToken:         getExportTokens,
 					ListExportToken:        autoTsdbTokens[pdPipeline+"-"+base.OpListExports],
 				},
 			},

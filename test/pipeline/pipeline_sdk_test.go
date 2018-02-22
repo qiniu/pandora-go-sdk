@@ -47,7 +47,7 @@ func init() {
 	logger = base.NewDefaultLogger()
 	cfg = pipeline.NewConfig().
 		WithEndpoint(endpoint).
-		//WithAccessKeySecretKey(ak, sk).
+		WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
 		WithLoggerLevel(base.LogDebug).
 		WithLogDBEndpoint("https://logdb.qiniu.com").
@@ -585,7 +585,7 @@ func TestWithOption(t *testing.T) {
 		RepoName: repoName,
 		Schema:   defaultRepoSchema,
 		Region:   "nb",
-		Options:  &pipeline.RepoOptions{WithTimestamp: "timestamp"},
+		Options:  &pipeline.RepoOptions{WithTimestamp: "timestamp", UnescapeLine: true},
 	}
 	err := client.CreateRepo(createRepoInput)
 	if err != nil {
@@ -595,31 +595,33 @@ func TestWithOption(t *testing.T) {
 	postDataInput := &pipeline.PostDataInput{
 		RepoName: repoName,
 		Points: pipeline.Points{
-			pipeline.Point{
-				[]pipeline.PointField{
-					pipeline.PointField{
+			{
+				Fields: []pipeline.PointField{
+					{
 						Key:   "f1",
-						Value: "12.7",
+						Value: "\\t12.7\\n",
 					},
-					pipeline.PointField{
+					{
 						Key:   "f2",
-						Value: 1.0,
+						Value: 3.14,
+					},
+				},
+			},
+			{
+				Fields: []pipeline.PointField{
+					{
+						Key:   "f1",
+						Value: "dang\\n\\thehe\nhe11\nx1",
+					},
+					{
+						Key:   "f2",
+						Value: 1024.0,
 					},
 				},
 			},
 		},
 	}
 	err = client.PostData(postDataInput)
-	if err != nil {
-		t.Error(err)
-	}
-
-	buf := []byte("f1=\"12.7\"\tf2=3.14\nf1=\"dang\"\tf2=1024.0")
-	postDataFromBytesInput := &pipeline.PostDataFromBytesInput{
-		RepoName: repoName,
-		Buffer:   buf,
-	}
-	err = client.PostDataFromBytes(postDataFromBytesInput)
 	if err != nil {
 		t.Error(err)
 	}

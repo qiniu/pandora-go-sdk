@@ -742,7 +742,7 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 		if err != nil {
 			return err
 		}
-		if !needUpdate {
+		if !needUpdate && len(schemas) > 0 {
 			needUpdate = isRepoOptionNeedUpdate(repo.Options, input.RepoOptions)
 		}
 		if needUpdate && input.SchemaFree {

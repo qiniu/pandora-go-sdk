@@ -1087,3 +1087,47 @@ func TestGetTrimedDataSchemaTrimNil(t *testing.T) {
 		t.Fatalf("test error exp %v, but got %v", expData, data)
 	}
 }
+
+func TestChangeElemType(t *testing.T) {
+	testData := []struct {
+		input RepoSchemaEntry
+		exp   RepoSchemaEntry
+	}{
+		{
+			input: RepoSchemaEntry{ValueType: PandoraTypeLong},
+			exp:   RepoSchemaEntry{ValueType: PandoraTypeFloat},
+		},
+		{
+			input: RepoSchemaEntry{ValueType: PandoraTypeMap, Schema: []RepoSchemaEntry{
+				{
+					ValueType: PandoraTypeLong,
+				},
+				{
+					ValueType: PandoraTypeFloat,
+				},
+				{
+					ValueType: PandoraTypeLong,
+				},
+			}},
+			exp: RepoSchemaEntry{ValueType: PandoraTypeMap, Schema: []RepoSchemaEntry{
+				{
+					ValueType: PandoraTypeFloat,
+				},
+				{
+					ValueType: PandoraTypeFloat,
+				},
+				{
+					ValueType: PandoraTypeFloat,
+				},
+			}},
+		},
+		{
+			input: RepoSchemaEntry{ValueType: PandoraTypeArray, ElemType: PandoraTypeLong},
+			exp:   RepoSchemaEntry{ValueType: PandoraTypeArray, ElemType: PandoraTypeFloat},
+		},
+	}
+	for _, input := range testData {
+		got := changeElemType(input.input, PandoraTypeLong, PandoraTypeFloat)
+		assert.Equal(t, input.exp, got)
+	}
+}

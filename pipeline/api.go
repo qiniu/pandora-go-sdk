@@ -546,13 +546,14 @@ func (c *Pipeline) unpack(input *SchemaFreeInput) (packages []pointContext, err 
 	var start = 0
 	for i, d := range input.Datas {
 		point, err := c.generatePoint(d, &InitOrUpdateWorkflowInput{
-			SchemaFree:      !input.NoUpdate,
-			Region:          input.Region,
-			RepoName:        input.RepoName,
-			WorkflowName:    input.WorkflowName,
-			RepoOptions:     input.RepoOptions,
-			Option:          input.Option,
-			SchemaFreeToken: input.SchemaFreeToken,
+			InitOptionChange: false,
+			SchemaFree:       !input.NoUpdate,
+			Region:           input.Region,
+			RepoName:         input.RepoName,
+			WorkflowName:     input.WorkflowName,
+			RepoOptions:      input.RepoOptions,
+			Option:           input.Option,
+			SchemaFreeToken:  input.SchemaFreeToken,
 		})
 		if err != nil {
 			return nil, err

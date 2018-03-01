@@ -403,6 +403,20 @@ func checkIgnore(value interface{}, schemeType string) bool {
 	return false
 }
 
+// 将 entry 以及 entry.Schema 中的 valueType 和 ElemType 的值由 srcType 改为 dstType
+func changeElemType(entry RepoSchemaEntry, srcType, dstType string) RepoSchemaEntry {
+	if entry.ValueType == srcType {
+		entry.ValueType = dstType
+	}
+	if entry.ElemType == srcType {
+		entry.ElemType = dstType
+	}
+	for i, s := range entry.Schema {
+		entry.Schema[i] = changeElemType(s, srcType, dstType)
+	}
+	return entry
+}
+
 func (c *Pipeline) generatePoint(oldData Data, input *InitOrUpdateWorkflowInput) (point Point, err error) {
 	// copyAndConvertData 函数会将包含'-'的 key 用 '_' 来代替
 	// 同时该函数会去除数据中无法判断类型的部分
@@ -472,6 +486,12 @@ func (c *Pipeline) generatePoint(oldData Data, input *InitOrUpdateWorkflowInput)
 		//defaultAll 为false时，过滤一批不要的
 		// 该函数有两个作用，1. 获取 data 中所有字段的 schema; 2. 将 data 中值为 nil, 无法判断类型的键值对，从 data 中删掉
 		valueType := getTrimedDataSchema(data)
+		// 将 metric 中的 long 都改成 float
+		if input.Option != nil && input.Option.IsMetric {
+			for key, val := range valueType {
+				valueType[key] = changeElemType(val, PandoraTypeLong, PandoraTypeFloat)
+			}
+		}
 		if err = c.addRepoSchemas(valueType, input); err != nil {
 			err = fmt.Errorf("schemafree add Repo schema error %v", err)
 			return
@@ -571,10 +591,11 @@ type WorkflowTokens struct {
 	GetWorkflowStatusToken PandoraToken
 }
 
-func (c *Pipeline) changeWorkflowToStopped(workflow *GetWorkflowOutput, waitStopped bool, tokens WorkflowTokens) error {
+func (c *Pipeline) changeWorkflowToStopped(workflow *GetWorkflowOutput, waitStopped bool, tokens WorkflowTokens, isNeedStart *bool) error {
 	logger := base.NewDefaultLogger()
 	switch workflow.Status {
 	case base.WorkflowStarted:
+		*isNeedStart = true
 		if err := c.StopWorkflow(&StopWorkflowInput{WorkflowName: workflow.Name, PandoraToken: tokens.StopWorkflowToken}); err != nil {
 			return err
 		}
@@ -582,6 +603,7 @@ func (c *Pipeline) changeWorkflowToStopped(workflow *GetWorkflowOutput, waitStop
 		if err := WaitWorkflowStarted(workflow.Name, c, logger, tokens.GetWorkflowStatusToken); err != nil {
 			return err
 		}
+		*isNeedStart = true
 		if err := c.StopWorkflow(&StopWorkflowInput{WorkflowName: workflow.Name, PandoraToken: tokens.StopWorkflowToken}); err != nil {
 			return err
 		}
@@ -647,8 +669,13 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 		RepoName:     input.RepoName,
 		PandoraToken: input.PipelineGetRepoToken,
 	})
+	// 是否由 logkit 启动 workflow
+	needStartWorkflow := false
 	if err != nil && reqerr.IsNoSuchResourceError(err) {
 		// 如果 repo 不存在
+		if len(input.Schema) == 0 {
+			return nil
+		}
 		var workflow *GetWorkflowOutput
 		if input.WorkflowName != "" {
 			// 如果导出到 dag, 确保 workflow 存在, 不存在时创建
@@ -657,6 +684,7 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 				PandoraToken: input.PipelineGetWorkflowToken,
 			})
 			if err != nil && reqerr.IsNoSuchWorkflow(err) {
+				needStartWorkflow = true
 				if err = c.CreateWorkflow(&CreateWorkflowInput{
 					WorkflowName: input.WorkflowName,
 					Region:       input.Region,
@@ -664,65 +692,65 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 				}); err != nil {
 					return err
 				}
+				workflow.Name = input.WorkflowName
+				workflow.Status = base.WorkflowReady
 			} else if err != nil {
 				return err
 			}
 		}
-		if len(input.Schema) != 0 {
-			// repo 不存在且传入了非空的 schema, 此时要新建 repo
-			if err := c.CreateRepo(&CreateRepoInput{
-				RepoName:     input.RepoName,
-				Region:       input.Region,
-				Schema:       input.Schema,
-				Options:      input.RepoOptions,
-				Workflow:     input.WorkflowName,
-				PandoraToken: input.PipelineCreateRepoToken,
-			}); err != nil {
-				if reqerr.IsWorkflowStatError(err) {
-					// 如果当前 workflow 的状态不允许更新，则先等待停止 workflow 再更新
-					if subErr := c.changeWorkflowToStopped(workflow, true, WorkflowTokens{
-						StartWorkflowToken:     input.PipelineStartWorkflowToken,
-						StopWorkflowToken:      input.PipelineStopWorkflowToken,
-						GetWorkflowStatusToken: input.PipelineGetWorkflowStatusToken,
-					}); subErr != nil {
-						return subErr
-					}
-					if subErr := c.CreateRepo(&CreateRepoInput{
-						RepoName:     input.RepoName,
-						Region:       input.Region,
-						Schema:       input.Schema,
-						Options:      input.RepoOptions,
-						Workflow:     input.WorkflowName,
-						PandoraToken: input.PipelineCreateRepoToken,
-					}); subErr != nil {
-						log.Error("Create Pipeline Repo  error", subErr)
-						return subErr
-					}
-				} else {
-					return err
+		// repo 不存在且传入了非空的 schema, 此时要新建 repo
+		if err := c.CreateRepo(&CreateRepoInput{
+			RepoName:     input.RepoName,
+			Region:       input.Region,
+			Schema:       input.Schema,
+			Options:      input.RepoOptions,
+			Workflow:     input.WorkflowName,
+			PandoraToken: input.PipelineCreateRepoToken,
+		}); err != nil {
+			if reqerr.IsWorkflowStatError(err) {
+				// 如果当前 workflow 的状态不允许更新，则先等待停止 workflow 再更新
+				if subErr := c.changeWorkflowToStopped(workflow, true, WorkflowTokens{
+					StartWorkflowToken:     input.PipelineStartWorkflowToken,
+					StopWorkflowToken:      input.PipelineStopWorkflowToken,
+					GetWorkflowStatusToken: input.PipelineGetWorkflowStatusToken,
+				}, &needStartWorkflow); subErr != nil {
+					return subErr
 				}
-			}
-			// 创建、更新各种导出
-			if input.Option != nil && input.Option.ToKODO {
-				if err := c.AutoExportToKODO(&input.Option.AutoExportToKODOInput); err != nil {
-					log.Error("AutoExportToKODO error", err)
-					return err
+				if subErr := c.CreateRepo(&CreateRepoInput{
+					RepoName:     input.RepoName,
+					Region:       input.Region,
+					Schema:       input.Schema,
+					Options:      input.RepoOptions,
+					Workflow:     input.WorkflowName,
+					PandoraToken: input.PipelineCreateRepoToken,
+				}); subErr != nil {
+					log.Error("Create Pipeline Repo error", subErr)
+					return subErr
 				}
-			}
-			if input.Option != nil && input.Option.ToLogDB {
-				if err := c.AutoExportToLogDB(&input.Option.AutoExportToLogDBInput); err != nil {
-					log.Error("AutoExportToLogDB error", err)
-					return err
-				}
-			}
-			if input.Option != nil && input.Option.ToTSDB {
-				if err := c.AutoExportToTSDB(&input.Option.AutoExportToTSDBInput); err != nil {
-					log.Error("AutoExportToTSDB error", err)
-					return err
-				}
+			} else {
+				return err
 			}
 		}
-		if input.WorkflowName != "" {
+		// 创建、更新各种导出
+		if input.Option != nil && input.Option.ToKODO {
+			if err := c.AutoExportToKODO(&input.Option.AutoExportToKODOInput); err != nil {
+				log.Error("AutoExportToKODO error", err)
+				return err
+			}
+		}
+		if input.Option != nil && input.Option.ToLogDB {
+			if err := c.AutoExportToLogDB(&input.Option.AutoExportToLogDBInput); err != nil {
+				log.Error("AutoExportToLogDB error", err)
+				return err
+			}
+		}
+		if input.Option != nil && input.Option.ToTSDB {
+			if err := c.AutoExportToTSDB(&input.Option.AutoExportToTSDBInput); err != nil {
+				log.Error("AutoExportToTSDB error", err)
+				return err
+			}
+		}
+		if input.WorkflowName != "" && needStartWorkflow {
 			if err := c.changeWorkflowToStarted(workflow, false, WorkflowTokens{
 				StartWorkflowToken:     input.PipelineStartWorkflowToken,
 				StopWorkflowToken:      input.PipelineStopWorkflowToken,
@@ -742,10 +770,8 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 		if err != nil {
 			return err
 		}
-		if !needUpdate && len(schemas) > 0 {
-			needUpdate = isRepoOptionNeedUpdate(repo.Options, input.RepoOptions)
-		}
-		if needUpdate && input.SchemaFree {
+		// 当 input.Init = true 时为 sender 创立，可能需要创建导出
+		if (needUpdate && input.SchemaFree) || (len(schemas) > 0 && input.InitOptionChange) {
 			updateRepoInput := &UpdateRepoInput{
 				RepoName:             input.RepoName,
 				Schema:               schemas,
@@ -769,7 +795,7 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 						StartWorkflowToken:     input.PipelineStartWorkflowToken,
 						StopWorkflowToken:      input.PipelineStopWorkflowToken,
 						GetWorkflowStatusToken: input.PipelineGetWorkflowStatusToken,
-					}); subErr != nil {
+					}, &needStartWorkflow); subErr != nil {
 						return subErr
 					}
 					if subErr = c.UpdateRepo(updateRepoInput); subErr != nil {
@@ -783,7 +809,7 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 			input.Schema = schemas
 		}
 		// 如果 repo 已经存在, repo 本身的 fromDag 字段就表明了是否来自workflow
-		if repo.FromDag {
+		if repo.FromDag && needStartWorkflow {
 			workflow, err := c.GetWorkflow(&GetWorkflowInput{
 				WorkflowName: repo.Workflow,
 				PandoraToken: input.PipelineGetWorkflowToken,
@@ -804,19 +830,6 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 		}
 	}
 	return nil
-}
-
-func isRepoOptionNeedUpdate(old, new *RepoOptions) bool {
-	if new == nil {
-		return false
-	}
-	if old == nil {
-		return true
-	}
-	if old.UnescapeLine == new.UnescapeLine && old.WithTimestamp == new.WithTimestamp && old.WithIP == new.WithIP {
-		return false
-	}
-	return true
 }
 
 func (c *Pipeline) addRepoSchemas(addSchemas map[string]RepoSchemaEntry, input *InitOrUpdateWorkflowInput) (err error) {

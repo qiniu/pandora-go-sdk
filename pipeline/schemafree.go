@@ -417,7 +417,7 @@ func changeElemType(entry RepoSchemaEntry, srcType, dstType string) RepoSchemaEn
 	return entry
 }
 
-func (c *Pipeline) generatePoint(oldData Data, input *InitOrUpdateWorkflowInput) (point Point, err error) {
+func (c *Pipeline) generatePoint(oldData Data, input *SchemaFreeInput) (point Point, repoUpdate bool, err error) {
 	// copyAndConvertData 函数会将包含'-'的 key 用 '_' 来代替
 	// 同时该函数会去除数据中无法判断类型的部分
 	data := copyAndConvertData(oldData, 1)
@@ -426,11 +426,13 @@ func (c *Pipeline) generatePoint(oldData Data, input *InitOrUpdateWorkflowInput)
 	schemas := c.repoSchemas[input.RepoName]
 	c.repoSchemaMux.Unlock()
 	if schemas == nil {
-		schemas, err = c.getSchemas(input.RepoName, input.PipelineGetRepoToken)
-		if err != nil {
+		if schemas, err = c.getSchemas(input.RepoName, input.PipelineGetRepoToken); err != nil {
 			reqe, ok := err.(*reqerr.RequestError)
 			if ok && reqe.ErrorType != reqerr.NoSuchRepoError {
 				return
+			} else {
+				err = nil
+				schemas = make(map[string]RepoSchemaEntry)
 			}
 		}
 		c.repoSchemaMux.Lock()
@@ -458,7 +460,7 @@ func (c *Pipeline) generatePoint(oldData Data, input *InitOrUpdateWorkflowInput)
 		}
 
 		//对于没有autoupdate的情况就不delete了，节省CPU
-		if input.SchemaFree {
+		if !input.NoUpdate {
 			if deepDeleteCheck(value, v) {
 				delete(data, name)
 			} else {
@@ -482,7 +484,7 @@ func (c *Pipeline) generatePoint(oldData Data, input *InitOrUpdateWorkflowInput)
 	/*
 		data中剩余的值，但是在schema中不存在的，根据schemaFree增加。
 	*/
-	if input.SchemaFree && haveNewData(data) {
+	if !input.NoUpdate && haveNewData(data) {
 		//defaultAll 为false时，过滤一批不要的
 		// 该函数有两个作用，1. 获取 data 中所有字段的 schema; 2. 将 data 中值为 nil, 无法判断类型的键值对，从 data 中删掉
 		valueType := getTrimedDataSchema(data)
@@ -492,7 +494,7 @@ func (c *Pipeline) generatePoint(oldData Data, input *InitOrUpdateWorkflowInput)
 				valueType[key] = changeElemType(val, PandoraTypeLong, PandoraTypeFloat)
 			}
 		}
-		if err = c.addRepoSchemas(valueType, input); err != nil {
+		if repoUpdate, err = c.addRepoSchemas(valueType, input.RepoName); err != nil {
 			err = fmt.Errorf("schemafree add Repo schema error %v", err)
 			return
 		}
@@ -832,24 +834,28 @@ func (c *Pipeline) InitOrUpdateWorkflow(input *InitOrUpdateWorkflowInput) error 
 	return nil
 }
 
-func (c *Pipeline) addRepoSchemas(addSchemas map[string]RepoSchemaEntry, input *InitOrUpdateWorkflowInput) (err error) {
+func (c *Pipeline) addRepoSchemas(addSchemas map[string]RepoSchemaEntry, repoName string) (repoUpdate bool, err error) {
 	if len(addSchemas) == 0 {
 		return
 	}
-	var addScs []RepoSchemaEntry
+	var oldScs, addScs, mergeScs []RepoSchemaEntry
 	for _, v := range addSchemas {
 		addScs = append(addScs, v)
 	}
-	input.Schema = addScs
-	if err := c.InitOrUpdateWorkflow(input); err != nil {
-		return err
+	c.repoSchemaMux.Lock()
+	for _, v := range c.repoSchemas[repoName] {
+		oldScs = append(oldScs, v)
+	}
+	c.repoSchemaMux.Unlock()
+	if mergeScs, repoUpdate, err = mergePandoraSchemas(oldScs, addScs); err != nil {
+		return
 	}
 	mpschemas := RepoSchema{}
-	for _, sc := range input.Schema {
+	for _, sc := range mergeScs {
 		mpschemas[sc.Key] = sc
 	}
 	c.repoSchemaMux.Lock()
-	c.repoSchemas[input.RepoName] = mpschemas
+	c.repoSchemas[repoName] = mpschemas
 	c.repoSchemaMux.Unlock()
 	return
 }

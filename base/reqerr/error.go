@@ -176,7 +176,7 @@ func IsExistError(err error) bool {
 	if reqErr.ErrorType == RepoAlreadyExistsError || reqErr.ErrorType == SeriesAlreadyExistsError {
 		return true
 	}
-	if reqErr.ErrorType == ExportAlreadyExistsError {
+	if reqErr.ErrorType == ExportAlreadyExistsError || reqErr.ErrorType == ErrWorkflowAlreadyExists {
 		return true
 	}
 	return false

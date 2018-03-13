@@ -949,6 +949,12 @@ func TestCopyAndConvertData(t *testing.T) {
 		"a": "a",
 		"b": 1,
 		"c": nil,
+		"g": uint64(9223372036854776000),
+		"h": uint64(9223372036851822000),
+		"i": uint64(1),
+		"j": []interface{}{int(1), uint64(9223372036854776000), uint64(9223372036851822000)},
+		"k": []uint64{uint64(9223372036854776000), uint64(1), uint64(9223372036851822000)},
+		"l": []interface{}{uint64(9223372036854776000), int(1), uint64(9223372036851822000)},
 		"e": []interface{}{},
 		"f": map[string]interface{}{},
 		"d": map[string]interface{}{
@@ -1006,6 +1012,11 @@ func TestCopyAndConvertData(t *testing.T) {
 	expData := Data{
 		"a": "a",
 		"b": 1,
+		"i": int64(1),
+		"h": int64(9223372036851822000),
+		"k": []int64{int64(1), int64(9223372036851822000)},
+		"l": []interface{}{int(1), int64(9223372036851822000)},
+		"j": []interface{}{int(1), uint64(9223372036854776000), uint64(9223372036851822000)},
 		"d": map[string]interface{}{
 			"a_1": "a",
 			"b1":  1,

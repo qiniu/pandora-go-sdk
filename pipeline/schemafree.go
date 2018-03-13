@@ -360,10 +360,44 @@ func copyAndConvertData(d Data, mapLevel int) Data {
 			} else {
 				v = map[string]interface{}(copyAndConvertData(nv, mapLevel+1))
 			}
+		case []uint64:
+			if len(nv) == 0 {
+				continue
+			}
+			newArr := make([]int64, 0)
+			for _, value := range nv {
+				if int64(value) < 0 {
+					continue
+				}
+				newArr = append(newArr, int64(value))
+			}
+			v = newArr
 		case []interface{}:
 			if len(nv) == 0 {
 				continue
 			}
+			switch nv[0].(type) {
+			case uint64:
+				newArr := make([]interface{}, 0)
+				for _, value := range nv {
+					switch newV := value.(type) {
+					case uint64:
+						if int64(newV) < 0 {
+							continue
+						}
+						newArr = append(newArr, int64(newV))
+					default:
+						newArr = append(newArr, newV)
+					}
+				}
+				v = newArr
+			}
+		case uint64:
+			newV := int64(nv)
+			if newV < 0 {
+				continue
+			}
+			v = newV
 		case nil:
 			continue
 		}

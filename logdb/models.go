@@ -391,6 +391,13 @@ type fullText struct {
 	Analyzer string `json:"analyzer"`
 }
 
+func NewFullText(analyzer string, enabled bool) fullText {
+	return fullText{
+		enabled,
+		analyzer,
+	}
+}
+
 type CreateRepoInput struct {
 	PandoraToken
 	RepoName     string

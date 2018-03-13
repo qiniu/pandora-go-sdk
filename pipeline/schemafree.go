@@ -366,9 +366,6 @@ func copyAndConvertData(d Data, mapLevel int) Data {
 			}
 			newArr := make([]int64, 0)
 			for _, value := range nv {
-				if int64(value) < 0 {
-					continue
-				}
 				newArr = append(newArr, int64(value))
 			}
 			v = newArr
@@ -382,9 +379,6 @@ func copyAndConvertData(d Data, mapLevel int) Data {
 				for _, value := range nv {
 					switch newV := value.(type) {
 					case uint64:
-						if int64(newV) < 0 {
-							continue
-						}
 						newArr = append(newArr, int64(newV))
 					default:
 						newArr = append(newArr, newV)
@@ -393,11 +387,7 @@ func copyAndConvertData(d Data, mapLevel int) Data {
 				v = newArr
 			}
 		case uint64:
-			newV := int64(nv)
-			if newV < 0 {
-				continue
-			}
-			v = newV
+			v = int64(nv)
 		case nil:
 			continue
 		}

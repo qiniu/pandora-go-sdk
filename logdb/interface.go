@@ -19,6 +19,10 @@ type LogdbAPI interface {
 
 	QueryLog(*QueryLogInput) (*QueryLogOutput, error)
 
+	QueryAnalysisLogJob(*QueryAnalysisLogInput) (string, error)
+
+	QueryAnalysisLog(string) (*QueryAnalysisLogOutput, error)
+
 	QueryScroll(*QueryScrollInput) (*QueryLogOutput, error)
 
 	QueryHistogramLog(*QueryHistogramLogInput) (*QueryHistogramLogOutput, error)

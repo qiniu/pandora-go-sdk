@@ -104,6 +104,8 @@ const (
 	OpGetRepoConfig     string = "GetRepoConfig"
 	OpPartialQuery      string = "PartialQuery"
 	OpSchemaRef         string = "SchemaRef"
+	OpAnalysisLogJob    string = "AnalysisLogJob"
+	OpAnalysisLog       string = "AnalysisLog"
 
 	OpUpdateRepoMetadata string = "UpdataRepoMetadata"
 	OpDeleteRepoMetadata string = "DeleteRepoMetadata"

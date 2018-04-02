@@ -77,10 +77,10 @@ var Analyzers = map[string]bool{
 func validateRepoName(r string) error {
 	matched, err := regexp.MatchString(repoNamePattern, r)
 	if err != nil {
-		return reqerr.NewInvalidArgs("RepoName", err.Error())
+		return reqerr.NewInvalidArgs("RepoName", err.Error()).WithComponent("tsdb")
 	}
 	if !matched {
-		return reqerr.NewInvalidArgs("RepoName", fmt.Sprintf("invalid repo name: %s", r))
+		return reqerr.NewInvalidArgs("RepoName", fmt.Sprintf("invalid repo name: %s", r)).WithComponent("tsdb")
 	}
 	return nil
 }
@@ -386,14 +386,16 @@ func getFormatDSL(schemas []RepoSchemaEntry, depth int, indent string) (dsl stri
 	return
 }
 
-type fullText struct {
+//FullText 用于创建和指定全文索引
+type FullText struct {
 	Enabled  bool   `json:"enabled"`
 	Analyzer string `json:"analyzer"`
 }
 
-func NewFullText(analyzer string, enabled bool) fullText {
-	return fullText{
-		enabled,
+//NewFullText  增加全文索引的选项
+func NewFullText(analyzer string) FullText {
+	return FullText{
+		true,
 		analyzer,
 	}
 }
@@ -405,7 +407,7 @@ type CreateRepoInput struct {
 	Retention    string            `json:"retention"`
 	Schema       []RepoSchemaEntry `json:"schema"`
 	PrimaryField string            `json:"primaryField"`
-	FullText     fullText          `json:"fullText"`
+	FullText     FullText          `json:"fullText"`
 }
 
 func (r *CreateRepoInput) Validate() (err error) {
@@ -482,7 +484,7 @@ type GetRepoOutput struct {
 	PrimaryField string            `json:"primaryField"`
 	CreateTime   string            `json:"createTime"`
 	UpdateTime   string            `json:"updateTime"`
-	FullText     fullText          `json:"fullText"`
+	FullText     FullText          `json:"fullText"`
 }
 
 type RepoDesc struct {
@@ -492,7 +494,7 @@ type RepoDesc struct {
 	Retention    string   `json:"retention"`
 	CreateTime   string   `json:"createTime"`
 	UpdateTime   string   `json:"updateTime"`
-	FullText     fullText `json:"fullText"`
+	FullText     FullText `json:"fullText"`
 }
 
 type ListReposInput struct {

@@ -1002,6 +1002,7 @@ type SchemaFreeOption struct {
 	ToTSDB           bool
 	ToKODO           bool
 	ForceDataConvert bool
+	NumberUseFloat   bool
 	AutoExportToLogDBInput
 	AutoExportToKODOInput
 	AutoExportToTSDBInput

@@ -743,6 +743,7 @@ type CreateRepoInput struct {
 	Options   *RepoOptions      `json:"options"`
 	GroupName string            `json:"group"`
 	Workflow  string            `json:"workflow"`
+	RuleName  *string           `json:"ruleName"`
 }
 
 func (r *CreateRepoInput) Validate() (err error) {
@@ -788,6 +789,7 @@ type UpdateRepoInput struct {
 	Schema               []RepoSchemaEntry `json:"schema"`
 	Option               *SchemaFreeOption
 	RepoOptions          *RepoOptions `json:"options"`
+	RuleName             *string
 }
 
 func (r *UpdateRepoInput) IsTag(key string) bool {

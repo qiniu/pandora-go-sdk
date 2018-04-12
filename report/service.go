@@ -1,6 +1,7 @@
 package report
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -44,6 +45,11 @@ func newClient(c *config.Config) (p *Report, err error) {
 			KeepAlive: 30 * time.Second,
 		}).Dial,
 		ResponseHeaderTimeout: c.ResponseTimeout,
+		TLSClientConfig:       &tls.Config{},
+	}
+
+	if c.AllowInsecureServer {
+		t.TLSClientConfig.InsecureSkipVerify = true
 	}
 
 	p = &Report{

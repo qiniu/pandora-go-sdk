@@ -2001,7 +2001,7 @@ func (e *JobExportTsdbSpec) Validate() (err error) {
 type JobExportHttpSpec struct {
 	Host   string `json:"host"`
 	Uri    string `json:"uri"`
-	Format string `json:"series,omitempty"`
+	Format string `json:"format,omitempty"`
 }
 
 func (e *JobExportHttpSpec) Validate() (err error) {

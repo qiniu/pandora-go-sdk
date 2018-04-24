@@ -2005,6 +2005,12 @@ type JobExportHttpSpec struct {
 }
 
 func (e *JobExportHttpSpec) Validate() (err error) {
+	if e.Host == "" {
+		return reqerr.NewInvalidArgs("Host", fmt.Sprintf("host should not be empty")).WithComponent("pipleline")
+	}
+	if !strings.HasPrefix(e.Uri, "/") {
+		return reqerr.NewInvalidArgs("Uri", fmt.Sprintf("uri should start with '/'")).WithComponent("pipleline")
+	}
 	return nil
 }
 

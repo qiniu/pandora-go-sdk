@@ -1599,7 +1599,7 @@ func (h *HdfsSourceSpec) Validate() (err error) {
 
 type FusionSourceSpec struct {
 	Domains    []string `json:"domains"`
-	FileFilter string   `json:"file_filter,omitempty"`
+	FileFilter string   `json:"fileFilter,omitempty"`
 }
 
 func (h *FusionSourceSpec) Validate() (err error) {

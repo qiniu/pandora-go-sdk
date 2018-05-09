@@ -936,6 +936,13 @@ func TestConvertData(t *testing.T) {
 			},
 			exp: ``,
 		},
+		{
+			v: "abc",
+			schema: RepoSchemaEntry{
+				ValueType: PandoraTypeMap,
+			},
+			exp: map[string]interface{}{"force_convert_raw_data": "abc", "force_convert_error": "invalid character 'a' looking for beginning of value"},
+		},
 	}
 	for _, ti := range tests {
 		got, err := dataConvert(ti.v, ti.schema)

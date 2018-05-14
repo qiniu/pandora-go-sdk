@@ -47,7 +47,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 		"j": jmp,
 	}
 	assert.NoError(t, err)
-	vt := getTrimedDataSchema(data)
+	vt := GetTrimedDataSchema(data)
 	assert.Equal(t, exp, vt)
 	data = map[string]interface{}{
 		"a": 1,
@@ -135,7 +135,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 
 		"i": formValueType("i", PandoraTypeBool),
 	}
-	vt = getTrimedDataSchema(data)
+	vt = GetTrimedDataSchema(data)
 	assert.Equal(t, exp, vt)
 }
 
@@ -175,7 +175,7 @@ func TestGetTrimedDataSchemaJsonString(t *testing.T) {
 	var jsonobj map[string]interface{}
 	err := json.Unmarshal([]byte(jsontest), &jsonobj)
 	assert.NoError(t, err)
-	gotschemas := getTrimedDataSchema(Data(jsonobj))
+	gotschemas := GetTrimedDataSchema(Data(jsonobj))
 
 	var schemas []RepoSchemaEntry
 	var keys sort.StringSlice
@@ -1101,7 +1101,7 @@ func TestGetTrimedDataSchemaTrimNil(t *testing.T) {
 			},
 		},
 	}
-	getTrimedDataSchema(data)
+	GetTrimedDataSchema(data)
 	if !reflect.DeepEqual(expData, data) {
 		t.Fatalf("test error exp %v, but got %v", expData, data)
 	}

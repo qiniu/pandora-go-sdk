@@ -1597,6 +1597,31 @@ func (h *HdfsSourceSpec) Validate() (err error) {
 	return
 }
 
+type FusionSourceSpec struct {
+	Domains    []string `json:"domains"`
+	FileFilter string   `json:"fileFilter,omitempty"`
+}
+
+func (h *FusionSourceSpec) Validate() (err error) {
+	if len(h.Domains) == 0 {
+		return reqerr.NewInvalidArgs("Domains", fmt.Sprintf("domains should not be empty")).WithComponent("pipleline")
+	}
+	// 目前仅支持单域名
+	if len(h.Domains) != 1 {
+		return reqerr.NewInvalidArgs("Domains", fmt.Sprintf("only one domain is supported")).WithComponent("pipleline")
+	}
+	for _, domain := range h.Domains {
+		if domain == "" {
+			return reqerr.NewInvalidArgs("Domain", fmt.Sprintf("domain in domains should not be empty")).WithComponent("pipleline")
+		}
+	}
+	if h.FileFilter == "" {
+		return reqerr.NewInvalidArgs("FileFilter", fmt.Sprintf("fileFilter should not be empty")).WithComponent("pipleline")
+	}
+
+	return
+}
+
 type RetrieveSchemaInput struct {
 	PandoraToken
 	Type string      `json:"type"`
@@ -1609,6 +1634,8 @@ func (r *RetrieveSchemaInput) Validate() (err error) {
 		r.Type = "kodo"
 	case *HdfsSourceSpec, HdfsSourceSpec:
 		r.Type = "hdfs"
+	case *FusionSourceSpec, FusionSourceSpec:
+		r.Type = "fusion"
 	default:
 		return
 	}
@@ -1662,6 +1689,8 @@ func (c *CreateDatasourceInput) Validate() (err error) {
 		c.Type = "kodo"
 	case *HdfsSourceSpec, HdfsSourceSpec:
 		c.Type = "hdfs"
+	case *FusionSourceSpec, FusionSourceSpec:
+		c.Type = "fusion"
 	default:
 		return
 	}

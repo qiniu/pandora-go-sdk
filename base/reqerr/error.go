@@ -229,6 +229,9 @@ func IsNoSuchResourceError(err error) bool {
 	if !ok {
 		return false
 	}
+	if reqErr.ErrorType == ErrNoSuchWorkflow {
+		return true
+	}
 	if reqErr.ErrorType == NoSuchRepoError {
 		return true
 	}

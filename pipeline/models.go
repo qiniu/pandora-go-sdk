@@ -309,11 +309,12 @@ type ListGroupsOutput struct {
 }
 
 type RepoSchemaEntry struct {
-	Key       string            `json:"key"`
-	ValueType string            `json:"valtype"`
-	Required  bool              `json:"required"`
-	ElemType  string            `json:"elemtype,omitempty"`
-	Schema    []RepoSchemaEntry `json:"schema,omitempty"`
+	Key         string            `json:"key"`
+	ValueType   string            `json:"valtype"`
+	Required    bool              `json:"required"`
+	ElemType    string            `json:"elemtype,omitempty"`
+	Schema      []RepoSchemaEntry `json:"schema,omitempty"`
+	Description string            `json:"description,omitempty"`
 }
 
 func (e RepoSchemaEntry) String() string {
@@ -355,12 +356,13 @@ func (e *RepoSchemaEntry) Validate() (err error) {
 
 type CreateRepoDSLInput struct {
 	PandoraToken
-	RepoName  string
-	Region    string       `json:"region"`
-	DSL       string       `json:"dsl"`
-	Options   *RepoOptions `json:"options"`
-	GroupName string       `json:"group"`
-	Workflow  string       `json:"workflow"`
+	RepoName    string
+	Region      string       `json:"region"`
+	DSL         string       `json:"dsl"`
+	Options     *RepoOptions `json:"options"`
+	GroupName   string       `json:"group"`
+	Workflow    string       `json:"workflow"`
+	Description string       `json:"description,omitempty"`
 }
 
 /*
@@ -592,6 +594,7 @@ type AutoExportToLogDBInput struct {
 	Region      string
 	OmitInvalid bool
 	OmitEmpty   bool
+	Description string
 	AnalyzerInfo
 	AutoExportLogDBTokens
 }
@@ -615,6 +618,7 @@ type CreateRepoForLogDBInput struct {
 	Retention   string
 	OmitInvalid bool
 	OmitEmpty   bool
+	Description string
 	AnalyzerInfo
 	AutoExportLogDBTokens
 }
@@ -625,6 +629,7 @@ type CreateRepoForLogDBDSLInput struct {
 	Region      string
 	Schema      string
 	Retention   string
+	Description string
 	AutoExportLogDBTokens
 }
 
@@ -737,13 +742,14 @@ type RepoOptions struct {
 
 type CreateRepoInput struct {
 	PandoraToken
-	RepoName  string
-	Region    string            `json:"region"`
-	Schema    []RepoSchemaEntry `json:"schema"`
-	Options   *RepoOptions      `json:"options"`
-	GroupName string            `json:"group"`
-	Workflow  string            `json:"workflow"`
-	RuleNames *[]string         `json:"ruleNames"`
+	RepoName    string
+	Region      string            `json:"region"`
+	Schema      []RepoSchemaEntry `json:"schema"`
+	Options     *RepoOptions      `json:"options"`
+	GroupName   string            `json:"group"`
+	Workflow    string            `json:"workflow"`
+	RuleNames   *[]string         `json:"ruleNames"`
+	Description string            `json:"description,omitempty"`
 }
 
 func (r *CreateRepoInput) Validate() (err error) {
@@ -790,6 +796,7 @@ type UpdateRepoInput struct {
 	Option               *SchemaFreeOption
 	RepoOptions          *RepoOptions `json:"options"`
 	RuleNames            *[]string    `json:"ruleNames"`
+	Description          string       `json:"description,omitempty"`
 }
 
 func (r *UpdateRepoInput) IsTag(key string) bool {
@@ -855,6 +862,7 @@ type GetRepoOutput struct {
 	FromDag     bool              `json:"fromDag"`
 	Workflow    string            `json:"workflow"`
 	RuleNames   *[]string         `json:"ruleNames"`
+	Description string            `json:"description,omitempty"`
 }
 
 type SampleDataOutput struct {
@@ -869,6 +877,7 @@ type RepoDesc struct {
 	FromDag     bool      `json:"fromDag"`
 	Workflow    string    `json:"workflow"`
 	RuleNames   *[]string `json:"ruleNames"`
+	Description string    `json:"description,omitempty"`
 }
 
 type ListReposInput struct {
@@ -973,6 +982,7 @@ type SchemaFreeInput struct {
 	Region       string
 	RepoName     string
 	WorkflowName string
+	Description  string
 	Option       *SchemaFreeOption
 	RepoOptions  *RepoOptions
 }
@@ -999,6 +1009,7 @@ type InitOrUpdateWorkflowInput struct {
 	RepoOptions      *RepoOptions
 	Schema           []RepoSchemaEntry
 	Option           *SchemaFreeOption
+	Description      string
 }
 
 type SchemaFreeOption struct {

@@ -899,6 +899,27 @@ type PointField struct {
 	Value interface{}
 }
 
+func (p *PointField) Bytes() []byte {
+	if p == nil || p.Value == nil {
+		return []byte("")
+	}
+	typ := reflect.TypeOf(p.Value).Kind()
+	var value []byte
+	if typ == reflect.Map || typ == reflect.Slice {
+		v, _ := json.Marshal(p.Value)
+		value = escapeBytesField(v)
+	} else if typ == reflect.String {
+		value = escapeBytesField([]byte(reflect.ValueOf(p.Value).String()))
+	} else {
+		value = escapeBytesField([]byte(fmt.Sprintf("%v", p.Value)))
+	}
+	ret := []byte(p.Key)
+	ret = append(ret, '=')
+	ret = append(ret, value...)
+	ret = append(ret, '\t')
+	return ret
+}
+
 func (p *PointField) String() string {
 	if p == nil || p.Value == nil {
 		return ""
@@ -932,13 +953,25 @@ func (p Point) ToString() (bs string) {
 	return buf.String()
 }
 
+func (p Point) ToBytes() []byte {
+	var buf bytes.Buffer
+	for _, field := range p.Fields {
+		buf.Write(field.Bytes())
+	}
+	if len(p.Fields) > 0 {
+		buf.Truncate(buf.Len() - 1)
+	}
+	buf.WriteByte('\n')
+	return buf.Bytes()
+}
+
 type Points []Point
 
 func (ps Points) Buffer() []byte {
 	var buf bytes.Buffer
 	for _, p := range ps {
 		for _, field := range p.Fields {
-			buf.WriteString(field.String())
+			buf.Write(field.Bytes())
 		}
 		if len(p.Fields) > 0 {
 			buf.Truncate(buf.Len() - 1)
@@ -966,6 +999,23 @@ func escapeStringField(in string) string {
 		}
 	}
 	return string(out)
+}
+
+func escapeBytesField(in []byte) []byte {
+	var out []byte
+	for i := 0; i < len(in); i++ {
+		switch in[i] {
+		case '\t': // escape tab
+			out = append(out, '\\')
+			out = append(out, 't')
+		case '\n': // escape new line
+			out = append(out, '\\')
+			out = append(out, 'n')
+		default:
+			out = append(out, in[i])
+		}
+	}
+	return out
 }
 
 type PostDataInput struct {

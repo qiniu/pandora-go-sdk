@@ -269,3 +269,135 @@ func BenchmarkPointField2(b *testing.B) {
 		PASS
 	*/
 }
+
+func TestEscapeString(t *testing.T) {
+	got := escapeStringField("\t\n")
+	assert.Equal(t, "\\t\\n", got)
+	got = escapeStringField("a\tb\nc")
+	assert.Equal(t, "a\\tb\\nc", got)
+	got = escapeStringField("\\t\\n")
+	assert.Equal(t, "\\t\\n", got)
+}
+
+func TestEscapeBytesField(t *testing.T) {
+	got := escapeBytesField([]byte("\t\n"))
+	assert.Equal(t, []byte("\\t\\n"), got)
+	got = escapeBytesField([]byte("a\tb\nc"))
+	assert.Equal(t, []byte("a\\tb\\nc"), got)
+	got = escapeBytesField([]byte("\\t\\n"))
+	assert.Equal(t, []byte("\\t\\n"), got)
+}
+
+var BencS string
+
+/*
+20000000	        59.6 ns/op
+PASS
+*/
+func BenchmarkEscapeString(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		BencS = escapeStringField("\t\n")
+	}
+	_ = BencS
+}
+
+var BencB []byte
+
+/*
+30000000	        45.1 ns/op
+PASS
+*/
+func BenchmarkEscapeBytes(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		BencB = escapeBytesField([]byte("\t\n"))
+	}
+	_ = BencB
+}
+
+/*
+10000000	       148 ns/op
+PASS
+*/
+func BenchmarkPointFieldString(b *testing.B) {
+	p := &PointField{
+		"hello",
+		"nihao!",
+	}
+	for i := 0; i < b.N; i++ {
+		BencS = p.String()
+	}
+	_ = BencS
+}
+
+func BenchmarkPointFieldBytes(b *testing.B) {
+	p := &PointField{
+		"hello",
+		"nihao!",
+	}
+	for i := 0; i < b.N; i++ {
+		BencB = p.Bytes()
+	}
+	_ = BencB
+}
+
+func TestPointField_Bytes(t *testing.T) {
+	p := &PointField{
+		"hello",
+		"nihao!",
+	}
+	assert.Equal(t, p.String(), string(p.Bytes()))
+
+	p = &PointField{
+		"hello",
+		12,
+	}
+	assert.Equal(t, p.String(), string(p.Bytes()))
+
+	p = &PointField{
+		"hello",
+		12.3,
+	}
+	assert.Equal(t, p.String(), string(p.Bytes()))
+
+	p = &PointField{
+		"hello",
+		"nihao\ta\n",
+	}
+	assert.Equal(t, p.String(), string(p.Bytes()))
+
+	p = &PointField{
+		"hello",
+		map[string]interface{}{"a": "B", "c": 1},
+	}
+	assert.Equal(t, p.String(), string(p.Bytes()))
+
+	p = &PointField{
+		"hello",
+		[]map[string]interface{}{{"a": "B", "c": 1}, {"heha": 12.1}},
+	}
+	assert.Equal(t, p.String(), string(p.Bytes()))
+}
+
+func BenchmarkPointString(b *testing.B) {
+	p := PointField{
+		"hello",
+		"nihao!",
+	}
+	newp := &Point{Fields: []PointField{p, {"ha", ""}}}
+	for i := 0; i < b.N; i++ {
+		BencS = newp.ToString()
+	}
+	_ = BencS
+}
+
+func BenchmarkPointBytes(b *testing.B) {
+	p := PointField{
+		"hello",
+		"nihao!",
+	}
+	newp := &Point{Fields: []PointField{p, {"ha", ""}}}
+	for i := 0; i < b.N; i++ {
+		BencB = newp.ToBytes()
+	}
+	_ = BencB
+}

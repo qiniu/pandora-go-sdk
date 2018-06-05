@@ -314,7 +314,7 @@ type RepoSchemaEntry struct {
 	Required    bool              `json:"required"`
 	ElemType    string            `json:"elemtype,omitempty"`
 	Schema      []RepoSchemaEntry `json:"schema,omitempty"`
-	Description string            `json:"description,omitempty"`
+	Description *string           `json:"description"`
 }
 
 func (e RepoSchemaEntry) String() string {
@@ -362,7 +362,7 @@ type CreateRepoDSLInput struct {
 	Options     *RepoOptions `json:"options"`
 	GroupName   string       `json:"group"`
 	Workflow    string       `json:"workflow"`
-	Description string       `json:"description,omitempty"`
+	Description *string      `json:"description"`
 }
 
 /*
@@ -594,7 +594,7 @@ type AutoExportToLogDBInput struct {
 	Region      string
 	OmitInvalid bool
 	OmitEmpty   bool
-	Description string
+	Description *string
 	AnalyzerInfo
 	AutoExportLogDBTokens
 }
@@ -618,7 +618,7 @@ type CreateRepoForLogDBInput struct {
 	Retention   string
 	OmitInvalid bool
 	OmitEmpty   bool
-	Description string
+	Description *string
 	AnalyzerInfo
 	AutoExportLogDBTokens
 }
@@ -629,7 +629,7 @@ type CreateRepoForLogDBDSLInput struct {
 	Region      string
 	Schema      string
 	Retention   string
-	Description string
+	Description *string
 	AutoExportLogDBTokens
 }
 
@@ -749,7 +749,7 @@ type CreateRepoInput struct {
 	GroupName   string            `json:"group"`
 	Workflow    string            `json:"workflow"`
 	RuleNames   *[]string         `json:"ruleNames"`
-	Description string            `json:"description,omitempty"`
+	Description *string           `json:"description"`
 }
 
 func (r *CreateRepoInput) Validate() (err error) {
@@ -796,7 +796,7 @@ type UpdateRepoInput struct {
 	Option               *SchemaFreeOption
 	RepoOptions          *RepoOptions `json:"options"`
 	RuleNames            *[]string    `json:"ruleNames"`
-	Description          string       `json:"description,omitempty"`
+	Description          *string      `json:"description"`
 }
 
 func (r *UpdateRepoInput) IsTag(key string) bool {
@@ -862,7 +862,7 @@ type GetRepoOutput struct {
 	FromDag     bool              `json:"fromDag"`
 	Workflow    string            `json:"workflow"`
 	RuleNames   *[]string         `json:"ruleNames"`
-	Description string            `json:"description,omitempty"`
+	Description *string           `json:"description"`
 }
 
 type SampleDataOutput struct {
@@ -877,7 +877,7 @@ type RepoDesc struct {
 	FromDag     bool      `json:"fromDag"`
 	Workflow    string    `json:"workflow"`
 	RuleNames   *[]string `json:"ruleNames"`
-	Description string    `json:"description,omitempty"`
+	Description *string   `json:"description"`
 }
 
 type ListReposInput struct {
@@ -1032,7 +1032,7 @@ type SchemaFreeInput struct {
 	Region       string
 	RepoName     string
 	WorkflowName string
-	Description  string
+	Description  *string
 	Option       *SchemaFreeOption
 	RepoOptions  *RepoOptions
 }
@@ -1059,7 +1059,7 @@ type InitOrUpdateWorkflowInput struct {
 	RepoOptions      *RepoOptions
 	Schema           []RepoSchemaEntry
 	Option           *SchemaFreeOption
-	Description      string
+	Description      *string
 }
 
 type SchemaFreeOption struct {

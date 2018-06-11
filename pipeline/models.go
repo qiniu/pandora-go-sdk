@@ -680,6 +680,9 @@ type CreateRepoForKodoInput struct {
 	RepoName  string
 	Prefix    string
 	Compress  bool
+	RotateStrategy string
+	RotateSize     int
+	RotateInterval int
 	Format    string
 	Schema    []RepoSchemaEntry
 	AutoExportKodoTokens
@@ -698,6 +701,9 @@ type AutoExportToKODOInput struct {
 	BucketName string
 	Prefix     string
 	Compress   bool
+	RotateStrategy string
+	RotateSize     int
+	RotateInterval int
 	Format     string
 	Email      string
 	Retention  int //数字，单位为天
@@ -1345,9 +1351,9 @@ type ExportKodoSpec struct {
 	Bucket         string            `json:"bucket"`
 	KeyPrefix      string            `json:"keyPrefix"`
 	Fields         map[string]string `json:"fields"`
-	RotateStrategy string            `json:"rotateStrategy,omitempty"`
-	RotateSize     int               `json:"rotateSize,omitempty"`
-	RotateInterval int               `json:"rotateInterval,omitempty"`
+	RotateStrategy string            `json:"rotateStrategy"`
+	RotateSize     int               `json:"rotateSize"`
+	RotateInterval int               `json:"rotateInterval"`
 	Email          string            `json:"email"`
 	AccessKey      string            `json:"accessKey"`
 	Format         string            `json:"format"`

@@ -109,6 +109,7 @@ func (c *Pipeline) CreateRepoFromDSL(input *CreateRepoDSLInput) (err error) {
 		Schema:       schemas,
 		Options:      input.Options,
 		Workflow:     input.Workflow,
+		Description:  input.Description,
 	})
 }
 

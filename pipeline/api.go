@@ -551,6 +551,20 @@ func (c *Pipeline) PostData(input *PostDataInput) (err error) {
 	return req.Send()
 }
 
+func (c *Pipeline) PostRawtextData(input *PostRawtextDataInput) (err error) {
+	op := c.NewOperation(base.OpPostRawtextData, input.RepoName)
+
+	req := c.newRequest(op, input.Token, nil)
+	req.SetBufferBody(input.Rawtext)
+	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeText)
+	if input.ResourceOwner != "" {
+		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
+	}
+	req.SetFlowLimiter(c.flowLimit)
+	req.SetReqLimiter(c.reqLimit)
+	return req.Send()
+}
+
 func (c *Pipeline) PostLargeData(input *PostDataInput, timeout time.Duration) (datafailed Points, err error) {
 	deadline := time.Now().Add(timeout)
 	packages := unpackPoints(input)

@@ -16,7 +16,7 @@ var (
 	cfg               *config.Config
 	client            PipelineAPI
 	region            = "<Region>"
-	endpoint          = "https://pipeline.qiniu.com"
+	endpoint          = config.DefaultPipelineEndpoint
 	ak                = "<AccessKey>"
 	sk                = "<SecretKey>"
 	logger            Logger

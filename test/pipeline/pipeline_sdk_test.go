@@ -50,8 +50,8 @@ func init() {
 		WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
 		WithLoggerLevel(base.LogDebug).
-		WithLogDBEndpoint("https://logdb.qiniu.com").
-		WithTSDBEndpoint("https://tsdb.qiniu.com").WithHeaderUserAgent("SDK_TEST")
+		WithLogDBEndpoint(config.DefaultLogDBEndpoint).
+		WithTSDBEndpoint(config.DefaultTSDBEndpoint).WithHeaderUserAgent("SDK_TEST")
 
 	tsdbapi, err = tsdb.New(cfg.Clone())
 	if err != nil {

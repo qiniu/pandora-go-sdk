@@ -1,17 +1,17 @@
 package pipeline
 
 import (
-	"testing"
-
 	"bytes"
 	"fmt"
+	"testing"
 
+	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUnpack(t *testing.T) {
 	cfg := NewConfig().
-		WithEndpoint("https://pipeline.qiniu.com")
+		WithEndpoint(config.DefaultPipelineEndpoint)
 
 	client, err := NewDefaultClient(cfg)
 	if err != nil {

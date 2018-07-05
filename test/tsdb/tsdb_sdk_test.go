@@ -31,7 +31,7 @@ func init() {
 	}
 
 	if endpoint == "" {
-		endpoint = "https://tsdb.qiniu.com"
+		endpoint = config.DefaultTSDBEndpoint
 	}
 
 	if ak == "" || sk == "" {

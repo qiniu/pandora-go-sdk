@@ -1,16 +1,17 @@
 package logkit
 
 import (
+	"time"
+
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/logkit"
-	"time"
 )
 
 var (
 	cfg      *config.Config
 	client   *logkit.Logkit
-	endpoint = "https://pipeline.qiniu.com"
+	endpoint = config.DefaultPipelineEndpoint
 	ak       = "<AccessKey>"
 	sk       = "<SecretKey>"
 	logger   base.Logger

@@ -13,7 +13,7 @@ var (
 	cfg               *config.Config
 	client            LogdbAPI
 	region            = "<Region>"
-	endpoint          = "https://logdb.qiniu.com"
+	endpoint          = config.DefaultLogDBEndpoint
 	ak                = "<AccessKey>"
 	sk                = "<SecretKey>"
 	logger            Logger

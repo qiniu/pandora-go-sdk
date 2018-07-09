@@ -204,6 +204,10 @@ const (
 	ErrDisablePostMetrics
 	ErrUnprocessableEntity
 	ErrDisablePostMetricsLogdb
+
+	ErrInvalidRepoDescription
+	ErrInvalidRepoSchemaDescription
+
 )
 
 type ErrBuilder interface {

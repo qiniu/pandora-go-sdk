@@ -30,12 +30,14 @@ var (
 	logdbapi logdb.LogdbAPI
 	tsdbapi  tsdb.TsdbAPI
 	region   = os.Getenv("REGION")
-	endpoint = os.Getenv("PIPELINE_HOST")
-	ak       = os.Getenv("ACCESS_KEY")
-	sk       = os.Getenv("SECRET_KEY")
-	//endpoint          = os.Getenv("DEV_PIPELINE_HOST")
-	//ak                = os.Getenv("DEV_ACCESS_KEY")
-	//sk                = os.Getenv("DEV_SECRET_KEY")
+	//endpoint = os.Getenv("PIPELINE_HOST")
+	//ak       = os.Getenv("ACCESS_KEY")
+	//sk       = os.Getenv("SECRET_KEY")
+	endpoint          = os.Getenv("DEV_PIPELINE_HOST")
+	ak                = os.Getenv("DEV_ACCESS_KEY")
+	sk                = os.Getenv("DEV_SECRET_KEY")
+	logdbEndpoint     = config.DefaultLogDBEndpoint //"http://10.200.20.40:9997"
+	tsdbEndpoint      = config.DefaultTSDBEndpoint  //"http://10.200.20.40:9998"
 	logger            base.Logger
 	defaultRepoSchema []pipeline.RepoSchemaEntry
 	defaultContainer  *pipeline.Container
@@ -50,8 +52,8 @@ func init() {
 		WithAccessKeySecretKey(ak, sk).
 		WithLogger(logger).
 		WithLoggerLevel(base.LogDebug).
-		WithLogDBEndpoint(config.DefaultLogDBEndpoint).
-		WithTSDBEndpoint(config.DefaultTSDBEndpoint).WithHeaderUserAgent("SDK_TEST")
+		WithLogDBEndpoint(logdbEndpoint).
+		WithTSDBEndpoint(tsdbEndpoint).WithHeaderUserAgent("SDK_TEST")
 
 	tsdbapi, err = tsdb.New(cfg.Clone())
 	if err != nil {
@@ -1370,8 +1372,9 @@ func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
 		Option: &pipeline.SchemaFreeOption{
 			ToLogDB: true,
 			AutoExportToLogDBInput: pipeline.AutoExportToLogDBInput{
-				RepoName:  "tologdb",
-				Retention: "3d",
+				RepoName:    repoName,
+				LogRepoName: "tologdb",
+				Retention:   "3d",
 			},
 		},
 	}
@@ -1379,7 +1382,7 @@ func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	logdbrepoinfo, err := logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.AutoExportToLogDBInput.RepoName})
+	logdbrepoinfo, err := logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.AutoExportToLogDBInput.LogRepoName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -1415,8 +1418,9 @@ func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
 		Option: &pipeline.SchemaFreeOption{
 			ToLogDB: true,
 			AutoExportToLogDBInput: pipeline.AutoExportToLogDBInput{
-				RepoName:  "tologdb",
-				Retention: "3d",
+				RepoName:    repoName,
+				LogRepoName: "tologdb",
+				Retention:   "3d",
 			},
 		},
 	}
@@ -1424,7 +1428,8 @@ func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	logdbrepoinfo, err = logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.AutoExportToLogDBInput.RepoName})
+
+	logdbrepoinfo, err = logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.AutoExportToLogDBInput.LogRepoName})
 	if err != nil {
 		t.Error(err)
 	}
@@ -1458,8 +1463,9 @@ func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
 		Option: &pipeline.SchemaFreeOption{
 			ToLogDB: true,
 			AutoExportToLogDBInput: pipeline.AutoExportToLogDBInput{
-				RepoName:  "tologdb",
-				Retention: "3d",
+				RepoName:    repoName,
+				LogRepoName: "tologdb",
+				Retention:   "3d",
 			},
 		},
 	}
@@ -1502,6 +1508,7 @@ func TestPostDataSchemaFreeWithLOGDB(t *testing.T) {
 	if err = logdbapi.DeleteRepo(&logdb.DeleteRepoInput{RepoName: "tologdb"}); err != nil {
 		t.Error(err)
 	}
+
 }
 
 func TestQuerySearch(t *testing.T) {
@@ -2419,4 +2426,91 @@ func TestPostDataSchemaFreeWithToken(t *testing.T) {
 		t.Error(err)
 	}
 
+}
+
+func TestUpdateLogdb(t *testing.T) {
+	repoName := "TestUpdateLogdb"
+	var err error
+
+	postDataInput := &pipeline.SchemaFreeInput{
+		WorkflowName: repoName,
+		RepoName:     repoName,
+		Datas: pipeline.Datas{
+			pipeline.Data{
+				"f1": "12.7",
+				"f2": 1.0,
+				"f4": 123,
+				"f5": true,
+			},
+		},
+		Option: &pipeline.SchemaFreeOption{
+			ToLogDB: true,
+			AutoExportToLogDBInput: pipeline.AutoExportToLogDBInput{
+				RepoName:    repoName,
+				LogRepoName: "tologdb",
+				Retention:   "3d",
+				OmitInvalid: true,
+				OmitEmpty:   true,
+			},
+		},
+	}
+	_, err = client.PostDataSchemaFree(postDataInput)
+	if err != nil {
+		t.Error(err)
+	}
+	logdbrepoinfo, err := logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.AutoExportToLogDBInput.LogRepoName})
+	if err != nil {
+		t.Error(err)
+	}
+	if len(logdbrepoinfo.Schema) != 4 {
+		t.Error("logdb repo info error ,schema should be 4 but ", len(logdbrepoinfo.Schema))
+	}
+	_, err = client.PostDataSchemaFree(&pipeline.SchemaFreeInput{
+		RepoName: repoName,
+		Datas: pipeline.Datas{
+			pipeline.Data{
+				"f7": "12.7",
+				"f8": 1.0,
+				"f9": 123,
+				"f0": true,
+			},
+		},
+		Option: &pipeline.SchemaFreeOption{
+			ToLogDB: true,
+			AutoExportToLogDBInput: pipeline.AutoExportToLogDBInput{
+				RepoName:    repoName,
+				LogRepoName: "tologdb",
+				Retention:   "3d",
+				OmitInvalid: true,
+				OmitEmpty:   true,
+			},
+		},
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	exports, err := client.ListExports(&pipeline.ListExportsInput{RepoName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+
+	oey := exports.Exports[0].Spec["omitEmpty"].(bool)
+	if oey != true {
+		t.Error(exports.Exports[0])
+	}
+	fmt.Println(exports.Exports[0])
+	logdbrepoinfo, err = logdbapi.GetRepo(&logdb.GetRepoInput{RepoName: postDataInput.Option.AutoExportToLogDBInput.LogRepoName})
+	if err != nil {
+		t.Error(err)
+	}
+	if len(logdbrepoinfo.Schema) != 8 {
+		t.Error("logdb repo info error ,schema should be 8 but ", len(logdbrepoinfo.Schema))
+	}
+	err = client.DeleteWorkflow(&pipeline.DeleteWorkflowInput{WorkflowName: repoName})
+	if err != nil {
+		t.Error(err)
+	}
+	if err = logdbapi.DeleteRepo(&logdb.DeleteRepoInput{RepoName: "tologdb"}); err != nil {
+		t.Error(err)
+	}
 }

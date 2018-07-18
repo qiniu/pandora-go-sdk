@@ -565,7 +565,12 @@ func (c *Pipeline) PostData(input *PostDataInput) (err error) {
 func (c *Pipeline) PostRawtextData(input *PostRawtextDataInput) (err error) {
 	op := c.NewOperation(base.OpPostRawtextData, input.RepoName)
 
-	req := c.newRequest(op, input.Token, nil)
+	type PortalRet struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	}
+	output := &PortalRet{}
+	req := c.newRequest(op, input.Token, output)
 	req.SetBufferBody(input.Rawtext)
 	req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeText)
 	if input.ResourceOwner != "" {
@@ -573,7 +578,20 @@ func (c *Pipeline) PostRawtextData(input *PostRawtextDataInput) (err error) {
 	}
 	req.SetFlowLimiter(c.flowLimit)
 	req.SetReqLimiter(c.reqLimit)
-	return req.Send()
+
+	err = req.Send()
+	if err != nil {
+		return err
+	}
+	if output.Code != 200 {
+		err = PipelineErrBuilder{}.Build(output.Message,
+			output.Message,
+			req.HTTPResponse.Header.Get(base.HTTPHeaderRequestId),
+			output.Code)
+		return err
+	}
+
+	return nil
 }
 
 func (c *Pipeline) PostLargeData(input *PostDataInput, timeout time.Duration) (datafailed Points, err error) {

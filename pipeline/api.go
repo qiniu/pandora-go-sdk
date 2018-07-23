@@ -216,15 +216,20 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 	if !ok {
 		return fmt.Errorf("export logdb spec doc assert error %v is not map[string]interface{}", ex.Spec["doc"])
 	}
-	omitEmpty, ok := ex.Spec["omitEmpty"].(bool)
-	if !ok {
-		return fmt.Errorf("export logdb spec omitEmpty assert error %v is not bool", ex.Spec["omitEmpty"])
-	}
-	omitInvalid, ok := ex.Spec["omitInvalid"].(bool)
-	if !ok {
-		return fmt.Errorf("export logdb spec omitInvalid assert error %v is not bool", ex.Spec["omitInvalid"])
-	}
 
+	var omitEmpty, omitInvalid bool
+	if omitEmptyInter, ok := ex.Spec["omitEmpty"]; ok {
+		omitEmpty, ok = omitEmptyInter.(bool)
+		if !ok {
+			log.Errorf("export logdb spec omitEmpty assert error %v is not bool", ex.Spec["omitEmpty"])
+		}
+	}
+	if omitInvalidInter, ok := ex.Spec["omitInvalid"]; ok {
+		omitInvalid, ok = omitInvalidInter.(bool)
+		if !ok {
+			log.Errorf("export logdb spec omitInvalid assert error %v is not bool", ex.Spec["omitInvalid"])
+		}
+	}
 	for _, v := range input.Schema {
 		docs[v.Key] = "#" + v.Key
 	}

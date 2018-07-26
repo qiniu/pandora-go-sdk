@@ -243,7 +243,7 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 		PandoraToken: input.Option.AutoExportLogDBTokens.GetLogDBRepoToken,
 	})
 	if reqerr.IsNoSuchResourceError(err) {
-		logdbschemas := convertSchema2LogDB(input.Schema, input.Option.AutoExportToLogDBInput.AnalyzerInfo)
+		logdbschemas := convertSchema2LogDB(input.Schema, input.Option.AutoExportToLogDBInput.AnalyzerInfo, nil)
 		rts := input.Option.AutoExportToLogDBInput.Retention
 		if rts == "" {
 			rts = "30d"
@@ -281,7 +281,7 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 	}
 	for _, v := range input.Schema {
 		if schemaNotIn(v.Key, repoInfo.Schema) {
-			scs := convertSchema2LogDB([]RepoSchemaEntry{v}, analyzers)
+			scs := convertSchema2LogDB([]RepoSchemaEntry{v}, analyzers, nil)
 			if len(scs) > 0 {
 				repoInfo.Schema = append(repoInfo.Schema, scs[0])
 			}

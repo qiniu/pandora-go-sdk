@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"testing"
+	"strconv"
 
 	"github.com/qiniu/pandora-go-sdk/logdb"
 	"github.com/stretchr/testify/assert"
@@ -453,10 +454,119 @@ func TestConvertSchema2LogDB_Analyzer(t *testing.T) {
 				},
 			},
 		},
+		{
+			// Analyzer 包括所有字段
+			analyzer: AnalyzerInfo{
+				Analyzer: map[string]string{
+					"a.d":   logdb.SimpleAnalyzer,
+					"a.e":   logdb.StandardAnalyzer,
+					"b.f":   logdb.StopAnalyzer,
+					"c.g.h": logdb.KeyWordAnalyzer,
+					"i":     logdb.KeyWordAnalyzer,
+				},
+			},
+			schemas: []RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: PandoraTypeMap,
+					Schema: []RepoSchemaEntry{
+						{
+							Key:       "d",
+							ValueType: PandoraTypeString,
+						},
+						{
+							Key:       "e",
+							ValueType: PandoraTypeString,
+						},
+					},
+				},
+				{
+					Key:       "b",
+					ValueType: PandoraTypeMap,
+					Schema: []RepoSchemaEntry{
+						{
+							Key:       "f",
+							ValueType: PandoraTypeString,
+						},
+					},
+				},
+				{
+					Key:       "c",
+					ValueType: PandoraTypeMap,
+					Schema: []RepoSchemaEntry{
+						{
+							Key:       "g",
+							ValueType: PandoraTypeMap,
+							Schema: []RepoSchemaEntry{
+								{
+									Key:       "h",
+									ValueType: PandoraTypeString,
+								},
+							},
+						},
+					},
+				},
+				{
+					Key:       "i",
+					ValueType: PandoraTypeString,
+				},
+			},
+			expSchema: []logdb.RepoSchemaEntry{
+				{
+					Key:       "a",
+					ValueType: logdb.TypeObject,
+					Schemas: []logdb.RepoSchemaEntry{
+						{
+							Key:       "d",
+							ValueType: PandoraTypeString,
+							Analyzer:  logdb.StopAnalyzer,
+						},
+						{
+							Key:       "e",
+							ValueType: PandoraTypeString,
+							Analyzer:  logdb.StopAnalyzer,
+						},
+					},
+				},
+				{
+					Key:       "b",
+					ValueType: logdb.TypeObject,
+					Schemas: []logdb.RepoSchemaEntry{
+						{
+							Key:       "f",
+							ValueType: PandoraTypeString,
+							Analyzer:  logdb.StopAnalyzer,
+						},
+					},
+				},
+				{
+					Key:       "c",
+					ValueType: logdb.TypeObject,
+					Schemas: []logdb.RepoSchemaEntry{
+						{
+							Key:       "g",
+							ValueType: logdb.TypeObject,
+							Schemas: []logdb.RepoSchemaEntry{
+								{
+									Key:       "h",
+									ValueType: PandoraTypeString,
+									Analyzer:  logdb.KeyWordAnalyzer,
+								},
+							},
+						},
+					},
+				},
+				{
+					Key:       "i",
+					ValueType: PandoraTypeString,
+					Analyzer:  logdb.KeyWordAnalyzer,
+				},
+			},
+		},
 	}
 
 	for _, td := range testData {
-		gotSchema := convertSchema2LogDB(td.schemas, td.analyzer)
+		gotSchema := convertSchema2LogDB(td.schemas, td.analyzer, nil)
 		if len(gotSchema) != len(td.expSchema) {
 			t.Fatalf("got schema number error, exp %v, but got %v", len(td.expSchema), len(gotSchema))
 		}
@@ -464,6 +574,59 @@ func TestConvertSchema2LogDB_Analyzer(t *testing.T) {
 			assert.Equal(t, td.expSchema[i].Key, ret.Key)
 			assert.Equal(t, td.expSchema[i].Analyzer, ret.Analyzer)
 			assert.Equal(t, td.expSchema[i].ValueType, ret.ValueType)
+		}
+	}
+}
+
+var BenchConvertRet []logdb.RepoSchemaEntry
+
+func BenchmarkConvertSchema2LogDB(b *testing.B) {
+	analyzers:=map[string]string{}
+	schemas:=[]RepoSchemaEntry{}
+	expSchemas:=[]logdb.RepoSchemaEntry{}
+	for i:=0;i<26;i++{
+		schema:=RepoSchemaEntry{
+			Key:       strconv.Itoa(i),
+			ValueType: PandoraTypeMap,
+		}
+		expSchema:=logdb.RepoSchemaEntry{
+			Key:       strconv.Itoa(i),
+			ValueType: logdb.TypeObject,
+		}
+		for j:=0;j<1000;j++{
+			analyzers[strconv.Itoa(i)+"."+strconv.Itoa(j)]=logdb.KeyWordAnalyzer
+			schema.Schema=append(schema.Schema,RepoSchemaEntry{
+				Key:       strconv.Itoa(j),
+				ValueType: PandoraTypeString,
+			})
+			expSchema.Schemas=append(expSchema.Schemas,logdb.RepoSchemaEntry{
+				Key:       strconv.Itoa(j),
+				ValueType:PandoraTypeString,
+				Analyzer:  logdb.KeyWordAnalyzer,
+			})
+		}
+		schemas=append(schemas,schema)
+		expSchemas=append(expSchemas,expSchema)
+	}
+	testData := []struct {
+		analyzer  AnalyzerInfo
+		schemas   []RepoSchemaEntry
+		expSchema []logdb.RepoSchemaEntry
+	}{
+		{
+			// Analyzer 包括所有字段
+			analyzer: AnalyzerInfo{
+				Analyzer: analyzers,
+			},
+			schemas: schemas,
+			expSchema:expSchemas,
+		},
+	}
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		for _, td := range testData {
+			BenchConvertRet = convertSchema2LogDB(td.schemas, td.analyzer, nil)
 		}
 	}
 }

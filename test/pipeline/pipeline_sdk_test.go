@@ -1933,6 +1933,29 @@ func GenerateTokensForSchemaFree(repoName, workflowName, ak, sk string) map[stri
 	return tokens
 }
 
+//为了兼容性！！！！等服务端鉴权兼容了请求参数变化不会导致过不了鉴权的问题，就可以去掉这个兼容性
+func TestNewPostDataOper(t *testing.T) {
+	c, _ := pipeline.NewDefaultClient(pipeline.NewConfig())
+	req := c.NewOperation(base.OpPostData, "testrepo")
+	assert.Equal(t, "/v2/repos/testrepo/data", req.Path)
+
+	req = c.NewOperation(base.OpPostData, "testrepo", "xsx")
+	assert.Equal(t, "/v2/repos/testrepo/data?tags=xsx", req.Path)
+
+	req = c.NewOperation(base.OpPostRawtextData, "testrepo")
+	assert.Equal(t, "/v2/stream/testrepo/data", req.Path)
+
+	req = c.NewOperation(base.OpPostRawtextData, "testrepo", "a", "b")
+	assert.Equal(t, "/v2/stream/testrepo/data?tags=a&rules=b", req.Path)
+
+	req = c.NewOperation(base.OpPostTextData, "testrepo")
+	assert.Equal(t, "/v2/streams/testrepo/data", req.Path)
+
+	req = c.NewOperation(base.OpPostTextData, "testrepo", "a", "b")
+	assert.Equal(t, "/v2/streams/testrepo/data?tags=a&rules=b", req.Path)
+
+}
+
 const (
 	pdPipeline = "pipeline"
 	pdLogdb    = "logdb"

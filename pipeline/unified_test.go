@@ -1,8 +1,8 @@
 package pipeline
 
 import (
-	"testing"
 	"strconv"
+	"testing"
 
 	"github.com/qiniu/pandora-go-sdk/logdb"
 	"github.com/stretchr/testify/assert"
@@ -581,32 +581,32 @@ func TestConvertSchema2LogDB_Analyzer(t *testing.T) {
 var BenchConvertRet []logdb.RepoSchemaEntry
 
 func BenchmarkConvertSchema2LogDB(b *testing.B) {
-	analyzers:=map[string]string{}
-	schemas:=[]RepoSchemaEntry{}
-	expSchemas:=[]logdb.RepoSchemaEntry{}
-	for i:=0;i<26;i++{
-		schema:=RepoSchemaEntry{
+	analyzers := map[string]string{}
+	schemas := []RepoSchemaEntry{}
+	expSchemas := []logdb.RepoSchemaEntry{}
+	for i := 0; i < 26; i++ {
+		schema := RepoSchemaEntry{
 			Key:       strconv.Itoa(i),
 			ValueType: PandoraTypeMap,
 		}
-		expSchema:=logdb.RepoSchemaEntry{
+		expSchema := logdb.RepoSchemaEntry{
 			Key:       strconv.Itoa(i),
 			ValueType: logdb.TypeObject,
 		}
-		for j:=0;j<1000;j++{
-			analyzers[strconv.Itoa(i)+"."+strconv.Itoa(j)]=logdb.KeyWordAnalyzer
-			schema.Schema=append(schema.Schema,RepoSchemaEntry{
+		for j := 0; j < 1000; j++ {
+			analyzers[strconv.Itoa(i)+"."+strconv.Itoa(j)] = logdb.KeyWordAnalyzer
+			schema.Schema = append(schema.Schema, RepoSchemaEntry{
 				Key:       strconv.Itoa(j),
 				ValueType: PandoraTypeString,
 			})
-			expSchema.Schemas=append(expSchema.Schemas,logdb.RepoSchemaEntry{
+			expSchema.Schemas = append(expSchema.Schemas, logdb.RepoSchemaEntry{
 				Key:       strconv.Itoa(j),
-				ValueType:PandoraTypeString,
+				ValueType: PandoraTypeString,
 				Analyzer:  logdb.KeyWordAnalyzer,
 			})
 		}
-		schemas=append(schemas,schema)
-		expSchemas=append(expSchemas,expSchema)
+		schemas = append(schemas, schema)
+		expSchemas = append(expSchemas, expSchema)
 	}
 	testData := []struct {
 		analyzer  AnalyzerInfo
@@ -618,8 +618,8 @@ func BenchmarkConvertSchema2LogDB(b *testing.B) {
 			analyzer: AnalyzerInfo{
 				Analyzer: analyzers,
 			},
-			schemas: schemas,
-			expSchema:expSchemas,
+			schemas:   schemas,
+			expSchema: expSchemas,
 		},
 	}
 	b.ReportAllocs()

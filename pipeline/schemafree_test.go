@@ -14,7 +14,7 @@ import (
 
 func TestGetTrimedDataSchemaBase(t *testing.T) {
 	var data map[string]interface{}
-	dc := json.NewDecoder(strings.NewReader(`{"a":123,"b":123.1,"c":"123","d":true,"e":[1,2,3],"f":[1.2,2.1,3.1],"g":{"g1":"1"},"h":[],"i":[1,1],"j":[null,1,2]}`))
+	dc := json.NewDecoder(strings.NewReader(`{"a":123,"b":123.1,"c":"123","d":true,"e":[1,2,3],"f":[1.2,2.1,3.1],"g":{"g1":"1"},"h":[],"i":[1,1],"j":[null,1,2],"k":"111.2.3.4"}`))
 	dc.UseNumber()
 	err := dc.Decode(&data)
 	emp := formValueType("e", PandoraTypeArray)
@@ -45,6 +45,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 		"g": gmp,
 		"i": imp,
 		"j": jmp,
+		"k": formValueType("k", PandoraTypeIP),
 	}
 	assert.NoError(t, err)
 	vt := GetTrimedDataSchema(data)
@@ -76,6 +77,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 			"h4": map[string]interface{}{},
 		},
 		"i": false,
+		"j": "111.2.3.4",
 	}
 	hmp := formValueType("h", PandoraTypeMap)
 	hmp.Schema = []RepoSchemaEntry{
@@ -126,6 +128,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 		"h3": hmp3,
 
 		"i": formValueType("i", PandoraTypeBool),
+		"j": formValueType("j", PandoraTypeIP),
 	}
 	vt = GetTrimedDataSchema(data)
 	assert.Equal(t, exp, vt)

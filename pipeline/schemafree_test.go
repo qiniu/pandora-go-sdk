@@ -23,7 +23,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 	fmp.ElemType = PandoraTypeFloat
 	gmp := formValueType("g", PandoraTypeMap)
 	gmp.Schema = []RepoSchemaEntry{
-		RepoSchemaEntry{
+		{
 			Key:       "g1",
 			ValueType: PandoraTypeString,
 		},
@@ -79,11 +79,11 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 	}
 	hmp := formValueType("h", PandoraTypeMap)
 	hmp.Schema = []RepoSchemaEntry{
-		RepoSchemaEntry{
+		{
 			Key:       "h5",
 			ValueType: PandoraTypeMap,
 			Schema: []RepoSchemaEntry{
-				RepoSchemaEntry{
+				{
 					Key:       "h51",
 					ValueType: PandoraTypeLong,
 				},
@@ -92,30 +92,23 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 	}
 	hmp1 := formValueType("h1", PandoraTypeMap)
 	hmp1.Schema = []RepoSchemaEntry{
-		RepoSchemaEntry{
+		{
 			Key:       "h1",
 			ValueType: PandoraTypeLong,
 		},
 	}
 	hmp2 := formValueType("h2", PandoraTypeMap)
 	hmp2.Schema = []RepoSchemaEntry{
-		RepoSchemaEntry{
+		{
 			Key:       "h2",
 			ValueType: PandoraTypeString,
 		},
 	}
 	hmp3 := formValueType("h3", PandoraTypeMap)
 	hmp3.Schema = []RepoSchemaEntry{
-		RepoSchemaEntry{
+		{
 			Key:       "h3",
 			ValueType: PandoraTypeFloat,
-		},
-	}
-	hmp4 := formValueType("h4", PandoraTypeMap)
-	hmp4.Schema = []RepoSchemaEntry{
-		RepoSchemaEntry{
-			Key:       "h4",
-			ValueType: PandoraTypeMap,
 		},
 	}
 
@@ -131,7 +124,6 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 		"h1": hmp1,
 		"h2": hmp2,
 		"h3": hmp3,
-		"h4": hmp4,
 
 		"i": formValueType("i", PandoraTypeBool),
 	}
@@ -209,6 +201,53 @@ user_id string
 	gotdsl := getFormatDSL(schemas, 0, "  ")
 	assert.Equal(t, expdsl, gotdsl)
 }
+
+func TestGetTrimedDataSchemaEmptyMap(t *testing.T) {
+	var data map[string]interface{}
+	dc := json.NewDecoder(strings.NewReader(`{
+  "reward": {
+    "1001": {
+      "100101": {}
+    },
+    "1002": {
+      "100201": {}
+    }
+  },
+  "song_rank": [
+    {
+      "digital_id": 1001,
+      "failed_songs": 0,
+      "life_number": 1,
+      "missed_songs": 0,
+      "order": 1,
+      "score": 50,
+      "status": 1,
+      "success_songs": 1
+    },
+    {
+      "digital_id": 1002,
+      "failed_songs": 0,
+      "life_number": 1,
+      "missed_songs": 0,
+      "order": 2,
+      "score": 30,
+      "status": 1,
+      "success_songs": 1
+    }
+  ]
+}`))
+	dc.UseNumber()
+	assert.NoError(t, dc.Decode(&data))
+
+	valTyp := formValueType("song_rank", PandoraTypeArray)
+	valTyp.ElemType = PandoraTypeString
+	exp := map[string]RepoSchemaEntry{
+		"song_rank": valTyp,
+	}
+	vt := GetTrimedDataSchema(data)
+	assert.Equal(t, exp, vt)
+}
+
 func TestDeepDeleteCheck(t *testing.T) {
 	tests := []struct {
 		value  interface{}

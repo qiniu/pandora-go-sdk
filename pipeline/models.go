@@ -706,6 +706,8 @@ type AutoExportToKODOInput struct {
 	RotateStrategy string
 	RotateSize     int
 	RotateInterval int
+	RotateSizeType string
+	RotateNumber   int
 	Format         string
 	Email          string
 	Retention      int //数字，单位为天

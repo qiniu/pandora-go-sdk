@@ -391,6 +391,9 @@ func (c *Pipeline) UpdateRepoWithKodo(input *UpdateRepoInput, ex ExportDesc) err
 		Format:    format,
 		KeyPrefix: keyPrefix,
 	}
+	if input.Option.KodoFileType == 1 {
+		spec.KodoFileType = 1
+	}
 	err := c.UpdateExport(&UpdateExportInput{
 		RepoName:     input.RepoName,
 		ExportName:   ex.Name,

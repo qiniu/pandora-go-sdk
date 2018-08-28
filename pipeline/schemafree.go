@@ -702,11 +702,15 @@ func (c *Pipeline) getOrCreateWorkflow(input *InitOrUpdateWorkflowInput, ns *boo
 		PandoraToken: input.PipelineGetWorkflowToken,
 	})
 	if err != nil && reqerr.IsNoSuchWorkflow(err) {
-		if err = c.CreateWorkflow(&CreateWorkflowInput{
+		createWorkflowInput := &CreateWorkflowInput{
 			WorkflowName: input.WorkflowName,
 			Region:       input.Region,
 			PandoraToken: input.PipelineCreateWorkflowToken,
-		}); err != nil && reqerr.IsExistError(err) {
+		}
+		if input.Description != nil {
+			createWorkflowInput.Comment = *input.Description
+		}
+		if err = c.CreateWorkflow(createWorkflowInput); err != nil && reqerr.IsExistError(err) {
 			workflow, err = c.GetWorkflow(&GetWorkflowInput{
 				WorkflowName: input.WorkflowName,
 				PandoraToken: input.PipelineGetWorkflowToken,
@@ -738,6 +742,7 @@ func (c *Pipeline) createOrUpdateRepo(input *InitOrUpdateWorkflowInput, workflow
 		Options:      input.RepoOptions,
 		Workflow:     input.WorkflowName,
 		PandoraToken: input.PipelineCreateRepoToken,
+		Description:  input.Description,
 	})
 	if err != nil && reqerr.IsWorkflowStatError(err) {
 		// 如果当前 workflow 的状态不允许更新，则先等待停止 workflow 再更新
@@ -756,6 +761,7 @@ func (c *Pipeline) createOrUpdateRepo(input *InitOrUpdateWorkflowInput, workflow
 			Options:      input.RepoOptions,
 			Workflow:     input.WorkflowName,
 			PandoraToken: input.PipelineCreateRepoToken,
+			Description:  input.Description,
 		})
 	}
 	if err != nil && reqerr.IsExistError(err) {

@@ -45,7 +45,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 		"g": gmp,
 		"i": imp,
 		"j": jmp,
-		"k": formValueType("k", PandoraTypeIP),
+		"k": formValueType("k", PandoraTypeString),
 	}
 	assert.NoError(t, err)
 	vt := GetTrimedDataSchema(data)
@@ -128,7 +128,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 		"h3": hmp3,
 
 		"i": formValueType("i", PandoraTypeBool),
-		"j": formValueType("j", PandoraTypeIP),
+		"j": formValueType("j", PandoraTypeString),
 	}
 	vt = GetTrimedDataSchema(data)
 	assert.Equal(t, exp, vt)

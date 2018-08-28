@@ -3,7 +3,6 @@ package pipeline
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"reflect"
 	"sort"
 	"strconv"
@@ -1069,11 +1068,9 @@ func GetTrimedDataSchema(data Data) (valueType map[string]RepoSchemaEntry) {
 			// 由于数据为空，且无法判断类型, 所以从数据中将该条键值对删掉
 			delete(data, k)
 		case string:
-			// 如果数据满足date格式，则推断为PandoraTypeDate，如果数据满足IP格式，则推断为PandoraTypeIP
+			// 如果数据满足date格式，则推断为PandoraTypeDate
 			if _, err := time.Parse(time.RFC3339, nv); err == nil {
 				valueType[k] = formValueType(k, PandoraTypeDate)
-			} else if ipAddr := net.ParseIP(nv); ipAddr != nil {
-				valueType[k] = formValueType(k, PandoraTypeIP)
 			} else {
 				valueType[k] = formValueType(k, PandoraTypeString)
 			}

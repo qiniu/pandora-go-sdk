@@ -995,17 +995,18 @@ func TestConvertData(t *testing.T) {
 
 func TestCopyAndConvertData(t *testing.T) {
 	data := Data{
-		"a": "a",
-		"b": 1,
-		"c": nil,
-		"g": uint64(9223372036854776000),
-		"h": uint64(9223372036851822000),
-		"i": uint64(1),
-		"j": []interface{}{int(1), uint64(9223372036854776000), uint64(9223372036851822000)},
-		"k": []uint64{uint64(1), uint64(9223372036854776000), uint64(9223372036851822000)},
-		"l": []interface{}{uint64(9223372036854776000), int(1), uint64(9223372036851822000)},
-		"e": []interface{}{},
-		"f": map[string]interface{}{},
+		"a":   "a",
+		"b":   1,
+		"c":   nil,
+		"g":   uint64(9223372036854776000),
+		"h":   uint64(9223372036851822000),
+		"i":   uint64(1),
+		"j":   []interface{}{int(1), uint64(9223372036854776000), uint64(9223372036851822000)},
+		"k":   []uint64{uint64(1), uint64(9223372036854776000), uint64(9223372036851822000)},
+		"l":   []interface{}{uint64(9223372036854776000), int(1), uint64(9223372036851822000)},
+		"e":   []interface{}{},
+		"xxx": "",
+		"f":   map[string]interface{}{},
 		"d": map[string]interface{}{
 			"a-1": "a",
 			"b1":  1,
@@ -1014,6 +1015,7 @@ func TestCopyAndConvertData(t *testing.T) {
 			"d1": map[string]interface{}{
 				"a2":  "a",
 				"b-2": 1,
+				"xxx": "",
 				"c_2": nil,
 				"e2":  []string{"a", "b", "c"},
 				"d-2": map[string]interface{}{

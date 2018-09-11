@@ -294,50 +294,37 @@ func (c *Pipeline) UpdateRepoWithLogDB(input *UpdateRepoInput, ex ExportDesc) er
 		}
 	}
 
-	// 有变化则需更新
-	if hasDiff {
-		if err = logdbAPI.UpdateRepo(&logdb.UpdateRepoInput{
-			RepoName:     repoName,
-			Retention:    repoInfo.Retention,
-			Schema:       repoInfo.Schema,
-			PandoraToken: input.Option.AutoExportLogDBTokens.UpdateLogDBRepoToken,
-		}); err != nil {
-			log.Error("UpdateRepoWithLogDB update logdb repo error", err)
-			return err
-		}
+	if !hasDiff {
+		// 对于没有变化的就不更新了
+		return nil
 	}
 
-	var exportUpdate = false
-	output, err := c.GetExport(&GetExportInput{
-		RepoName:     input.RepoName,
-		ExportName:   ex.Name,
-		PandoraToken: input.Option.AutoExportLogDBTokens.UpdateExportToken,
-	})
-	if err != nil {
-		log.Error("Get logdb repo export error", err)
+	if err = logdbAPI.UpdateRepo(&logdb.UpdateRepoInput{
+		RepoName:     repoName,
+		Retention:    repoInfo.Retention,
+		Schema:       repoInfo.Schema,
+		PandoraToken: input.Option.AutoExportLogDBTokens.UpdateLogDBRepoToken,
+	}); err != nil {
+		log.Error("UpdateRepoWithLogDB update logdb repo error", err)
 		return err
 	}
 
-	var ipConfig, locateIPConfig *LocateIPConfig
+	var ipConfig *LocateIPConfig
 	if input.Option != nil {
-		ipConfig = input.Option.AutoExportToLogDBInput.IPConfig
+		ipConfig = input.Option.IPConfig
 	}
-	locateIPConfig, exportUpdate = checkExportUpdate(output.Spec, ipConfig)
-	// 有变化则需更新
-	if hasDiff || exportUpdate {
-		spec := &ExportLogDBSpec{DestRepoName: repoName, Doc: docs, OmitEmpty: omitEmpty, OmitInvalid: omitInvalid, LocateIPConfig: locateIPConfig}
-		err = c.UpdateExport(&UpdateExportInput{
-			RepoName:     input.RepoName,
-			ExportName:   ex.Name,
-			Spec:         spec,
-			PandoraToken: input.Option.AutoExportLogDBTokens.UpdateExportToken,
-		})
-		if reqerr.IsExportRemainUnchanged(err) {
-			err = nil
-		}
-		if err != nil {
-			log.Error("UpdateRepoWithLogDB update export error", err)
-		}
+	spec := &ExportLogDBSpec{DestRepoName: repoName, Doc: docs, OmitEmpty: omitEmpty, OmitInvalid: omitInvalid, LocateIPConfig: ipConfig}
+	err = c.UpdateExport(&UpdateExportInput{
+		RepoName:     input.RepoName,
+		ExportName:   ex.Name,
+		Spec:         spec,
+		PandoraToken: input.Option.AutoExportLogDBTokens.UpdateExportToken,
+	})
+	if reqerr.IsExportRemainUnchanged(err) {
+		err = nil
+	}
+	if err != nil {
+		log.Error("UpdateRepoWithLogDB update export error", err)
 	}
 	return err
 }
@@ -1984,96 +1971,4 @@ func (c *Pipeline) ListSystemVariables(input *ListVariablesInput) (output *ListV
 		req.SetHeader(base.HTTPHeaderResourceOwner, input.ResourceOwner)
 	}
 	return output, req.Send()
-}
-
-func checkExportUpdate(spec map[string]interface{}, ipConfig *LocateIPConfig) (*LocateIPConfig, bool) {
-	if ipConfig == nil {
-		return nil, false
-	}
-	locateIPConfig, ok := spec["locateIPConfig"].(*LocateIPConfig)
-	if !ok {
-		if ipConfig == nil {
-			return nil, false
-		}
-		locateIPConfig = ipConfig
-		return locateIPConfig, true
-	}
-
-	if locateIPConfig == nil {
-		if ipConfig != nil {
-			locateIPConfig = ipConfig
-			return locateIPConfig, true
-		}
-		return nil, false
-	}
-
-	exportUpdate := false
-	if ipConfig.ShouldLocateIP == true && locateIPConfig.ShouldLocateIP == false {
-		locateIPConfig.ShouldLocateIP = true
-		exportUpdate = true
-	}
-
-	for key, ipDetail := range ipConfig.Mappings {
-		if ipDetail == nil {
-			continue
-		}
-
-		locateIPDetail := locateIPConfig.Mappings[key]
-		if locateIPDetail == nil {
-			if locateIPConfig.Mappings == nil {
-				locateIPConfig.Mappings = make(map[string]*LocateIPDetails)
-			}
-			locateIPConfig.Mappings[key] = ipDetail
-			exportUpdate = true
-			continue
-		}
-
-		if ipDetail.ShouldLocateField == true && locateIPDetail.ShouldLocateField == false {
-			locateIPDetail.ShouldLocateField = true
-			exportUpdate = true
-		}
-
-		locateFiledName, fieldUpdate := checkUpdateFiledName(ipDetail.FieldNames, locateIPDetail.FieldNames)
-		if fieldUpdate {
-			locateIPDetail.FieldNames = locateFiledName
-			exportUpdate = true
-		}
-
-		locateWantedFiled, wantedUpdate := checkUpdateWantedFiled(ipDetail.WantedFields, locateIPDetail.WantedFields)
-		if wantedUpdate {
-			locateIPDetail.WantedFields = locateWantedFiled
-			exportUpdate = true
-		}
-	}
-	return locateIPConfig, exportUpdate
-}
-
-func checkUpdateFiledName(filedName, locateFiledName map[string]string) (map[string]string, bool) {
-	var fieldUpdate = false
-	for field, value := range filedName {
-		if locateFiledName[field] != value {
-			if locateFiledName == nil {
-				locateFiledName = make(map[string]string)
-			}
-			locateFiledName[field] = value
-			fieldUpdate = true
-		}
-	}
-
-	return locateFiledName, fieldUpdate
-}
-
-func checkUpdateWantedFiled(wantedFiled, locateWantedFiled map[string]bool) (map[string]bool, bool) {
-	var wantedUpdate = false
-	for field, value := range wantedFiled {
-		if locateWantedFiled[field] != value {
-			if locateWantedFiled == nil {
-				locateWantedFiled = make(map[string]bool)
-			}
-			locateWantedFiled[field] = value
-			wantedUpdate = true
-		}
-	}
-
-	return locateWantedFiled, wantedUpdate
 }

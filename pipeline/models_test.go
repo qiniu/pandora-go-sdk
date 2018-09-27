@@ -221,6 +221,58 @@ func Test_convertDSL(t *testing.T) {
 			},
 			experr: true,
 		},
+		{
+			dsl: "invalid-key l, invalid-key2 l, validKey,x-10 {x-11 d,x12 (f),x13 {x-14},x-15 {x16 l}}",
+			exp: []RepoSchemaEntry{
+				{
+					Key:       "invalid_key",
+					ValueType: "long",
+				},
+				{
+					Key:       "invalid_key2",
+					ValueType: "long",
+				},
+				{
+					Key:       "validKey",
+					ValueType: "string",
+				},
+				{
+					Key:       "x_10",
+					ValueType: "map",
+					Schema: []RepoSchemaEntry{
+						{
+							Key:       "x_11",
+							ValueType: "date",
+						},
+						{
+							Key:       "x12",
+							ValueType: "array",
+							ElemType:  "float",
+						},
+						{
+							Key:       "x13",
+							ValueType: "map",
+							Schema: []RepoSchemaEntry{
+								{
+									Key:       "x_14",
+									ValueType: "string",
+								},
+							},
+						},
+						{
+							Key:       "x_15",
+							ValueType: "map",
+							Schema: []RepoSchemaEntry{
+								{
+									Key:       "x16",
+									ValueType: "long",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, ti := range tests {
 		got, err := toSchema(ti.dsl, 0)
@@ -234,6 +286,27 @@ func Test_convertDSL(t *testing.T) {
 		got2, err := toSchema(dslstr, 0)
 		assert.NoError(t, err)
 		assert.Equal(t, ti.exp, got2)
+	}
+}
+
+func Test_PandoraKey(t *testing.T) {
+	testKeys := []string{"", "@timestamp", ".dot", "percent%100", "^^^^^^^^^^", "timestamp"}
+	expectKeys := []string{"KEmptyPandoraAutoAdd", "timestamp", "dot", "percent_100", "", "timestamp"}
+	expectValid := []bool{false, false, false, false, false, true}
+	for idx, key := range testKeys {
+		actual, valid := PandoraKey(key)
+		assert.Equal(t, expectKeys[idx], actual)
+		assert.Equal(t, expectValid[idx], valid)
+	}
+}
+
+func BenchmarkPandoraKey(b *testing.B) {
+	b.ReportAllocs()
+	testKeys := []string{"@timestamp", ".dot", "percent%100", "^^^^^^^^^^", "timestamp", "aaa"}
+	for i := 0; i < b.N; i++ {
+		for _, key := range testKeys {
+			PandoraKey(key)
+		}
 	}
 }
 

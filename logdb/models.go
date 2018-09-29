@@ -404,13 +404,14 @@ func NewFullText(analyzer string) FullText {
 
 type CreateRepoInput struct {
 	PandoraToken
-	RepoName     string
-	Region       string            `json:"region"`
-	Retention    string            `json:"retention"`
-	Schema       []RepoSchemaEntry `json:"schema"`
-	PrimaryField string            `json:"primaryField"`
-	FullText     FullText          `json:"fullText"`
-	Description  *string           `json:"description"`
+	RepoName       string
+	Region         string            `json:"region"`
+	Retention      string            `json:"retention"`
+	Schema         []RepoSchemaEntry `json:"schema"`
+	PrimaryField   string            `json:"primaryField"`
+	DateIndexField string            `json:"dateIndexField"`
+	FullText       FullText          `json:"fullText"`
+	Description    *string           `json:"description"`
 }
 
 func (r *CreateRepoInput) Validate() (err error) {
@@ -424,6 +425,34 @@ func (r *CreateRepoInput) Validate() (err error) {
 	for _, schema := range r.Schema {
 		if err = schema.Validate(); err != nil {
 			return
+		}
+	}
+
+	// 校验 primary field 相关
+	if r.PrimaryField != "" {
+		if r.DateIndexField == "" {
+			return reqerr.NewInvalidArgs("DateIndexField", "DateIndexField can not be empty")
+		}
+		pfExist, difExist := false, false
+		for _, s := range r.Schema {
+			if r.PrimaryField == s.Key {
+				if s.ValueType != TypeString {
+					return reqerr.NewInvalidArgs("PrimaryField", fmt.Sprintf("PrimaryField[%v] must be string", r.PrimaryField))
+				}
+				pfExist = true
+			}
+			if r.DateIndexField == s.Key {
+				if s.ValueType != TypeDate {
+					return reqerr.NewInvalidArgs("DateIndexField", fmt.Sprintf("DateIndexField[%v] must be string", r.DateIndexField))
+				}
+				difExist = true
+			}
+		}
+		if !pfExist {
+			return reqerr.NewInvalidArgs("PrimaryField", fmt.Sprintf("can not find primaryField[%v] in schema", r.PrimaryField))
+		}
+		if !difExist {
+			return reqerr.NewInvalidArgs("DateIndexField", fmt.Sprintf("can not find DateIndexField[%v] in schema", r.PrimaryField))
 		}
 	}
 
@@ -482,25 +511,27 @@ type GetRepoInput struct {
 }
 
 type GetRepoOutput struct {
-	Region       string            `json:"region"`
-	Retention    string            `json:"retention"`
-	Schema       []RepoSchemaEntry `json:"schema"`
-	PrimaryField string            `json:"primaryField"`
-	CreateTime   string            `json:"createTime"`
-	UpdateTime   string            `json:"updateTime"`
-	FullText     FullText          `json:"fullText"`
-	Description  *string           `json:"description"`
+	Region         string            `json:"region"`
+	Retention      string            `json:"retention"`
+	Schema         []RepoSchemaEntry `json:"schema"`
+	PrimaryField   string            `json:"primaryField"`
+	DateIndexField string            `json:"dateIndexField"`
+	CreateTime     string            `json:"createTime"`
+	UpdateTime     string            `json:"updateTime"`
+	FullText       FullText          `json:"fullText"`
+	Description    *string           `json:"description"`
 }
 
 type RepoDesc struct {
-	RepoName     string   `json:"name"`
-	Region       string   `json:"region"`
-	PrimaryField string   `json:"primaryField"`
-	Retention    string   `json:"retention"`
-	CreateTime   string   `json:"createTime"`
-	UpdateTime   string   `json:"updateTime"`
-	FullText     FullText `json:"fullText"`
-	Description  *string  `json:"description"`
+	RepoName       string   `json:"name"`
+	Region         string   `json:"region"`
+	PrimaryField   string   `json:"primaryField"`
+	DateIndexField string   `json:"dateIndexField"`
+	Retention      string   `json:"retention"`
+	CreateTime     string   `json:"createTime"`
+	UpdateTime     string   `json:"updateTime"`
+	FullText       FullText `json:"fullText"`
+	Description    *string  `json:"description"`
 }
 
 type ListReposInput struct {

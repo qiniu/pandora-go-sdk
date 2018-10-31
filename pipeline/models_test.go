@@ -3,6 +3,8 @@ package pipeline
 import (
 	"testing"
 
+	"time"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -473,4 +475,24 @@ func BenchmarkPointBytes(b *testing.B) {
 		BencB = newp.ToBytes()
 	}
 	_ = BencB
+}
+
+func TestDateTime(t *testing.T) {
+	tm := time.Unix(10, 0)
+	p := PointField{
+		Key:   "t",
+		Value: time.Unix(10, 0),
+	}
+	assert.Equal(t, string(p.Bytes()), p.String())
+	p = PointField{
+		Key:   "t",
+		Value: &tm,
+	}
+	var np *time.Time
+	assert.Equal(t, string(p.Bytes()), p.String())
+	p = PointField{
+		Key:   "t",
+		Value: np,
+	}
+	assert.Equal(t, string(p.Bytes()), p.String())
 }

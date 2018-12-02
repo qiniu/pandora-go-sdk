@@ -298,6 +298,9 @@ func IsExistError(err error) bool {
 	if reqErr.ErrorType == ExportAlreadyExistsError || reqErr.ErrorType == ErrWorkflowAlreadyExists {
 		return true
 	}
+	if reqErr.ErrorType == ErrExistRecord {
+		return true
+	}
 	return false
 }
 
@@ -361,6 +364,9 @@ func IsNoSuchResourceError(err error) bool {
 		return true
 	}
 	if reqErr.ErrorType == ErrJobExportNotExist {
+		return true
+	}
+	if reqErr.ErrorType == ErrNotFoundRecord {
 		return true
 	}
 	return false

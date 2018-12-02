@@ -136,7 +136,7 @@ type AssignConfigTagsOptions struct {
 
 // AssignConfigTags 分配指定 tags 给 config
 func (l *Logkit) AssignConfigTags(opts *AssignConfigTagsOptions) error {
-	op := newOperation(opAssignAgentTags, opts.Name)
+	op := newOperation(opAssignConfigTags, opts.Name)
 	data, err := json.Marshal(opts)
 	if err != nil {
 		return err

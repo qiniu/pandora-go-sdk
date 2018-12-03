@@ -135,7 +135,7 @@ type UnassignTagConfigOptions struct {
 
 // UnassignTagConfig 删除为 tags 分发的 configs
 func (l *Logkit) UnassignTagConfig(opts *UnassignTagConfigOptions) error {
-	op := newOperation(opUnassignTagAgents, opts.TagName, opts.ConfigName)
+	op := newOperation(opUnassignTagConfig, opts.TagName, opts.ConfigName)
 	return l.newRequest(op, opts.Token, nil).Send()
 }
 

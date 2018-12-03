@@ -398,6 +398,8 @@ const (
 
 type SendError struct {
 	failDatas []map[string]interface{}
+	failLines []string
+	isline    bool
 	msg       string
 	ErrorType SendErrorType
 }
@@ -407,6 +409,16 @@ func NewSendError(msg string, failDatas []map[string]interface{}, eType SendErro
 		msg:       msg,
 		failDatas: failDatas,
 		ErrorType: eType,
+	}
+	return &se
+}
+
+func NewRawSendError(msg string, failDatas []string, eType SendErrorType) *SendError {
+	se := SendError{
+		msg:       msg,
+		failLines: failDatas,
+		ErrorType: eType,
+		isline:    true,
 	}
 	return &se
 }

@@ -392,6 +392,9 @@ const (
 	//TypeBinaryUnpack 表示外部需要进一步二分数据
 	TypeBinaryUnpack = SendErrorType("Data Need Binary Unpack")
 
+	//TypeContainInvalidPoint 表示点无效，使用TypeBinaryUnpack类似逻辑将无效的点找出来
+	TypeContainInvalidPoint = SendErrorType("Contain Invalid Point")
+
 	//TypeSchemaFreeRetry 表示在schemafree情况下服务端schema更新带来的localcache错误，重试即可
 	TypeSchemaFreeRetry = SendErrorType("if schema free then retry")
 )

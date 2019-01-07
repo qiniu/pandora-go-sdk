@@ -292,9 +292,9 @@ func Test_convertDSL(t *testing.T) {
 }
 
 func Test_PandoraKey(t *testing.T) {
-	testKeys := []string{"", "@timestamp", ".dot", "percent%100", "^^^^^^^^^^", "timestamp", "__disk", "___disk///a/b/__c__", "_disk__//@_a"}
-	expectKeys := []string{"KEmptyPandoraAutoAdd", "timestamp", "dot", "percent_100", "", "timestamp", "disk", "disk_a_b___c__", "disk____a"}
-	expectValid := []bool{false, false, false, false, false, true, false, false, false}
+	testKeys := []string{"", "@timestamp", ".dot", "percent%100", "^^^^^^^^^^", "__disk", "___disk///a/b/__c__", "_——disk__//@_a", "_", "__", "timestamp"}
+	expectKeys := []string{"KEmptyPandoraAutoAdd", "timestamp", "dot", "percent_100", "", "disk", "disk_a_b___c__", "disk____a", "", "", "timestamp"}
+	expectValid := []bool{false, false, false, false, false, false, false, false, false, false, true}
 	for idx, key := range testKeys {
 		actual, valid := PandoraKey(key)
 		assert.Equal(t, expectKeys[idx], actual)

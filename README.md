@@ -17,7 +17,7 @@ Pandora SDK是pandora服务一个golang版本的SDK。包含pipeline、tsdb和lo
 
 这里我们给出一个小的代码片段，通过这段代码我们展示一下如何快速的用pandora SDK做第一次请求。
 
-```
+```go
 package main
 
 import (
@@ -76,7 +76,7 @@ Pandora SDK封装了签名逻辑，用户无需手动计算签名，避免大量
 
 我们要使用token，必须借助于一个定义于token.go里面的辅助结构体TokenDesc，它的定义如下：
 
-```
+```gp
 type TokenDesc struct {
         Url         string
         QueryString url.Values
@@ -90,7 +90,7 @@ type TokenDesc struct {
 
 了解了这个重要的数据结构，接下来我们来看一段代码示例：
 
-```
+```go
 desc := &TokenDesc{}
 desc.Expires = time.Now().Unix() + 3600 // token过期时间为1小时之后
 
@@ -132,7 +132,7 @@ if err != nil {
 Pandora SDK中封装了RequestError，来表示服务端返回的错误，方便用户快速得到出错的详细信息。
 RequestError的定义如下：
 
-```
+```go
 type RequestError struct {
         Message    string `json:"error"`
         StatusCode int    `json:"-"`
@@ -170,7 +170,7 @@ func (r RequestError) Error() string {
 
 对于这些错误类型的使用举一个例子，如下：
 
-```
+```go
 output, err := client.GetTransform(input)
 if err == nil { // 没有出错，做一些处理
     // do something

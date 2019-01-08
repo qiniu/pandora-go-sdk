@@ -575,6 +575,7 @@ func PandoraKey(key string) (string, bool) {
 		return "KEmptyPandoraAutoAdd", false
 	}
 
+	lastInderlineIndex := -1
 	for idx, c := range key {
 		if c >= '0' && c <= '9' {
 			size++
@@ -589,8 +590,9 @@ func PandoraKey(key string) (string, bool) {
 			continue
 		}
 
-		if c == '_' {
-			size++
+		if c == '_' && idx == lastInderlineIndex+1 {
+			valid = false
+			lastInderlineIndex++
 			continue
 		}
 
@@ -610,6 +612,7 @@ func PandoraKey(key string) (string, bool) {
 	bytes := make([]byte, size)
 	bp := 0
 	lastBeReplace := false
+	key = key[(lastInderlineIndex + 1):]
 	for idx, c := range key {
 		if c >= '0' && c <= '9' {
 			if idx == 0 {
@@ -628,7 +631,7 @@ func PandoraKey(key string) (string, bool) {
 			continue
 		}
 
-		if c == '_' {
+		if c == '_' && bp > 0 {
 			bytes[bp] = byte(c)
 			bp++
 			lastBeReplace = false

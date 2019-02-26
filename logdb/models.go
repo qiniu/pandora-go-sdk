@@ -407,6 +407,7 @@ type CreateRepoInput struct {
 	RepoName       string
 	Region         string            `json:"region"`
 	Retention      string            `json:"retention"`
+	ColdRetention  string            `json:"coldRetention"`
 	Schema         []RepoSchemaEntry `json:"schema"`
 	FullText       FullText          `json:"fullText"`
 	Description    *string           `json:"description"`
@@ -455,10 +456,11 @@ func checkRetention(retention string) error {
 
 type UpdateRepoInput struct {
 	PandoraToken
-	RepoName    string
-	Retention   string            `json:"retention"`
-	Schema      []RepoSchemaEntry `json:"schema"`
-	Description *string           `json:"description"`
+	RepoName      string
+	Retention     string            `json:"retention"`
+	ColdRetention string            `json:"coldRetention"`
+	Schema        []RepoSchemaEntry `json:"schema"`
+	Description   *string           `json:"description"`
 }
 
 func (r *UpdateRepoInput) Validate() (err error) {
@@ -485,6 +487,7 @@ type GetRepoInput struct {
 type GetRepoOutput struct {
 	Region         string            `json:"region"`
 	Retention      string            `json:"retention"`
+	ColdRetention  string            `json:"coldRetention"`
 	Schema         []RepoSchemaEntry `json:"schema"`
 	CreateTime     string            `json:"createTime"`
 	UpdateTime     string            `json:"updateTime"`

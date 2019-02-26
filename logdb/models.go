@@ -501,6 +501,7 @@ type RepoDesc struct {
 	RepoName       string   `json:"name"`
 	Region         string   `json:"region"`
 	Retention      string   `json:"retention"`
+	ColdRetention  string   `json:"coldRetention"`
 	CreateTime     string   `json:"createTime"`
 	UpdateTime     string   `json:"updateTime"`
 	FullText       FullText `json:"fullText"`

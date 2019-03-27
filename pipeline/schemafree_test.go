@@ -76,6 +76,10 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 		"h4": map[string]interface{}{
 			"h4": map[string]interface{}{},
 		},
+		"h5": map[string]string{
+			"h5_1": "h5_1 str",
+			"h5_2": "h5_2 str",
+		},
 		"i": false,
 		"j": "111.2.3.4",
 	}
@@ -113,6 +117,17 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 			ValueType: PandoraTypeFloat,
 		},
 	}
+	hmp5 := formValueType("h5", PandoraTypeMap)
+	hmp5.Schema = []RepoSchemaEntry{
+		{
+			Key:       "h5_1",
+			ValueType: PandoraTypeString,
+		},
+		{
+			Key:       "h5_2",
+			ValueType: PandoraTypeString,
+		},
+	}
 
 	exp = map[string]RepoSchemaEntry{
 		"a":  formValueType("a", PandoraTypeLong),
@@ -126,6 +141,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 		"h1": hmp1,
 		"h2": hmp2,
 		"h3": hmp3,
+		"h5":hmp5,
 
 		"i": formValueType("i", PandoraTypeBool),
 		"j": formValueType("j", PandoraTypeString),

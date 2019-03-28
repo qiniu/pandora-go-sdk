@@ -21,13 +21,7 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 	emp.ElemType = PandoraTypeLong
 	fmp := formValueType("f", PandoraTypeArray)
 	fmp.ElemType = PandoraTypeFloat
-	gmp := formValueType("g", PandoraTypeMap)
-	gmp.Schema = []RepoSchemaEntry{
-		{
-			Key:       "g1",
-			ValueType: PandoraTypeString,
-		},
-	}
+	gmp := formValueType("g", PandoraTypeJsonString)
 	imp := formValueType("i", PandoraTypeArray)
 	imp.ElemType = PandoraTypeLong
 
@@ -80,54 +74,18 @@ func TestGetTrimedDataSchemaBase(t *testing.T) {
 			"h5_1": "h5_1 str",
 			"h5_2": "h5_2 str",
 		},
+		"h6": map[string]string{
+			"h6_1": "",
+			"h6_2": "",
+		},
 		"i": false,
 		"j": "111.2.3.4",
 	}
-	hmp := formValueType("h", PandoraTypeMap)
-	hmp.Schema = []RepoSchemaEntry{
-		{
-			Key:       "h5",
-			ValueType: PandoraTypeMap,
-			Schema: []RepoSchemaEntry{
-				{
-					Key:       "h51",
-					ValueType: PandoraTypeLong,
-				},
-			},
-		},
-	}
-	hmp1 := formValueType("h1", PandoraTypeMap)
-	hmp1.Schema = []RepoSchemaEntry{
-		{
-			Key:       "h1",
-			ValueType: PandoraTypeLong,
-		},
-	}
-	hmp2 := formValueType("h2", PandoraTypeMap)
-	hmp2.Schema = []RepoSchemaEntry{
-		{
-			Key:       "h2",
-			ValueType: PandoraTypeString,
-		},
-	}
-	hmp3 := formValueType("h3", PandoraTypeMap)
-	hmp3.Schema = []RepoSchemaEntry{
-		{
-			Key:       "h3",
-			ValueType: PandoraTypeFloat,
-		},
-	}
-	hmp5 := formValueType("h5", PandoraTypeMap)
-	hmp5.Schema = []RepoSchemaEntry{
-		{
-			Key:       "h5_1",
-			ValueType: PandoraTypeString,
-		},
-		{
-			Key:       "h5_2",
-			ValueType: PandoraTypeString,
-		},
-	}
+	hmp := formValueType("h", PandoraTypeJsonString)
+	hmp1 := formValueType("h1", PandoraTypeJsonString)
+	hmp2 := formValueType("h2", PandoraTypeJsonString)
+	hmp3 := formValueType("h3", PandoraTypeJsonString)
+	hmp5 := formValueType("h5", PandoraTypeJsonString)
 
 	exp = map[string]RepoSchemaEntry{
 		"a":  formValueType("a", PandoraTypeLong),
@@ -208,9 +166,7 @@ job_id string
 lesson_id string
 msg string
 process string
-resource map{
-  instance array(string)
-}
+resource jsonstring
 scene_id string
 status string
 type string

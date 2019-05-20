@@ -991,6 +991,7 @@ type RepoDesc struct {
 type ListReposInput struct {
 	PandoraToken
 	WithDag bool `json:"-"`
+	Authorized bool `json:"-"`
 }
 
 type ListReposOutput struct {

@@ -652,6 +652,8 @@ func (c *Pipeline) ListRepos(input *ListReposInput) (output *ListReposOutput, er
 	var op *request.Operation
 	if input.WithDag {
 		op = c.NewOperation(base.OpListReposWithDag)
+	} else if input.Authorized{
+		op = c.NewOperation(base.OpListReposAuthorized)
 	} else {
 		op = c.NewOperation(base.OpListRepos)
 	}

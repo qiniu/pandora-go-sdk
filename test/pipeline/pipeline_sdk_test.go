@@ -12,7 +12,7 @@ import (
 
 	"strings"
 
-	"github.com/qiniu/log"
+	"github.com/qiniu/log.v1"
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/config"
 	"github.com/qiniu/pandora-go-sdk/base/models"

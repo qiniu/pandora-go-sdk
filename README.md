@@ -1,4 +1,8 @@
-# Pandora SDK [![Qiniu Logo](http://qiniutek.com/images/logo-2.png)](http://qiniu.com/)
+# Pandora SDK
+
+[![Build Status](https://travis-ci.org/qiniu/pandora-go-sdk.svg?branch=master)](https://travis-ci.org/qiniu/pandora-go-sdk) [![GoDoc](https://godoc.org/github.com/qiniu/pandora-go-sdk?status.svg)](https://godoc.org/github.com/qiniu/pandora-go-sdk)
+
+[![Qiniu Logo](http://open.qiniudn.com/logo.png)](http://www.qiniu.com/)
 
 # Pandora SDK使用说明
 

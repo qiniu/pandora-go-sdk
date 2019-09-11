@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/qiniu/log"
+	"github.com/qiniu/x/log"
 
 	"github.com/qiniu/pandora-go-sdk/base"
 	. "github.com/qiniu/pandora-go-sdk/base/models"

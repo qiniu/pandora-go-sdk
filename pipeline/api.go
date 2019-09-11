@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/qiniu/log"
+	"github.com/qiniu/x/log"
 	"github.com/qiniu/pandora-go-sdk/base"
 	"github.com/qiniu/pandora-go-sdk/base/models"
 	"github.com/qiniu/pandora-go-sdk/base/reqerr"
@@ -353,7 +353,7 @@ func (c *Pipeline) UpdateRepoWithKodo(input *UpdateRepoInput, ex ExportDesc) err
 		} else {
 			typeis = "null"
 		}
-		return fmt.Errorf("export kodo spec retention assert error %v is not int, but %V", ex.Spec["retention"], typeis)
+		return fmt.Errorf("export kodo spec retention assert error %v is not int, but %v", ex.Spec["retention"], typeis)
 	}
 	compress, ok := ex.Spec["compress"].(bool)
 	if !ok {

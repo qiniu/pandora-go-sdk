@@ -136,7 +136,7 @@ func (l *DefaultLogger) Errorf(format string, v ...interface{}) {
 
 func (l *DefaultLogger) Panic(v ...interface{}) {
 	if l.AtMost(LogPanic) {
-		l.Logger.Panic(v)
+		l.Logger.Panic(v...)
 	}
 }
 

@@ -32,6 +32,12 @@ type GetTagsOptions struct {
 	Size int `url:"size"`
 }
 
+type TagList struct {
+	Tags      []*Tag                 `json:"tags"`
+	Agents    map[string]interface{} `json:"agents"`
+	TotalSize int                    `json:"totalSize"`
+}
+
 // GetTags 返回符合条件的 tags、agents（可选）信息以及可获取的总数
 func (l *Logkit) GetTags(opts *GetTagsOptions) ([]*Tag, map[string]interface{}, int, error) {
 	vals, err := query.Values(opts)
@@ -39,11 +45,7 @@ func (l *Logkit) GetTags(opts *GetTagsOptions) ([]*Tag, map[string]interface{}, 
 		return nil, nil, 0, err
 	}
 	op := newOperation(opGetTags, vals.Encode())
-	resp := &struct {
-		Tags      []*Tag                 `json:"tags"`
-		Agents    map[string]interface{} `json:"agents"`
-		TotalSize int                    `json:"totalSize"`
-	}{}
+	resp := new(TagList)
 	return resp.Tags, resp.Agents, resp.TotalSize, l.newRequest(op, opts.Token, resp).Send()
 }
 

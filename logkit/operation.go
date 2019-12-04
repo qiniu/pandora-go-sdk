@@ -107,7 +107,7 @@ func newOperation(opName string, args ...interface{}) *request.Operation {
 	case opAssignTagAgents:
 		method, urlTmpl = http.MethodPost, "/tags/%s/agentids"
 	case opUnassignTagAgents:
-		method, urlTmpl = http.MethodDelete, "/tags/%s/agentids/batch?agentid=%s"
+		method, urlTmpl = http.MethodDelete, "/tags/%s/agentids/batch?agentids=%s"
 	case opUnassignTagConfig:
 		method, urlTmpl = http.MethodDelete, "/tags/%s/configs/%s"
 	case opDeleteTag:

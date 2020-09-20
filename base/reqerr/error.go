@@ -243,6 +243,10 @@ const (
 	ErrConnectHdfsFailed
 	ErrStatFileFailed
 	ErrExportTypeDisabled
+
+	// account
+	ErrAccountArrearsProtection
+	ErrAccountFrozen
 )
 
 type ErrBuilder interface {

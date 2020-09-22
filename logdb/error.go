@@ -34,6 +34,10 @@ func (e LogdbErrBuilder) Build(msg, text, reqId string, code int) error {
 		err.ErrorType = reqerr.ErrInvalidRepoDescription
 	case "E8136":
 		err.ErrorType = reqerr.ErrInvalidRepoSchemaDescription
+	case "E18669":
+		err.ErrorType = reqerr.ErrAccountArrearsProtection
+	case "E18670":
+		err.ErrorType = reqerr.ErrAccountFrozen
 
 	default:
 		if code == 401 {

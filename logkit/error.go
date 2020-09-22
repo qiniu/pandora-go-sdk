@@ -166,6 +166,10 @@ func (e ErrBuilder) Build(msg, text, reqID string, code int) error {
 		err.ErrorType = reqerr.ErrUnprocessableEntity
 	case "E1087":
 		err.ErrorType = reqerr.ErrDisablePostMetricsLogdb
+	case "E18669":
+		err.ErrorType = reqerr.ErrAccountArrearsProtection
+	case "E18670":
+		err.ErrorType = reqerr.ErrAccountFrozen
 	default:
 		if code == 401 {
 			err.Message = fmt.Sprintf("unauthorized: %v. 1. Please check your qiniu access_key and secret_key are both correct and you're authorized qiniu pandora user. 2. Please check the local time to ensure the consistent with the server time. 3. If you are using the token, please make sure that token has not expired.", msg)

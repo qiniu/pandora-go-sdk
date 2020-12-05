@@ -108,7 +108,7 @@ func (c *Logdb) QueryLog(input *QueryLogInput) (output *QueryLogOutput, err erro
 	if input.Highlight != nil {
 		highlight = true
 	}
-	op := c.NewOperation(base.OpQueryLog, input.RepoName, url.QueryEscape(input.Query), input.Sort, input.From, input.Size, input.Scroll, highlight)
+	op := c.NewOperation(base.OpQueryLog, input.RepoName, url.QueryEscape(input.Query), input.Sort, input.From, input.Size, input.Scroll, highlight, input.Fields)
 
 	output = &QueryLogOutput{}
 	req := c.newRequest(op, input.Token, output)
@@ -119,6 +119,33 @@ func (c *Logdb) QueryLog(input *QueryLogInput) (output *QueryLogOutput, err erro
 		req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
 	}
 	return output, req.Send()
+}
+
+type job struct {
+	Id string `json:"id"`
+}
+
+func (c *Logdb) QueryAnalysisLog(jobId string) (output *QueryAnalysisLogOutput, err error) {
+	op := c.NewOperation(base.OpAnalysisLog, jobId)
+
+	output = &QueryAnalysisLogOutput{}
+	req := c.newRequest(op, "", output)
+	return output, req.Send()
+}
+
+func (c *Logdb) QueryAnalysisLogJob(input *QueryAnalysisLogInput) (jobId string, err error) {
+	op := c.NewOperation(base.OpAnalysisLogJob, input.RepoName, input.Start.Unix()*1000, input.End.Unix()*1000)
+
+	output := &job{}
+	req := c.newRequest(op, input.Token, output)
+
+	// req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	buf, err := input.Buf()
+	if err != nil {
+		return
+	}
+	req.SetBufferBody(buf)
+	return output.Id, req.Send()
 }
 
 func (c *Logdb) QueryScroll(input *QueryScrollInput) (output *QueryLogOutput, err error) {

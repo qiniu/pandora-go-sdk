@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/qiniu/pandora-go-sdk/base"
 	. "github.com/qiniu/pandora-go-sdk/base/models"
@@ -611,7 +612,39 @@ type QueryLogInput struct {
 	From      int
 	Size      int
 	Scroll    string
+	Fields    string
 	Highlight *Highlight
+}
+
+type QueryAnalysisLogInput struct {
+	PandoraToken
+	Start    time.Time
+	End      time.Time
+	RepoName string
+	Query    string
+	Sort     string
+	From     int
+	Size     int
+	Scroll   string
+	Fields   string
+}
+
+func (input *QueryAnalysisLogInput) Buf() (buf []byte, err error) {
+	data := map[string]interface{}{
+		"query": map[string]interface{}{
+			"query_string": map[string]string{
+				"query": input.Query,
+			},
+		},
+		"_source": strings.Split(input.Fields, ","),
+		"size":    input.Size,
+	}
+	buf, err = json.Marshal(data)
+	if err != nil {
+		return
+	}
+	fmt.Println("body", string(buf))
+	return
 }
 
 type QueryScrollInput struct {
@@ -634,6 +667,21 @@ type QueryLogOutput struct {
 	Total          int                      `json:"total"`
 	PartialSuccess bool                     `json:"partialSuccess"`
 	Data           []map[string]interface{} `json:"data"`
+}
+
+type QueryAnalysisLogHit struct {
+	Type  string                 `json:"_type,omitempty"`
+	Id    string                 `json:"_id,omitempty"`
+	Score float32                `json:"_score,omitempty"`
+	Data  map[string]interface{} `json:"_source,omitempty"`
+}
+
+type QueryAnalysisLogOutput struct {
+	Took           int                   `json:"took,omitempty"`
+	Process        float32               `json:"process,omitempty"`
+	Total          int                   `json:"total"`
+	PartialSuccess bool                  `json:"partialSuccess"`
+	Hits           []QueryAnalysisLogHit `json:"hits"`
 }
 
 type QueryHistogramLogInput struct {

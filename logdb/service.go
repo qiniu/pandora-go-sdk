@@ -82,7 +82,7 @@ func (c *Logdb) NewOperation(opName string, args ...interface{}) *request.Operat
 	case base.OpSendLog:
 		method, urlTmpl = base.MethodPost, "/v5/repos/%s/data?omitInvalidLog=%t"
 	case base.OpQueryLog:
-		method, urlTmpl = base.MethodGet, "/v5/repos/%s/search?q=%s&sort=%s&from=%d&size=%d&scroll=%s&highlight=%t"
+		method, urlTmpl = base.MethodGet, "/v5/repos/%s/search?q=%s&sort=%s&from=%d&size=%d&scroll=%s&highlight=%t&fields=%s"
 	case base.OpQueryScroll:
 		method, urlTmpl = base.MethodPost, "/v5/repos/%s/scroll"
 	case base.OpQueryHistogramLog:
@@ -95,6 +95,10 @@ func (c *Logdb) NewOperation(opName string, args ...interface{}) *request.Operat
 		method, urlTmpl = base.MethodPost, "/v5/repos/%s/s"
 	case base.OpSchemaRef:
 		method, urlTmpl = base.MethodPost, "/v5/schema/derivation"
+	case base.OpAnalysisLogJob:
+		method, urlTmpl = base.MethodPost, "/v5/job?type=analysis&repos=%s&startTime=%d&endTime=%d"
+	case base.OpAnalysisLog:
+		method, urlTmpl = base.MethodGet, "/v5/job/%s/analysis"
 	default:
 		c.Config.Logger.Errorf("unmatched operation name: %s", opName)
 		return nil

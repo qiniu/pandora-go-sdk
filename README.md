@@ -9,6 +9,7 @@
 ## 简述
 
 Pandora SDK是pandora服务一个golang版本的SDK。包含pipeline、tsdb和logdb三种服务的SDK。
+另外还提供了全链路追踪服务（针对go语言项目）的接入SDK。
 
 ## 快速开始
 
@@ -205,6 +206,44 @@ default:
 ### API封装
 
 Pandora SDK提供了对所有核心API的封装，各个接口的输入类型定义在pipeline/tsdb/logdb目录下的models.go里面，结构体的定义和API的定义是接近的，具体的可以参考[Pandora产品文档](https://pandora-docs.qiniu.com/)和sample目录下的示例代码，此处不再赘述。
+
+## tracing 模块使用方式
+go 项目需要侵入项目代码，增加 tracing 逻辑，才能使用全链路追踪功能，该 SDK 中的 tracing 模块，提供了较为简易的改造原项目的方案。下面以几个示例讲解其用法。
+```
+// 服务启动时，在 main 方法中初始化 tracing 服务
+func main() {
+    tracing.ServiceInit()
+    defer tracing.ServiceClose()
+    // service initializing logic
+}
+
+// http API handle 注册全链路追踪
+// 若原始handler注册语句是 http.HandleFunc("/path/of/url", handlerFunc)
+// 改造后如下
+http.HandleFunc("/path/of/url", tracing.HttpHandleDec(handlerFunc))
+
+// http.Do 远程访问请求 全链路追踪
+// 若原始语句是 resp, err = client.Do(req)
+// 改造之后如下
+resp, err = tracing.TracingHttpDoDec(client.Do, "Do")(req)
+
+// 自定义方法 全链路追踪
+// 若原始语句是 result, err = CallFunc(a, b, c)
+// 改造之后如下
+tracing.SimpleAPIDec("CallFunc", func() map[string]interface{} {
+    result, err = CallFunc(a, b, c)
+    return nil
+    // 其中返回值 map[string]interface{} 用以记录需要保存在链路中的 tag 信息，以kv新式存储。例如可以将 err 信息返回，方便全链路定位问题
+})
+
+// goroutine 全链路追踪
+// 若原始语句是 go runFunc(a, b, c)
+// 改造之后如下
+tracing.GoRoutineDec("runFunc", func() map[string]interface{} {
+    runFunc(a, b, c)
+    return nil
+})
+```
 
 ## 使用原则
 1. 所有接口调用均遵循“没有消息就是好消息”的原则，返回的error如果是nil，那么表明调用成功；

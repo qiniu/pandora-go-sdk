@@ -1,27 +1,27 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"time"
 
 	"github.com/qiniu/pandora-go-sdk/v2/auth"
-	"github.com/qiniu/pandora-go-sdk/v2/client"
+	"github.com/qiniu/pandora-go-sdk/v2/conf"
+	"github.com/qiniu/pandora-go-sdk/v2/search"
 )
 
 func main() {
-	fmt.Println("hello world")
-	a, err := test()
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(a)
-	}
-}
+	cfg := conf.NewConfg([]string{"http://localhost:8080"})
+	credentials := auth.New("<Your Pandora Token>")
+	param := search.NewSearchParam(
+		`repo="matrix" | stats count() by host`, "fast",
+		0,
+		1629200879919,
+		-1,
+		false,
+	)
+	fmt.Println(param)
+	m := search.NewSearchManager(credentials, cfg)
 
-func test() (body map[string]interface{}, err error) {
-	cli := &client.DefaultClient
-	credentials := auth.New("eyJhbGciOiJIUzUxMiIsInppcCI6IkRFRiJ9.eJwVy0EOwiAQQNG7zBoMDAMWVr3KDJYEU2ltizEx3t26_Xn_A_ejQoIByWcng_ZeWJMga8kYNUZjQ0F0FAQUvOp2dJ4hFZ73ScHe5ZxXbrdl4_FZW-2XvDxO2aRAsgGjtWRMUDC9139w9hqRTPz-AF5EIpU.IEiCAcJpkp0i0WiqqioRfaNXxtBCnyrHaJN3cmiyAZasM98NDAqJm1zFiUomnoITVekg2lOjJqh5cuaRbnqpRA")
-
-	err = cli.CredentialedCall(context.Background(), credentials, auth.PandoraToken, &body, "GET", "http://pandora-express-rc.qiniu.io/api/v1/repos", nil)
-	return
+	job, jobInfo, jobResult, err := m.CreateAndWaitForQueryResults(param, time.Second, time.Second*10)
+	fmt.Printf("job %v\n jobInfo %v \n jobResult %v \nerr %v\n", job, jobInfo, jobResult, err)
 }

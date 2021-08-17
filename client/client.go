@@ -29,7 +29,7 @@ var DeepDebugInfo = false
 
 // --------------------------------------------------------------------
 
-// Client 负责发送HTTP请求到七牛接口服务器
+// Client 负责发送HTTP请求到Pandora接口服务器
 type Client struct {
 	*http.Client
 }

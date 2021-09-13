@@ -1,10 +1,5 @@
-module github.com/qiniu/pandora-go-sdk
+module github.com/qiniu/pandora-go-sdk/v2
 
-go 1.12
+go 1.14
 
-require (
-	github.com/davecgh/go-spew v1.1.1
-	github.com/google/go-querystring v1.0.0
-	github.com/qiniu/x v0.0.0-20190911131702-ec64d9399366
-	github.com/stretchr/testify v1.4.0
-)
+require golang.org/x/sync v0.0.0-20201207232520-09787c993a3a

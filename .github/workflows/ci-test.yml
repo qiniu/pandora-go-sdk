@@ -1,0 +1,61 @@
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+name: Run Test Cases
+jobs:
+  go-path-test:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: src/github.com/qiniu/pandora-go-sdk
+          ref: ${{ github.ref }}
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.10.x'
+      - name: Format
+        run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
+      - name: Run unit cases
+        run: |
+          GOPATH=$GITHUB_WORKSPACE go get github.com/qiniu/x
+          GOPATH=$GITHUB_WORKSPACE go get golang.org/x/sync/singleflight
+          GOPATH=$GITHUB_WORKSPACE make unittest
+        working-directory: src/github.com/qiniu/pandora-go-sdk
+  go-mod-test:
+    needs: 'go-path-test'
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        go_version: ['1.11.x', '1.12.x', '1.13.x', '1.14.x', '1.15.x', '1.16.x']
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go_version }}
+      - name: Format
+        run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
+      - name: Run unit cases
+        run: |
+          make unittest
+        env:
+          GO111MODULE: 'on'
